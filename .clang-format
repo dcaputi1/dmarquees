@@ -1,0 +1,8 @@
+BasedOnStyle: Microsoft
+IndentWidth: 4
+UseTab: Never
+
+# Break single-line control statements and omit braces for single-line bodies
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AllowShortElseOnASingleLine: false

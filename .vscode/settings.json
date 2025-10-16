@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "marquee-drm.h": "c",
+        "unistd.h": "c",
+        "gl2.h": "c",
+        "types.h": "c",
+        "fcntl.h": "c"
+    }
+}
