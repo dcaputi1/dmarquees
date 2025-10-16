@@ -1,9 +1,0 @@
-dmarquees: v1.2.0 starting...
-dmarquees: Selected connector 42 mode 3840x2160 crtc 104
-dmarquees: drmModeSetCrtc(1) - Initial FB presented
-dmarquees: DRM master dropped - MAME can safely start.
-stdout: entering main loop
-stderr: listening on /tmp/dmarquees_cmd
-dmarquees: command received: 'CLEAR'
-dmarquees: command received: 'EXIT'
-dmarquees: exiting
