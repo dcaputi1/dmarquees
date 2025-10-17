@@ -1,5 +1,5 @@
 /*
- dmarquee v1.2.0
+ dmarquee v1.2.1
 
  Lightweight DRM marquee daemon for Raspberry Pi / RetroPie.
  - Runs as a long-lived daemon (run as root at boot).
@@ -46,12 +46,12 @@
 #include <xf86drmMode.h>
 #include "helpers.h"
 
-#define VERSION "1.2.0"
+#define VERSION "1.2.1"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
-#define PREFERRED_W 3840
-#define PREFERRED_H 2160
+#define PREFERRED_W 1920
+#define PREFERRED_H 1080
 
 static volatile bool running = true;
 static int drm_fd = -1;
