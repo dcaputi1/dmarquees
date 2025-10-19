@@ -1,5 +1,5 @@
 /*
- dmarquee v1.3.0
+ dmarquee v1.3.1
 
  Lightweight DRM marquee daemon for Raspberry Pi / RetroPie.
  - Runs as a long-lived daemon (run as root at boot).
@@ -46,7 +46,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.0"
+#define VERSION "1.3.1"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -441,10 +441,12 @@ int main(int argc, char **argv)
             // black area already zeroed earlier; just overwrite bottom-half region
             scale_and_blit_to_xrgb(img, iw, ih, fbptr, fb_w, fb_h, stride_pixels, dest_x, dest_y);
 
+#ifdef USE_MODE_SET_AFTER_EACH_UPDATE   // not sure why ChatGPT suggested this at one point
             // After writing to mmap'd framebuffer memory, the kernel should display it.
             // If needed, call drmModeSetCrtc again.
             if (drmModeSetCrtc(drm_fd, crtc_id, fb_id, 0, 0, &conn_id, 1, &chosen_mode) != 0)
                 perror("drmModeSetCrtc");
+#endif
         }
         free(img);
     }
