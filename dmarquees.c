@@ -1,5 +1,5 @@
 /*
- dmarquee v1.3.1
+ dmarquee v1.3.2
 
  Lightweight DRM marquee daemon for Raspberry Pi / RetroPie.
  - Runs as a long-lived daemon (run as root at boot).
@@ -46,7 +46,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.1"
+#define VERSION "1.3.2"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -66,7 +66,7 @@ static uint32_t stride = 0;
 static uint64_t bo_size = 0;
 static void *fb_map = NULL;
 
-static bool initialized = false;
+static bool g_is_master = false;
 
 typedef enum
 {
@@ -285,7 +285,8 @@ static int initialize(void)
     }
 
     // attempt to become DRM master (recommended for daemon)
-    if (drmSetMaster(drm_fd) != 0)
+    g_is_master = (drmSetMaster(drm_fd) == 0);
+    if (!g_is_master)
     {
         perror("drmSetMaster (continuing anyway)");
         // continue: we may still be able to set the CRTC depending on environment
@@ -319,10 +320,18 @@ static int initialize(void)
         printf("dmarquees: drmModeSetCrtc(1) - Initial FB presented\n");
 
     // Release DRM master so other apps (like MAME) can take control
-    if (drmDropMaster(drm_fd) != 0)
-        fprintf(stderr, "warning: drmDropMaster failed (%s)\n", strerror(errno));
-    else
-        printf("dmarquees: DRM master dropped - MAME can safely start.\n");
+    if (g_is_master)
+    {
+        if (drmDropMaster(drm_fd) != 0)
+        {
+            fprintf(stderr, "warning: drmDropMaster failed (%s)\n", strerror(errno));
+        }
+        else
+        {
+            g_is_master = false;
+            printf("dmarquees: DRM master dropped - MAME can safely start.\n");
+        }
+    }
 
     return 0;
 }
@@ -341,14 +350,8 @@ int main(int argc, char **argv)
 
     signal(SIGINT, sigint_handler);
 
-    if (g_frontend_mode == eSA)
-    {
-        if (initialize() != 0)
-        {
-            return 1;
-        }
-        initialized = true;
-    }
+    if (initialize() != 0)
+        return 1;
 
     printf("stdout: entering main loop\n");
     fprintf(stderr, "stderr: listening on %s\n", CMD_FIFO);
@@ -416,18 +419,6 @@ int main(int argc, char **argv)
             continue;
         }
 
-        // Game is started - prepare for marquee display
-        if (!initialized)
-        {
-            if (initialize() != 0)
-            {
-                free(img);
-                fprintf(stderr, "error: Failed to initialize DRM\n");
-                continue;
-            }
-            initialized = true;
-        }
-
         // clear bottom half to black first
         if (fb_map)
         {
@@ -455,7 +446,10 @@ int main(int argc, char **argv)
     destroy_dumb_fb(drm_fd);
     if (drm_fd >= 0)
     {
-        drmDropMaster(drm_fd);
+        if (g_is_master)
+        {
+            drmDropMaster(drm_fd);
+        }
         close(drm_fd);
     }
     unlink(CMD_FIFO);
