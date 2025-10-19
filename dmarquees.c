@@ -1,5 +1,5 @@
 /*
- dmarquee v1.2.1
+ dmarquee v1.3.0
 
  Lightweight DRM marquee daemon for Raspberry Pi / RetroPie.
  - Runs as a long-lived daemon (run as root at boot).
@@ -27,8 +27,11 @@
 */
 
 #define _GNU_SOURCE
+#include "helpers.h"
+#include <drm.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <png.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -40,13 +43,10 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <png.h>
-#include <drm.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
-#include "helpers.h"
 
-#define VERSION "1.2.1"
+#define VERSION "1.3.0"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -65,6 +65,54 @@ static uint32_t fb_id = 0;
 static uint32_t stride = 0;
 static uint64_t bo_size = 0;
 static void *fb_map = NULL;
+
+static bool initialized = false;
+
+typedef enum
+{
+    eSA = 0,
+    eRA = 1
+} FrontendMode;
+static FrontendMode g_frontend_mode = eSA;
+
+static void print_usage(const char *prog)
+{
+    fprintf(stderr, "Usage: %s [-f SA|RA]\n", prog);
+}
+
+static int parseFrontendModeArg(int argc, char **argv)
+{
+    int opt;
+    while ((opt = getopt(argc, argv, "f:h")) != -1)
+    {
+        switch (opt)
+        {
+        case 'f':
+            if (strcasecmp(optarg, "RA") == 0 || strcasecmp(optarg, "RetroArch") == 0)
+            {
+                g_frontend_mode = eRA;
+            }
+            else if (strcasecmp(optarg, "SA") == 0 || strcasecmp(optarg, "StandAlone") == 0)
+            {
+                g_frontend_mode = eSA;
+            }
+            else
+            {
+                fprintf(stderr, "error: invalid frontend '%s'\n", optarg);
+                print_usage(argv[0]);
+                return 2;
+            }
+            break;
+        case 'h':
+            print_usage(argv[0]);
+            return 0;
+        default:
+            print_usage(argv[0]);
+            return 2;
+        }
+    }
+    return 0;
+}
 
 static void sigint_handler(int sig)
 {
@@ -215,11 +263,8 @@ static void destroy_dumb_fb(int fd)
     }
 }
 
-int main(int argc, char **argv)
+static int initialize(void)
 {
-    printf("dmarquees: v%s starting...\n", VERSION);
-    signal(SIGINT, sigint_handler);
-
     // ensure FIFO exists
     if (mkfifo(CMD_FIFO, 0666) < 0)
     {
@@ -254,7 +299,8 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    printf("dmarquees: Selected connector %u mode %dx%d crtc %u\n", conn_id, chosen_mode.hdisplay, chosen_mode.vdisplay, crtc_id);
+    printf("dmarquees: Selected connector %u mode %dx%d crtc %u\n", conn_id, chosen_mode.hdisplay, chosen_mode.vdisplay,
+           crtc_id);
 
     // create persistent dumb framebuffer sized to chosen_mode
     if (create_dumb_fb(drm_fd, chosen_mode.hdisplay, chosen_mode.vdisplay) != 0)
@@ -264,7 +310,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    memset(fb_map, 0x00, bo_size);    // Clear framebuffer (black)
+    memset(fb_map, 0x00, bo_size); // Clear framebuffer (black)
 
     // set CRTC once to show our FB (this may fail with EPERM if another master exists)
     if (drmModeSetCrtc(drm_fd, crtc_id, fb_id, 0, 0, &conn_id, 1, &chosen_mode) != 0)
@@ -277,6 +323,32 @@ int main(int argc, char **argv)
         fprintf(stderr, "warning: drmDropMaster failed (%s)\n", strerror(errno));
     else
         printf("dmarquees: DRM master dropped - MAME can safely start.\n");
+
+    return 0;
+}
+
+int main(int argc, char **argv)
+{
+    printf("dmarquees: v%s starting...\n", VERSION);
+
+    // parse command line for frontend mode
+    int parse_result = parseFrontendModeArg(argc, argv);
+    if (parse_result != 0)
+    {
+        return parse_result;
+    }
+    printf("dmarquees: frontend=%s\n", (g_frontend_mode == eRA) ? "RA" : "SA");
+
+    signal(SIGINT, sigint_handler);
+
+    if (g_frontend_mode == eSA)
+    {
+        if (initialize() != 0)
+        {
+            return 1;
+        }
+        initialized = true;
+    }
 
     printf("stdout: entering main loop\n");
     fprintf(stderr, "stderr: listening on %s\n", CMD_FIFO);
@@ -304,7 +376,7 @@ int main(int argc, char **argv)
         buf[n] = '\0';
 
         // strip newline and whitespace
-        char* cmd = trim(buf);
+        char *cmd = trim(buf);
         if (!(cmd && strlen(cmd)))
             continue;
 
@@ -318,7 +390,7 @@ int main(int argc, char **argv)
         if (strcasecmp(cmd, "CLEAR") == 0)
         {
             memset(fb_map, 0x00, bo_size);
-            continue;   // no need to re-add fb; kernel shows updated memory
+            continue; // no need to re-add fb; kernel shows updated memory
         }
         if (game_has_multiple_screens(cmd))
         {
@@ -337,11 +409,23 @@ int main(int argc, char **argv)
         }
 
         int iw = 0, ih = 0;
-        uint8_t* img = load_png_rgba(imgpath, &iw, &ih);
+        uint8_t *img = load_png_rgba(imgpath, &iw, &ih);
         if (img == NULL)
         {
             fprintf(stderr, "error: png load failed %s\n", imgpath);
             continue;
+        }
+
+        // Game is started - prepare for marquee display
+        if (!initialized)
+        {
+            if (initialize() != 0)
+            {
+                free(img);
+                fprintf(stderr, "error: Failed to initialize DRM\n");
+                continue;
+            }
+            initialized = true;
         }
 
         // clear bottom half to black first
