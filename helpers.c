@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <png.h>
+#include <strings.h> // for strcasecmp
 
 /* Minimal PNG loader using libpng. Returns malloc'd RGBA (8-bit per channel) buffer. */
 uint8_t *load_png_rgba(const char *path, int *out_w, int *out_h)
@@ -151,4 +152,76 @@ char* trim(char* str)
 
     *(end + 1) = '\0';
     return str;
-}   
+}
+
+FrontendMode toFrontendMode(const char *s)
+{
+    if (!s) return eNA;
+    if (strcasecmp(s, "RA") == 0 || strcasecmp(s, "RetroArch") == 0) return eRA;
+    if (strcasecmp(s, "SA") == 0 || strcasecmp(s, "StandAlone") == 0) return eSA;
+    if (strcasecmp(s, "NA") == 0 || strcasecmp(s, "None") == 0) return eNA;
+    return eNA;
+}
+
+const char *fromFrontendMode(FrontendMode m)
+{
+    switch (m)
+    {
+    case eRA: return "RA";
+    case eSA: return "SA";
+    case eNA:
+    default:  return "NA";
+    }
+}
+
+int parseFrontendModeArg(int argc, char **argv)
+{
+    extern FrontendMode g_frontend_mode;
+    int opt;
+    while ((opt = getopt(argc, argv, "f:h")) != -1)
+    {
+        switch (opt)
+        {
+        case 'f':
+            g_frontend_mode = toFrontendMode(optarg);
+            if (g_frontend_mode == eNA && strcasecmp(optarg, "NA") != 0 && strcasecmp(optarg, "None") != 0)
+            {
+                fprintf(stderr, "error: invalid frontend '%s'\n", optarg);
+                fprintf(stderr, "Usage: %s [-f SA|RA|NA]\n", argv[0]);
+                return 2;
+            }
+            break;
+        case 'h':
+            fprintf(stderr, "Usage: %s [-f SA|RA|NA]\n", argv[0]);
+            return 0;
+        default:
+            fprintf(stderr, "Usage: %s [-f SA|RA|NA]\n", argv[0]);
+            return 2;
+        }
+    }
+    return 0;
+}
+
+CommandType toCommandType(const char *s)
+{
+    if (!s) return CMD_ROM;
+    if (strcasecmp(s, "EXIT") == 0) return CMD_EXIT;
+    if (strcasecmp(s, "CLEAR") == 0) return CMD_CLEAR;
+    if (strcasecmp(s, "RA") == 0) return CMD_RA;
+    if (strcasecmp(s, "SA") == 0) return CMD_SA;
+    // If not a known command, treat as ROM
+    return CMD_ROM;
+}
+
+const char *fromCommandType(CommandType c)
+{
+    switch (c)
+    {
+    case CMD_EXIT:  return "EXIT";
+    case CMD_CLEAR: return "CLEAR";
+    case CMD_RA:    return "RA";
+    case CMD_SA:    return "SA";
+    case CMD_ROM:
+    default:        return "ROM";
+    }
+}

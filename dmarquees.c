@@ -1,5 +1,5 @@
 /*
- dmarquee v1.3.2
+ dmarquee v1.3.3
 
  Lightweight DRM marquee daemon for Raspberry Pi / RetroPie.
  - Runs as a long-lived daemon (run as root at boot).
@@ -46,7 +46,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.2"
+#define VERSION "1.3.3"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -68,50 +68,55 @@ static void *fb_map = NULL;
 
 static bool g_is_master = false;
 
-typedef enum
+static FrontendMode g_frontend_mode = eNA;
+
+// Pick default marquee name based on frontend mode
+static const char *default_marquee_name_for(FrontendMode m)
 {
-    eSA = 0,
-    eRA = 1
-} FrontendMode;
-static FrontendMode g_frontend_mode = eSA;
+    switch (m)
+    {
+    case eSA: return "MAME";
+    case eRA: return "RetroArch";
+    case eNA:
+    default:  return "Arcade";
+    }
+}
+
+// Draw the default marquee (bottom half). Clears bottom half to black first.
+static void show_default_marquee(void)
+{
+    if (!fb_map) return;
+
+    const char *name = default_marquee_name_for(g_frontend_mode);
+    char imgpath[512];
+    snprintf(imgpath, sizeof(imgpath), "%s/%s.png", IMAGE_DIR, name);
+
+    int fb_w = chosen_mode.hdisplay;
+    int fb_h = chosen_mode.vdisplay;
+    int dest_y = fb_h / 2;
+
+    // Clear only bottom half to black
+    uint8_t *bottom = (uint8_t *)fb_map + (size_t)dest_y * stride;
+    size_t bottom_bytes = (size_t)(fb_h - dest_y) * stride;
+    memset(bottom, 0x00, bottom_bytes);
+
+    int iw = 0, ih = 0;
+    uint8_t *img = load_png_rgba(imgpath, &iw, &ih);
+    if (!img)
+    {
+        fprintf(stderr, "warning: default marquee load failed: %s\n", imgpath);
+        return; // bottom half remains black
+    }
+
+    uint32_t *fbptr = (uint32_t *)fb_map;
+    int stride_pixels = stride / 4;
+    scale_and_blit_to_xrgb(img, iw, ih, fbptr, fb_w, fb_h, stride_pixels, /*dest_x=*/0, dest_y);
+    free(img);
+}
 
 static void print_usage(const char *prog)
 {
-    fprintf(stderr, "Usage: %s [-f SA|RA]\n", prog);
-}
-
-static int parseFrontendModeArg(int argc, char **argv)
-{
-    int opt;
-    while ((opt = getopt(argc, argv, "f:h")) != -1)
-    {
-        switch (opt)
-        {
-        case 'f':
-            if (strcasecmp(optarg, "RA") == 0 || strcasecmp(optarg, "RetroArch") == 0)
-            {
-                g_frontend_mode = eRA;
-            }
-            else if (strcasecmp(optarg, "SA") == 0 || strcasecmp(optarg, "StandAlone") == 0)
-            {
-                g_frontend_mode = eSA;
-            }
-            else
-            {
-                fprintf(stderr, "error: invalid frontend '%s'\n", optarg);
-                print_usage(argv[0]);
-                return 2;
-            }
-            break;
-        case 'h':
-            print_usage(argv[0]);
-            return 0;
-        default:
-            print_usage(argv[0]);
-            return 2;
-        }
-    }
-    return 0;
+    fprintf(stderr, "Usage: %s [-f SA|RA|NA]\n", prog);
 }
 
 static void sigint_handler(int sig)
@@ -288,7 +293,7 @@ static int initialize(void)
     g_is_master = (drmSetMaster(drm_fd) == 0);
     if (!g_is_master)
     {
-        perror("drmSetMaster (continuing anyway)");
+        perror("drmSetMaster (ignored)");
         // continue: we may still be able to set the CRTC depending on environment
     }
 
@@ -312,6 +317,9 @@ static int initialize(void)
     }
 
     memset(fb_map, 0x00, bo_size); // Clear framebuffer (black)
+
+    // Optional: draw default marquee based on current frontend mode
+    show_default_marquee();
 
     // set CRTC once to show our FB (this may fail with EPERM if another master exists)
     if (drmModeSetCrtc(drm_fd, crtc_id, fb_id, 0, 0, &conn_id, 1, &chosen_mode) != 0)
@@ -341,12 +349,12 @@ int main(int argc, char **argv)
     printf("dmarquees: v%s starting...\n", VERSION);
 
     // parse command line for frontend mode
-    int parse_result = parseFrontendModeArg(argc, argv);
+    int parse_result = parseFrontendModeArg(argc, argv); // now from helpers.h
     if (parse_result != 0)
     {
         return parse_result;
     }
-    printf("dmarquees: frontend=%s\n", (g_frontend_mode == eRA) ? "RA" : "SA");
+    printf("dmarquees: frontend=%s\n", fromFrontendMode(g_frontend_mode));
 
     signal(SIGINT, sigint_handler);
 
@@ -383,7 +391,19 @@ int main(int argc, char **argv)
         if (!(cmd && strlen(cmd)))
             continue;
 
-        printf("dmarquees: command received: '%s'\n", buf);
+        printf("dmarquees: command received: '%s'\n", cmd);
+
+        // Check for frontend mode change commands
+        if (strcasecmp(cmd, "RA") == 0) {
+            g_frontend_mode = eRA;
+            printf("dmarquees: frontend mode changed to RA\n");
+            continue;
+        }
+        if (strcasecmp(cmd, "SA") == 0) {
+            g_frontend_mode = eSA;
+            printf("dmarquees: frontend mode changed to SA\n");
+            continue;
+        }
 
         if (strcasecmp(cmd, "EXIT") == 0)
         {
@@ -392,8 +412,9 @@ int main(int argc, char **argv)
         }
         if (strcasecmp(cmd, "CLEAR") == 0)
         {
-            memset(fb_map, 0x00, bo_size);
-            continue; // no need to re-add fb; kernel shows updated memory
+            // Show default marquee for current frontend instead of full black
+            show_default_marquee();
+            continue;
         }
         if (game_has_multiple_screens(cmd))
         {
@@ -408,6 +429,8 @@ int main(int argc, char **argv)
         if (stat(imgpath, &st) != 0)
         {
             fprintf(stderr, "warning: image missing: %s\n", imgpath);
+            // Fallback: show default marquee
+            show_default_marquee();
             continue;
         }
 
@@ -416,10 +439,12 @@ int main(int argc, char **argv)
         if (img == NULL)
         {
             fprintf(stderr, "error: png load failed %s\n", imgpath);
+            // Fallback: show default marquee
+            show_default_marquee();
             continue;
         }
 
-        // clear bottom half to black first
+        // clear bottom half to black first and blit ROM marquee
         if (fb_map)
         {
             uint32_t *fbptr = (uint32_t *)fb_map;
@@ -427,14 +452,16 @@ int main(int argc, char **argv)
             int fb_h = chosen_mode.vdisplay;
             int stride_pixels = stride / 4;
             int dest_x = 0;
-            int dest_y = fb_h - (fb_h / 2);
+            int dest_y = fb_h / 2;
 
-            // black area already zeroed earlier; just overwrite bottom-half region
+            // Clear bottom half before blit (to avoid remnants)
+            uint8_t *bottom = (uint8_t *)fb_map + (size_t)dest_y * stride;
+            size_t bottom_bytes = (size_t)(fb_h - dest_y) * stride;
+            memset(bottom, 0x00, bottom_bytes);
+
             scale_and_blit_to_xrgb(img, iw, ih, fbptr, fb_w, fb_h, stride_pixels, dest_x, dest_y);
 
-#ifdef USE_MODE_SET_AFTER_EACH_UPDATE   // not sure why ChatGPT suggested this at one point
-            // After writing to mmap'd framebuffer memory, the kernel should display it.
-            // If needed, call drmModeSetCrtc again.
+#ifdef USE_MODE_SET_AFTER_EACH_UPDATE
             if (drmModeSetCrtc(drm_fd, crtc_id, fb_id, 0, 0, &conn_id, 1, &chosen_mode) != 0)
                 perror("drmModeSetCrtc");
 #endif
