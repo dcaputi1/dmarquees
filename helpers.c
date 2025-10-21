@@ -7,6 +7,7 @@
 #include <ctype.h>
 #include <png.h>
 #include <strings.h> // for strcasecmp
+#include <unistd.h> // for getopt/optarg
 
 /* Minimal PNG loader using libpng. Returns malloc'd RGBA (8-bit per channel) buffer. */
 uint8_t *load_png_rgba(const char *path, int *out_w, int *out_h)
@@ -97,9 +98,16 @@ bool game_has_multiple_screens(const char *romname)
     {
         if (strncasecmp(line, "numscreens", 10) == 0)
         {
-            int n = 0;
-            if (sscanf(line, "numscreens %d", &n) == 1 && n > 1)
-                multi = true;
+            // parse "numscreens <n>" using strtol to avoid sscanf
+            char *p = line + 10; // after "numscreens"
+            while (*p && isspace((unsigned char)*p)) ++p;
+            if (*p)
+            {
+                char *endptr = NULL;
+                long val = strtol(p, &endptr, 10);
+                if (endptr != p && val > 1)
+                    multi = true;
+            }
             break;
         }
     }
@@ -109,49 +117,48 @@ bool game_has_multiple_screens(const char *romname)
 }
 
 /* Nearest-neighbor scale/blit RGBA -> XRGB8888 framebuffer (dest is uint32_t array) */
-void scale_and_blit_to_xrgb(uint8_t *src, int sw, int sh, uint32_t *dest, int dw, int dh,
-                            int stride_pixels, int dest_x, int dest_y)
+void scale_and_blit_to_xrgb(const uint8_t *src_rgba, int src_w, int src_h,
+                            uint32_t *dst, int dst_w, int dst_h, int dst_stride,
+                            int dest_x, int dest_y)
 {
-    if (!src || !dest)
-        return;
-    int target_w = dw;
-    int target_h = dh / 2; // bottom half
-    for (int ty = 0; ty < target_h; ++ty)
+    if (!src_rgba || !dst) return;
+
+    // Determine destination region: fill width and from dest_y to bottom.
+    int dst_x0 = dest_x >= 0 ? dest_x : 0;
+    int dst_y0 = dest_y >= 0 ? dest_y : 0;
+    int region_w = dst_w - dst_x0;
+    int region_h = dst_h - dst_y0;
+    if (region_w <= 0 || region_h <= 0) return;
+
+    for (int y = 0; y < region_h; ++y)
     {
-        int sy = (ty * sh) / target_h;
-        uint32_t *drow = dest + (dest_y + ty) * stride_pixels + dest_x;
-        for (int tx = 0; tx < target_w; ++tx)
+        int src_y = (y * src_h) / region_h;
+        const uint8_t *src_row = src_rgba + (size_t)src_y * src_w * 4;
+        uint32_t *dst_row = dst + (size_t)(dst_y0 + y) * dst_stride + dst_x0;
+        for (int x = 0; x < region_w; ++x)
         {
-            int sx = (tx * sw) / target_w;
-            uint8_t *p = src + (sy * sw + sx) * 4; // RGBA
+            int src_x = (x * src_w) / region_w;
+            const uint8_t *p = src_row + src_x * 4;
             uint8_t r = p[0];
             uint8_t g = p[1];
             uint8_t b = p[2];
-            uint32_t pixel = ((uint32_t)r << 16) | ((uint32_t)g << 8) | (uint32_t)b; // 0x00RRGGBB
-            drow[tx] = pixel;
+            uint32_t pixel = ((uint32_t)r << 16) | ((uint32_t)g << 8) | (uint32_t)b;
+            dst_row[x] = pixel;
         }
     }
 }
 
-char* trim(char* str)
+char *trim(char *s)
 {
-    if (!str)
-        return NULL;
-
-    // Trim leading whitespace
-    while (*str && isspace(*str))
-        str++;
-
-    if (*str == 0) // All spaces
-        return str;
-
-    // Trim trailing whitespace
-    char* end = str + strlen(str) - 1;
-    while (end > str && isspace(*end))
-        end--;
-
-    *(end + 1) = '\0';
-    return str;
+    if (!s) return s;
+    char *p = s;
+    // trim left
+    while (*p && isspace((unsigned char)*p)) ++p;
+    if (p != s) memmove(s, p, strlen(p) + 1);
+    // trim right
+    size_t len = strlen(s);
+    while (len > 0 && isspace((unsigned char)s[len - 1])) s[--len] = '\0';
+    return s;
 }
 
 FrontendMode toFrontendMode(const char *s)

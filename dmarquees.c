@@ -74,7 +74,7 @@ static void *fb_map = NULL;
 
 static bool g_is_master = false;
 
-static FrontendMode g_frontend_mode = eNA;
+FrontendMode g_frontend_mode = eNA;
 
 // Pick default marquee name based on frontend mode
 static const char *default_marquee_name_for(FrontendMode m)
@@ -120,7 +120,7 @@ static void show_default_marquee(void)
     free(img);
 }
 
-static void print_usage(const char *prog)
+static void __attribute__((unused)) print_usage(const char *prog)
 {
     fprintf(stderr, "Usage: %s [-f SA|RA|NA]\n", prog);
 }

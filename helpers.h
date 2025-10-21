@@ -18,6 +18,8 @@ typedef enum
 FrontendMode toFrontendMode(const char *s);
 const char *fromFrontendMode(FrontendMode m);
 
+    // Global frontend mode (defined in dmarquees.c)
+    extern FrontendMode g_frontend_mode;
 // Command type enum and conversion helpers
 typedef enum
 {
@@ -31,10 +33,11 @@ typedef enum
 CommandType toCommandType(const char *s);
 const char *fromCommandType(CommandType c);
 
-unsigned char* load_png_rgba(const char* path, int* out_w, int* out_h);
+uint8_t *load_png_rgba(const char *path, int *out_w, int *out_h);
 bool game_has_multiple_screens(const char *romname);
-void scale_and_blit_to_xrgb(uint8_t* src, int sw, int sh, uint32_t* dest, int dw, int dh,
-                            int stride_pixels, int dest_x, int dest_y);
-char* trim(char* str);
+void scale_and_blit_to_xrgb(const uint8_t *src_rgba, int src_w, int src_h,
+                            uint32_t *dst, int dst_w, int dst_h, int dst_stride,
+                            int dest_x, int dest_y);
+char *trim(char *s);
 int parseFrontendModeArg(int argc, char **argv);
 #endif
