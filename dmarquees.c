@@ -48,7 +48,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.4"
+#define VERSION "1.3.5"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
