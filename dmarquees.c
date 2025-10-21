@@ -1,5 +1,5 @@
 /*
- dmarquee v1.3.3
+ dmarquee v1.3.4
 
  Lightweight DRM marquee daemon for Raspberry Pi / RetroPie.
  - Runs as a long-lived daemon (run as root at boot).
@@ -9,6 +9,8 @@
      <shortname>   => load /home/danc/mnt/marquees/<shortname>.png and display it
      CLEAR         => clear the screen (black)
      EXIT          => exit the daemon
+     RA            => set frontend mode to RetroArch
+     SA            => set frontend mode to StandAlone
  - Image is scaled nearest-neighbor to fill the width and bottom-half of the screen.
  - Uses a single persistent dumb framebuffer; the daemon blits into the mapped buffer
    and calls drmModeSetCrtc() once at startup to show the FB. Subsequent blits update
@@ -22,7 +24,7 @@
  Run (recommended from system startup as root):
    sudo ./dmarquee &
 
- Your plugin writes the rom shortname to /tmp/dmarquee_cmd, e.g.
+ The plugin writes the rom shortname to /tmp/dmarquee_cmd, e.g.
    echo sf > /tmp/dmarquee_cmd
 */
 
@@ -46,10 +48,14 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.3"
+#define VERSION "1.3.4"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
+#define PICTURES_DIR "/home/danc/Pictures"
+#define DEF_MARQUEE_NAME "retropie_marquee"
+#define DEF_RA_MARQUEE_NAME "RetroArch_logo"
+#define DEF_SA_MARQUEE_NAME "MAMELogoR"
 #define PREFERRED_W 1920
 #define PREFERRED_H 1080
 
@@ -75,10 +81,10 @@ static const char *default_marquee_name_for(FrontendMode m)
 {
     switch (m)
     {
-    case eSA: return "MAME";
-    case eRA: return "RetroArch";
+    case eSA: return DEF_SA_MARQUEE_NAME;
+    case eRA: return DEF_RA_MARQUEE_NAME;
     case eNA:
-    default:  return "Arcade";
+    default:  return DEF_MARQUEE_NAME;
     }
 }
 
@@ -89,7 +95,7 @@ static void show_default_marquee(void)
 
     const char *name = default_marquee_name_for(g_frontend_mode);
     char imgpath[512];
-    snprintf(imgpath, sizeof(imgpath), "%s/%s.png", IMAGE_DIR, name);
+    snprintf(imgpath, sizeof(imgpath), "%s/%s.png", PICTURES_DIR, name);
 
     int fb_w = chosen_mode.hdisplay;
     int fb_h = chosen_mode.vdisplay;
