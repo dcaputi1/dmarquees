@@ -30,7 +30,8 @@
 
 #define _GNU_SOURCE
 #include "helpers.h"
-#include <drm.h>
+#include <drm/drm.h>
+#include <drm/drm_mode.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <png.h>
@@ -48,11 +49,12 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.5"
+#define VERSION "1.3.6"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
-#define PICTURES_DIR "/home/danc/Pictures"
+#define PROGRAM_DIR "/home/danc/marquees"
+#define DEF_MARQUEE_DIR PROGRAM_DIR "/images"
 #define DEF_MARQUEE_NAME "retropie_marquee"
 #define DEF_RA_MARQUEE_NAME "RetroArch_logo"
 #define DEF_SA_MARQUEE_NAME "MAMELogoR"
@@ -95,7 +97,7 @@ static void show_default_marquee(void)
 
     const char *name = default_marquee_name_for(g_frontend_mode);
     char imgpath[512];
-    snprintf(imgpath, sizeof(imgpath), "%s/%s.png", PICTURES_DIR, name);
+    snprintf(imgpath, sizeof(imgpath), "%s/%s.png", DEF_MARQUEE_DIR, name);
 
     int fb_w = chosen_mode.hdisplay;
     int fb_h = chosen_mode.vdisplay;
