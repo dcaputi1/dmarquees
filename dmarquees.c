@@ -1,5 +1,5 @@
 /*
- dmarquee v1.3.4
+ dmarquee - RetroPie Marquee Daemon
 
  Lightweight DRM marquee daemon for Raspberry Pi / RetroPie.
  - Runs as a long-lived daemon (run as root at boot).
@@ -49,13 +49,13 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.6"
+#define VERSION "1.3.7"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
 #define PROGRAM_DIR "/home/danc/marquees"
 #define DEF_MARQUEE_DIR PROGRAM_DIR "/images"
-#define DEF_MARQUEE_NAME "retropie_marquee"
+#define DEF_MARQUEE_NAME "RetroPieMarquee"
 #define DEF_RA_MARQUEE_NAME "RetroArch_logo"
 #define DEF_SA_MARQUEE_NAME "MAMELogoR"
 #define PREFERRED_W 1920
@@ -115,6 +115,8 @@ static void show_default_marquee(void)
         fprintf(stderr, "warning: default marquee load failed: %s\n", imgpath);
         return; // bottom half remains black
     }
+
+    printf("dmarquees: showing default marquee: %s\n", imgpath);
 
     uint32_t *fbptr = (uint32_t *)fb_map;
     int stride_pixels = stride / 4;
@@ -357,7 +359,7 @@ int main(int argc, char **argv)
     printf("dmarquees: v%s starting...\n", VERSION);
 
     // parse command line for frontend mode
-    int parse_result = parseFrontendModeArg(argc, argv); // now from helpers.h
+    int parse_result = parseFrontendModeArg(argc, argv);
     if (parse_result != 0)
     {
         return parse_result;
