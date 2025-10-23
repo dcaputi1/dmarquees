@@ -4,6 +4,9 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <png.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <time.h>
 
 #define INI_DIR   "/opt/retropie/emulators/mame/ini"
 
@@ -40,4 +43,17 @@ void scale_and_blit_to_xrgb(const uint8_t *src_rgba, int src_w, int src_h,
                             int dest_x, int dest_y);
 char *trim(char *s);
 int parseFrontendModeArg(int argc, char **argv);
+
+// Get current timestamp in HH:MM:SS format
+void get_timestamp(char *buffer, size_t size);
+
+// Timestamped printf wrapper
+void ts_printf(const char *format, ...);
+
+// Timestamped fprintf wrapper
+void ts_fprintf(FILE *stream, const char *format, ...);
+
+// Timestamped perror wrapper
+void ts_perror(const char *s);
+
 #endif

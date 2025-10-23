@@ -8,6 +8,8 @@
 #include <png.h>
 #include <strings.h> // for strcasecmp
 #include <unistd.h> // for getopt/optarg
+#include <time.h>
+#include <stdarg.h>
 
 /* Minimal PNG loader using libpng. Returns malloc'd RGBA (8-bit per channel) buffer. */
 uint8_t *load_png_rgba(const char *path, int *out_w, int *out_h)
@@ -231,4 +233,46 @@ const char *fromCommandType(CommandType c)
     case CMD_ROM:
     default:        return "ROM";
     }
+}
+
+// Get current timestamp in HH:MM:SS format
+void get_timestamp(char *buffer, size_t size) {
+    time_t now = time(NULL);
+    struct tm *tm_info = localtime(&now);
+    strftime(buffer, size, "%H:%M:%S", tm_info);
+}
+
+// Timestamped printf wrapper
+void ts_printf(const char *format, ...) {
+    char timestamp[16];
+    get_timestamp(timestamp, sizeof(timestamp));
+    printf("%s ", timestamp);
+    
+    va_list args;
+    va_start(args, format);
+    vprintf(format, args);
+    va_end(args);
+    fflush(stdout);
+}
+
+// Timestamped fprintf wrapper
+void ts_fprintf(FILE *stream, const char *format, ...) {
+    char timestamp[16];
+    get_timestamp(timestamp, sizeof(timestamp));
+    fprintf(stream, "%s ", timestamp);
+    
+    va_list args;
+    va_start(args, format);
+    vfprintf(stream, format, args);
+    va_end(args);
+    fflush(stream);
+}
+
+// Timestamped perror wrapper
+void ts_perror(const char *s) {
+    char timestamp[16];
+    get_timestamp(timestamp, sizeof(timestamp));
+    fprintf(stderr, "%s ", timestamp);
+    perror(s);
+    fflush(stderr);
 }

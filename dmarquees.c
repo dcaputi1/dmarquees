@@ -49,7 +49,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.7"
+#define VERSION "1.3.8"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -112,11 +112,11 @@ static void show_default_marquee(void)
     uint8_t *img = load_png_rgba(imgpath, &iw, &ih);
     if (!img)
     {
-        fprintf(stderr, "warning: default marquee load failed: %s\n", imgpath);
+        ts_fprintf(stderr, "warning: default marquee load failed: %s\n", imgpath);
         return; // bottom half remains black
     }
 
-    printf("dmarquees: showing default marquee: %s\n", imgpath);
+    ts_printf("dmarquees: showing default marquee: %s\n", imgpath);
 
     uint32_t *fbptr = (uint32_t *)fb_map;
     int stride_pixels = stride / 4;
@@ -126,7 +126,7 @@ static void show_default_marquee(void)
 
 static void __attribute__((unused)) print_usage(const char *prog)
 {
-    fprintf(stderr, "Usage: %s [-f SA|RA|NA]\n", prog);
+    ts_fprintf(stderr, "Usage: %s [-f SA|RA|NA]\n", prog);
 }
 
 static void sigint_handler(int sig)
@@ -226,7 +226,7 @@ static int create_dumb_fb(int fd, uint32_t width, uint32_t height)
     creq.bpp = 32;
     if (ioctl(fd, DRM_IOCTL_MODE_CREATE_DUMB, &creq) < 0)
     {
-        perror("DRM_IOCTL_MODE_CREATE_DUMB");
+        ts_perror("DRM_IOCTL_MODE_CREATE_DUMB");
         return -1;
     }
     dumb_handle = creq.handle;
@@ -237,20 +237,20 @@ static int create_dumb_fb(int fd, uint32_t width, uint32_t height)
     mreq.handle = dumb_handle;
     if (ioctl(fd, DRM_IOCTL_MODE_MAP_DUMB, &mreq) < 0)
     {
-        perror("DRM_IOCTL_MODE_MAP_DUMB");
+        ts_perror("DRM_IOCTL_MODE_MAP_DUMB");
         return -1;
     }
     fb_map = mmap(0, bo_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, mreq.offset);
     if (fb_map == MAP_FAILED)
     {
-        perror("mmap");
+        ts_perror("mmap");
         fb_map = NULL;
         return -1;
     }
     // create FB
     if (drmModeAddFB(fd, width, height, 24, 32, stride, dumb_handle, &fb_id))
     {
-        perror("drmModeAddFB");
+        ts_perror("drmModeAddFB");
         munmap(fb_map, bo_size);
         fb_map = NULL;
         return -1;
@@ -285,7 +285,7 @@ static int initialize(void)
     {
         if (errno != EEXIST)
         {
-            perror("mkfifo");
+            ts_perror("mkfifo");
             return 1;
         }
     }
@@ -295,7 +295,7 @@ static int initialize(void)
     drm_fd = open(DEVICE_PATH, O_RDWR | O_CLOEXEC);
     if (drm_fd < 0)
     {
-        perror("open drm");
+        ts_perror("open drm");
         return 1;
     }
 
@@ -303,25 +303,25 @@ static int initialize(void)
     g_is_master = (drmSetMaster(drm_fd) == 0);
     if (!g_is_master)
     {
-        perror("drmSetMaster (ignored)");
+        ts_perror("drmSetMaster (ignored)");
         // continue: we may still be able to set the CRTC depending on environment
     }
 
     // locate connector & mode
     if (find_connector_mode(drm_fd, &conn_id, &crtc_id, &chosen_mode) != 0)
     {
-        fprintf(stderr, "error: Failed to find connected output\n");
+        ts_fprintf(stderr, "error: Failed to find connected output\n");
         close(drm_fd);
         return 1;
     }
 
-    printf("dmarquees: Selected connector %u mode %dx%d crtc %u\n", conn_id, chosen_mode.hdisplay, chosen_mode.vdisplay,
+    ts_printf("dmarquees: Selected connector %u mode %dx%d crtc %u\n", conn_id, chosen_mode.hdisplay, chosen_mode.vdisplay,
            crtc_id);
 
     // create persistent dumb framebuffer sized to chosen_mode
     if (create_dumb_fb(drm_fd, chosen_mode.hdisplay, chosen_mode.vdisplay) != 0)
     {
-        fprintf(stderr, "error: Failed to create dumb FB\n");
+        ts_fprintf(stderr, "error: Failed to create dumb FB\n");
         close(drm_fd);
         return 1;
     }
@@ -333,21 +333,21 @@ static int initialize(void)
 
     // set CRTC once to show our FB (this may fail with EPERM if another master exists)
     if (drmModeSetCrtc(drm_fd, crtc_id, fb_id, 0, 0, &conn_id, 1, &chosen_mode) != 0)
-        perror("drmModeSetCrtc"); // we'll still run and accept commands; writes will not be visible until we succeed
+        ts_perror("drmModeSetCrtc"); // we'll still run and accept commands; writes will not be visible until we succeed
     else
-        printf("dmarquees: drmModeSetCrtc(1) - Initial FB presented\n");
+        ts_printf("dmarquees: drmModeSetCrtc(1) - Initial FB presented\n");
 
     // Release DRM master so other apps (like MAME) can take control
     if (g_is_master)
     {
         if (drmDropMaster(drm_fd) != 0)
         {
-            fprintf(stderr, "warning: drmDropMaster failed (%s)\n", strerror(errno));
+            ts_fprintf(stderr, "warning: drmDropMaster failed (%s)\n", strerror(errno));
         }
         else
         {
             g_is_master = false;
-            printf("dmarquees: DRM master dropped - MAME can safely start.\n");
+            ts_printf("dmarquees: DRM master dropped - MAME can safely start.\n");
         }
     }
 
@@ -356,7 +356,7 @@ static int initialize(void)
 
 int main(int argc, char **argv)
 {
-    printf("dmarquees: v%s starting...\n", VERSION);
+    ts_printf("dmarquees: v%s starting...\n", VERSION);
 
     // parse command line for frontend mode
     int parse_result = parseFrontendModeArg(argc, argv);
@@ -364,15 +364,15 @@ int main(int argc, char **argv)
     {
         return parse_result;
     }
-    printf("dmarquees: frontend=%s\n", fromFrontendMode(g_frontend_mode));
+    ts_printf("dmarquees: frontend=%s\n", fromFrontendMode(g_frontend_mode));
 
     signal(SIGINT, sigint_handler);
 
     if (initialize() != 0)
         return 1;
 
-    printf("stdout: entering main loop\n");
-    fprintf(stderr, "stderr: listening on %s\n", CMD_FIFO);
+    ts_printf("stdout: entering main loop\n");
+    ts_fprintf(stderr, "stderr: listening on %s\n", CMD_FIFO);
 
     // main loop: read FIFO lines and act on them
     while (running)
@@ -380,7 +380,7 @@ int main(int argc, char **argv)
         int fifo = open(CMD_FIFO, O_RDONLY);
         if (fifo < 0)
         {
-            perror("open fifo");
+            ts_perror("open fifo");
             break;
         }
 
@@ -401,17 +401,17 @@ int main(int argc, char **argv)
         if (!(cmd && strlen(cmd)))
             continue;
 
-        printf("dmarquees: command received: '%s'\n", cmd);
+        ts_printf("dmarquees: command received: '%s'\n", cmd);
 
         // Check for frontend mode change commands
         if (strcasecmp(cmd, "RA") == 0) {
             g_frontend_mode = eRA;
-            printf("dmarquees: frontend mode changed to RA\n");
+            ts_printf("dmarquees: frontend mode changed to RA\n");
             continue;
         }
         if (strcasecmp(cmd, "SA") == 0) {
             g_frontend_mode = eSA;
-            printf("dmarquees: frontend mode changed to SA\n");
+            ts_printf("dmarquees: frontend mode changed to SA\n");
             continue;
         }
 
@@ -428,7 +428,7 @@ int main(int argc, char **argv)
         }
         if (game_has_multiple_screens(cmd))
         {
-            printf("dmarquees: Skipping multi-screen game: %s\n", cmd);
+            ts_printf("dmarquees: Skipping multi-screen game: %s\n", cmd);
             continue;
         }
 
@@ -438,7 +438,7 @@ int main(int argc, char **argv)
         struct stat st;
         if (stat(imgpath, &st) != 0)
         {
-            fprintf(stderr, "warning: image missing: %s\n", imgpath);
+            ts_fprintf(stderr, "warning: image missing: %s\n", imgpath);
             // Fallback: show default marquee
             show_default_marquee();
             continue;
@@ -448,7 +448,7 @@ int main(int argc, char **argv)
         uint8_t *img = load_png_rgba(imgpath, &iw, &ih);
         if (img == NULL)
         {
-            fprintf(stderr, "error: png load failed %s\n", imgpath);
+            ts_fprintf(stderr, "error: png load failed %s\n", imgpath);
             // Fallback: show default marquee
             show_default_marquee();
             continue;
@@ -473,7 +473,7 @@ int main(int argc, char **argv)
 
 #ifdef USE_MODE_SET_AFTER_EACH_UPDATE
             if (drmModeSetCrtc(drm_fd, crtc_id, fb_id, 0, 0, &conn_id, 1, &chosen_mode) != 0)
-                perror("drmModeSetCrtc");
+                ts_perror("drmModeSetCrtc");
 #endif
         }
         free(img);
@@ -490,6 +490,6 @@ int main(int argc, char **argv)
         close(drm_fd);
     }
     unlink(CMD_FIFO);
-    printf("dmarquees: exiting\n");
+    ts_printf("dmarquees: exiting\n");
     return 0;
 }
