@@ -49,7 +49,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.8"
+#define VERSION "1.3.9"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -407,11 +407,13 @@ int main(int argc, char **argv)
         if (strcasecmp(cmd, "RA") == 0) {
             g_frontend_mode = eRA;
             ts_printf("dmarquees: frontend mode changed to RA\n");
+            show_default_marquee();
             continue;
         }
         if (strcasecmp(cmd, "SA") == 0) {
             g_frontend_mode = eSA;
             ts_printf("dmarquees: frontend mode changed to SA\n");
+            show_default_marquee();
             continue;
         }
 
