@@ -2,3 +2,4 @@ build.log
 dmarquees.log
 dmarquees.o
 dmarquees
+helpers.o
