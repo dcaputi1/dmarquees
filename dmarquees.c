@@ -49,7 +49,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.11"
+#define VERSION "1.3.12"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -431,7 +431,7 @@ int main(int argc, char **argv)
             break;
 
         case CMD_CLEAR:
-            memset(fb_map, 0x00, bo_size);  // Clear framebuffer (black)
+            show_default_marquee();
             continue;
 
         case CMD_ROM:
