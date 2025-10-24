@@ -49,7 +49,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.10"
+#define VERSION "1.3.11"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -405,36 +405,36 @@ int main(int argc, char **argv)
         ts_printf("dmarquees: command received: '%s'\n", cmd);
 
         // Process command using switch statement
-        Command command = toCommandType(cmd);
+        CommandType command = toCommandType(cmd);
         switch (command)
         {
-        case eRA:
+        case CMD_RA:
             g_frontend_mode = eRA;
             ts_printf("dmarquees: frontend mode changed to RA\n");
             show_default_marquee();
             continue;
 
-        case eSA:
+        case CMD_SA:
             g_frontend_mode = eSA;
             ts_printf("dmarquees: frontend mode changed to SA\n");
             show_default_marquee();
             continue;
 
-        case eNA:
+        case CMD_NA:
             g_frontend_mode = eNA;
             ts_printf("dmarquees: frontend mode changed to NA\n");
             show_default_marquee();
             continue;
 
-        case eEXIT:
+        case CMD_EXIT:
             running = false;
             break;
 
-        case eCLEAR:
+        case CMD_CLEAR:
             memset(fb_map, 0x00, bo_size);  // Clear framebuffer (black)
             continue;
 
-        case eROM:
+        case CMD_ROM:
         default:
             // Handle as ROM shortname (including unknown commands)
             break;
