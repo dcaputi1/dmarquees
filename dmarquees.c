@@ -49,7 +49,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.9"
+#define VERSION "1.3.10"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -60,6 +60,7 @@
 #define DEF_SA_MARQUEE_NAME "MAMELogoR"
 #define PREFERRED_W 1920
 #define PREFERRED_H 1080
+#define FIFO_RETRY_DELAY_MSEC 250
 
 static volatile bool running = true;
 static int drm_fd = -1;
@@ -390,7 +391,7 @@ int main(int argc, char **argv)
 
         if (n <= 0)
         {
-            usleep(100000);
+            usleep(FIFO_RETRY_DELAY_MSEC * 1000);
             continue;
         }
 
@@ -403,31 +404,43 @@ int main(int argc, char **argv)
 
         ts_printf("dmarquees: command received: '%s'\n", cmd);
 
-        // Check for frontend mode change commands
-        if (strcasecmp(cmd, "RA") == 0) {
+        // Process command using switch statement
+        Command command = toCommandType(cmd);
+        switch (command)
+        {
+        case eRA:
             g_frontend_mode = eRA;
             ts_printf("dmarquees: frontend mode changed to RA\n");
             show_default_marquee();
             continue;
-        }
-        if (strcasecmp(cmd, "SA") == 0) {
+
+        case eSA:
             g_frontend_mode = eSA;
             ts_printf("dmarquees: frontend mode changed to SA\n");
             show_default_marquee();
             continue;
-        }
 
-        if (strcasecmp(cmd, "EXIT") == 0)
-        {
-            running = false;
-            break;
-        }
-        if (strcasecmp(cmd, "CLEAR") == 0)
-        {
-            // Show default marquee for current frontend instead of full black
+        case eNA:
+            g_frontend_mode = eNA;
+            ts_printf("dmarquees: frontend mode changed to NA\n");
             show_default_marquee();
             continue;
+
+        case eEXIT:
+            running = false;
+            break;
+
+        case eCLEAR:
+            memset(fb_map, 0x00, bo_size);  // Clear framebuffer (black)
+            continue;
+
+        case eROM:
+        default:
+            // Handle as ROM shortname (including unknown commands)
+            break;
         }
+
+        // If we reach here, it's either eROM or an unknown command - treat as ROM shortname
         if (game_has_multiple_screens(cmd))
         {
             ts_printf("dmarquees: Skipping multi-screen game: %s\n", cmd);

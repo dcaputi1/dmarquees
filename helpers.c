@@ -218,6 +218,7 @@ CommandType toCommandType(const char *s)
     if (strcasecmp(s, "CLEAR") == 0) return CMD_CLEAR;
     if (strcasecmp(s, "RA") == 0) return CMD_RA;
     if (strcasecmp(s, "SA") == 0) return CMD_SA;
+    if (strcasecmp(s, "NA") == 0) return CMD_NA;
     // If not a known command, treat as ROM
     return CMD_ROM;
 }

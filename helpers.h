@@ -30,7 +30,8 @@ typedef enum
     CMD_CLEAR = 1,
     CMD_RA = 2,
     CMD_SA = 3,
-    CMD_ROM = 4
+    CMD_NA = 4,
+    CMD_ROM = 5
 } CommandType;
 
 CommandType toCommandType(const char *s);
