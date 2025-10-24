@@ -49,7 +49,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.12"
+#define VERSION "1.3.13"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -459,6 +459,8 @@ int main(int argc, char **argv)
             continue;
         }
 
+
+
         int iw = 0, ih = 0;
         uint8_t *img = load_png_rgba(imgpath, &iw, &ih);
         if (img == NULL)
@@ -468,6 +470,8 @@ int main(int argc, char **argv)
             show_default_marquee();
             continue;
         }
+
+        ts_printf("dmarquees: displaying game marquee: %s.png\n", cmd);
 
         // clear bottom half to black first and blit ROM marquee
         if (fb_map)
