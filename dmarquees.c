@@ -49,7 +49,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.16"
+#define VERSION "1.3.17"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -162,12 +162,26 @@ static void handle_fb_update_for_ra_mode(const char* image_description)
         snprintf(g_current_image_path, sizeof(g_current_image_path), "%s", image_description);
         
         // Start RA init hold period to give lr-mame time to acquire DRM master
-        g_ra_init_hold_start = time(NULL);
-        g_in_ra_init_hold = true;
+        if (strcmp(image_description, DEF_RA_MARQUEE_NAME) != 0)
+        {
+            // Not the initial RetroArch logo, start hold period
+            g_ra_init_hold_start = time(NULL);
+            g_in_ra_init_hold = true;
+
+            ts_printf("dmarquees: Starting RA init hold period for %s (waiting %d seconds)\n", 
+                     image_description, RA_INIT_HOLD_SEC);
+        }
+        else
+        {
+            // Initial RA logo, no hold period
+            g_in_ra_init_hold = false;
+            g_ra_init_hold_start = 0;
+
+            ts_printf("dmarquees: Displayed RA logo, no init hold period\n");
+        }
+
         g_needs_crtc_reset = true;
         
-        ts_printf("dmarquees: Starting RA init hold period for %s (waiting %d seconds)\n", 
-                 image_description, RA_INIT_HOLD_SEC);
     }
 }
 
