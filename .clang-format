@@ -1,8 +1,31 @@
+---
+Language: Cpp
 BasedOnStyle: Microsoft
+
+# Brace placement - Microsoft/Allman style (braces on new lines, vertically aligned)
+BreakBeforeBraces: Allman
+
+# Remove braces from single-line control statements
+RemoveBracesLLVM: true
+
+# Force if statements onto separate lines (no single-line if statements)
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: Inline
+
+# Basic formatting
 IndentWidth: 4
+ColumnLimit: 120
 UseTab: Never
 
-# Break single-line control statements and omit braces for single-line bodies
-AllowShortIfStatementsOnASingleLine: false
-AllowShortLoopsOnASingleLine: false
-AllowShortElseOnASingleLine: false
+# Pointer alignment
+PointerAlignment: Left
+
+# Space preferences  
+SpaceBeforeParens: ControlStatements
+SpaceAfterCStyleCast: false
+
+# Case indentation
+IndentCaseLabels: true
