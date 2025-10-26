@@ -49,7 +49,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.15"
+#define VERSION "1.3.16"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -62,6 +62,7 @@
 #define PREFERRED_H 1080
 #define RETRY_DELAY_MSEC 250
 #define ERROR_LOG_THROTTLE_SEC 1
+#define RA_INIT_HOLD_SEC 5
 
 static volatile bool running = true;
 static int drm_fd = -1;
@@ -84,6 +85,23 @@ FrontendMode g_frontend_mode = eNA;
 static bool g_needs_crtc_reset = false;
 static time_t g_last_crtc_error_log = 0;
 static char g_current_image_path[512] = {0};
+static time_t g_ra_init_hold_start = 0;
+static bool g_in_ra_init_hold = false;
+
+// Check if another process currently holds DRM master
+static bool is_drm_master_held_by_other(void)
+{
+    // Try to become master temporarily to test availability
+    if (drmSetMaster(drm_fd) == 0)
+    {
+        // We got master, so it wasn't held by another process
+        drmDropMaster(drm_fd);
+        g_is_master = false;
+        return false;
+    }
+    // Failed to get master, likely held by another process
+    return true;
+}
 
 // Try to reset CRTC by becoming master, setting CRTC, then dropping master
 // Returns true if drmModeSetCrtc succeeded, updates g_is_master appropriately
@@ -143,11 +161,13 @@ static void handle_fb_update_for_ra_mode(const char* image_description)
         // Store current image info for retry logic
         snprintf(g_current_image_path, sizeof(g_current_image_path), "%s", image_description);
         
-        if (!try_reset_crtc())
-        {
-            // Failed to reset CRTC, mark for retry
-            g_needs_crtc_reset = true;
-        }
+        // Start RA init hold period to give lr-mame time to acquire DRM master
+        g_ra_init_hold_start = time(NULL);
+        g_in_ra_init_hold = true;
+        g_needs_crtc_reset = true;
+        
+        ts_printf("dmarquees: Starting RA init hold period for %s (waiting %d seconds)\n", 
+                 image_description, RA_INIT_HOLD_SEC);
     }
 }
 
@@ -467,8 +487,36 @@ int main(int argc, char** argv)
             // No new command, check if we need to retry CRTC reset
             if (g_needs_crtc_reset && g_frontend_mode == eRA)
             {
-                if (try_reset_crtc())
-                    ts_printf("dmarquees: CRTC reset successful for %s\n", g_current_image_path);
+                time_t now = time(NULL);
+                
+                if (g_in_ra_init_hold)
+                {
+                    // Check if we should abort init hold due to DRM master activity
+                    bool master_held = is_drm_master_held_by_other();
+                    static bool prev_master_held = false;
+                    
+                    // Detect transition: master was held, now available (lr-mame finished)
+                    if (prev_master_held && !master_held)
+                    {
+                        ts_printf("dmarquees: DRM master released by other process, ending init hold early\n");
+                        g_in_ra_init_hold = false;
+                    }
+                    // Check if init hold timeout expired
+                    else if (now - g_ra_init_hold_start >= RA_INIT_HOLD_SEC)
+                    {
+                        ts_printf("dmarquees: RA init hold timeout expired\n");
+                        g_in_ra_init_hold = false;
+                    }
+                    
+                    prev_master_held = master_held;
+                }
+                
+                // Only try CRTC reset if not in init hold period
+                if (!g_in_ra_init_hold)
+                {
+                    if (try_reset_crtc())
+                        ts_printf("dmarquees: CRTC reset successful for %s\n", g_current_image_path);
+                }
             }
             
             usleep(RETRY_DELAY_MSEC * 1000);
@@ -487,6 +535,7 @@ int main(int argc, char** argv)
         // Clear retry flag when new command received
         g_needs_crtc_reset = false;
         g_current_image_path[0] = '\0';
+        g_in_ra_init_hold = false;
 
         // Process command using switch statement
         CommandType command = toCommandType(cmd);
