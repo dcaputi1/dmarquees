@@ -49,7 +49,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.13"
+#define VERSION "1.3.14"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -123,6 +123,17 @@ static void show_default_marquee(void)
     int stride_pixels = stride / 4;
     scale_and_blit_to_xrgb(img, iw, ih, fbptr, fb_w, fb_h, stride_pixels, /*dest_x=*/0, dest_y);
     free(img);
+
+    if (g_frontend_mode == eRA && !g_is_master)
+    {
+        // In RetroArch mode, we need to set the CRTC again to make the image visible
+        if (drmSetMaster(drm_fd) != 0)
+            ts_perror("drmSetMaster (RA mode");
+        else if (drmModeSetCrtc(drm_fd, crtc_id, fb_id, 0, 0, &conn_id, 1, &chosen_mode) != 0)
+            ts_perror("drmModeSetCrtc (RA mode)");
+        else if (drmDropMaster(drm_fd) != 0)
+            ts_perror("drmDropMaster (RA mode)");
+    }
 }
 
 static void __attribute__((unused)) print_usage(const char *prog)
@@ -351,7 +362,6 @@ static int initialize(void)
             ts_printf("dmarquees: DRM master dropped - MAME can safely start.\n");
         }
     }
-
     return 0;
 }
 
@@ -458,8 +468,6 @@ int main(int argc, char **argv)
             show_default_marquee();
             continue;
         }
-
-
 
         int iw = 0, ih = 0;
         uint8_t *img = load_png_rgba(imgpath, &iw, &ih);
