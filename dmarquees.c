@@ -79,6 +79,40 @@ static bool g_is_master = false;
 
 FrontendMode g_frontend_mode = eNA;
 
+// Try to reset CRTC by becoming master, setting CRTC, then dropping master
+// Returns true if drmModeSetCrtc succeeded, updates g_is_master appropriately
+static bool try_reset_crtc(void)
+{
+    bool crtc_success = false;
+
+    if (drmSetMaster(drm_fd) != 0)
+    {
+        ts_perror("drmSetMaster (try_reset_crtc)");
+        return false;
+    }
+
+    g_is_master = true;
+
+    if (drmModeSetCrtc(drm_fd, crtc_id, fb_id, 0, 0, &conn_id, 1, &chosen_mode) != 0)
+        ts_perror("drmModeSetCrtc (try_reset_crtc)");
+    else
+        crtc_success = true;
+
+    if (drmDropMaster(drm_fd) != 0)
+        ts_perror("drmDropMaster (try_reset_crtc)");
+    else
+        g_is_master = false;
+
+    return crtc_success;
+}
+
+// Handle framebuffer update and CRTC reset for RetroArch mode
+static void handle_fb_update_for_ra_mode(const char* image_description)
+{
+    if (g_frontend_mode == eRA && !g_is_master)
+        try_reset_crtc();
+}
+
 // Pick default marquee name based on frontend mode
 static const char *default_marquee_name_for(FrontendMode m)
 {
@@ -94,7 +128,8 @@ static const char *default_marquee_name_for(FrontendMode m)
 // Draw the default marquee (bottom half). Clears bottom half to black first.
 static void show_default_marquee(void)
 {
-    if (!fb_map) return;
+    if (!fb_map)
+        return;
 
     const char *name = default_marquee_name_for(g_frontend_mode);
     char imgpath[512];
@@ -327,8 +362,8 @@ static int initialize(void)
         return 1;
     }
 
-    ts_printf("dmarquees: Selected connector %u mode %dx%d crtc %u\n", conn_id, chosen_mode.hdisplay, chosen_mode.vdisplay,
-           crtc_id);
+    ts_printf("dmarquees: Selected connector %u mode %dx%d crtc %u\n", conn_id, chosen_mode.hdisplay,
+              chosen_mode.vdisplay, crtc_id);
 
     // create persistent dumb framebuffer sized to chosen_mode
     if (create_dumb_fb(drm_fd, chosen_mode.hdisplay, chosen_mode.vdisplay) != 0)
@@ -372,9 +407,8 @@ int main(int argc, char **argv)
     // parse command line for frontend mode
     int parse_result = parseFrontendModeArg(argc, argv);
     if (parse_result != 0)
-    {
         return parse_result;
-    }
+
     ts_printf("dmarquees: frontend=%s\n", fromFrontendMode(g_frontend_mode));
 
     signal(SIGINT, sigint_handler);
@@ -504,6 +538,9 @@ int main(int argc, char **argv)
 #endif
         }
         free(img);
+
+        // Handle RetroArch mode CRTC reset after ROM image update
+        handle_fb_update_for_ra_mode(cmd);
     }
 
     // cleanup
@@ -511,9 +548,8 @@ int main(int argc, char **argv)
     if (drm_fd >= 0)
     {
         if (g_is_master)
-        {
             drmDropMaster(drm_fd);
-        }
+
         close(drm_fd);
     }
     unlink(CMD_FIFO);
