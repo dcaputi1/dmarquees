@@ -3,3 +3,4 @@ dmarquees.log
 dmarquees.o
 dmarquees
 helpers.o
+*.bak
