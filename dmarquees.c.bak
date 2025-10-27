@@ -652,7 +652,6 @@ int main(int argc, char** argv)
     {
         if (g_is_master)
             drmDropMaster(drm_fd);
-
         close(drm_fd);
     }
     unlink(CMD_FIFO);
