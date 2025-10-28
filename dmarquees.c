@@ -159,16 +159,8 @@ static void show_default_marquee(void)
     scale_and_blit_to_xrgb(img, iw, ih, fbptr, fb_w, fb_h, stride_pixels, /*dest_x=*/0, dest_y);
     free(img);
 
-    if (g_frontend_mode == eRA && !g_is_master)
-    {
-        // In RetroArch mode, we need to set the CRTC again to make the image visible
-        if (drmSetMaster(drm_fd) != 0)
-            ts_perror("drmSetMaster (RA mode");
-        else if (drmModeSetCrtc(drm_fd, crtc_id, fb_id, 0, 0, &conn_id, 1, &chosen_mode) != 0)
-            ts_perror("drmModeSetCrtc (RA mode)");
-        else if (drmDropMaster(drm_fd) != 0)
-            ts_perror("drmDropMaster (RA mode)");
-    }
+    // Handle RetroArch mode CRTC reset
+    handle_fb_update_for_ra_mode(name);
 }
 
 static void __attribute__((unused)) print_usage(const char *prog)
