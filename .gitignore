@@ -1,6 +1,3 @@
-build.log
-dmarquees.log
-dmarquees.o
-dmarquees
-helpers.o
+*.log
+*.o
 *.bak

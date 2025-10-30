@@ -42,7 +42,7 @@ bool game_has_multiple_screens(const char *romname);
 void scale_and_blit_to_xrgb(const uint8_t *src_rgba, int src_w, int src_h,
                             uint32_t *dst, int dst_w, int dst_h, int dst_stride,
                             int dest_x, int dest_y);
-char *trim(char *s);
+char *trim(char *s, size_t len);
 int parseFrontendModeArg(int argc, char **argv);
 
 // Get current timestamp in HH:MM:SS format
