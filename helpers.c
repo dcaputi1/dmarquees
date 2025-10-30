@@ -1,15 +1,15 @@
 #include "helpers.h"
+#include <ctype.h>
+#include <png.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <ctype.h>
-#include <png.h>
 #include <strings.h> // for strcasecmp
-#include <unistd.h> // for getopt/optarg
 #include <time.h>
-#include <stdarg.h>
+#include <unistd.h> // for getopt/optarg
 
 /* Minimal PNG loader using libpng. Returns malloc'd RGBA (8-bit per channel) buffer. */
 uint8_t *load_png_rgba(const char *path, int *out_w, int *out_h)
@@ -102,7 +102,8 @@ bool game_has_multiple_screens(const char *romname)
         {
             // parse "numscreens <n>" using strtol to avoid sscanf
             char *p = line + 10; // after "numscreens"
-            while (*p && isspace((unsigned char)*p)) ++p;
+            while (*p && isspace((unsigned char)*p))
+                ++p;
             if (*p)
             {
                 char *endptr = NULL;
@@ -119,18 +120,19 @@ bool game_has_multiple_screens(const char *romname)
 }
 
 /* Nearest-neighbor scale/blit RGBA -> XRGB8888 framebuffer (dest is uint32_t array) */
-void scale_and_blit_to_xrgb(const uint8_t *src_rgba, int src_w, int src_h,
-                            uint32_t *dst, int dst_w, int dst_h, int dst_stride,
-                            int dest_x, int dest_y)
+void scale_and_blit_to_xrgb(const uint8_t *src_rgba, int src_w, int src_h, uint32_t *dst, int dst_w, int dst_h,
+                            int dst_stride, int dest_x, int dest_y)
 {
-    if (!src_rgba || !dst) return;
+    if (!src_rgba || !dst)
+        return;
 
     // Determine destination region: fill width and from dest_y to bottom.
     int dst_x0 = dest_x >= 0 ? dest_x : 0;
     int dst_y0 = dest_y >= 0 ? dest_y : 0;
     int region_w = dst_w - dst_x0;
     int region_h = dst_h - dst_y0;
-    if (region_w <= 0 || region_h <= 0) return;
+    if (region_w <= 0 || region_h <= 0)
+        return;
 
     for (int y = 0; y < region_h; ++y)
     {
@@ -150,25 +152,35 @@ void scale_and_blit_to_xrgb(const uint8_t *src_rgba, int src_w, int src_h,
     }
 }
 
-char *trim(char *s)
+char *trim(char *s, size_t len)
 {
-    if (!s) return s;
-    char *p = s;
-    // trim left
-    while (*p && isspace((unsigned char)*p)) ++p;
-    if (p != s) memmove(s, p, strlen(p) + 1);
+    if (!s)
+        return s;
+    s[--len] = '\0'; // ensure null-termination
     // trim right
-    size_t len = strlen(s);
-    while (len > 0 && isspace((unsigned char)s[len - 1])) s[--len] = '\0';
+    while (len > 0 && isspace(s[len - 1]))
+        s[--len] = '\0';
+    // trim left
+    char *p = s;
+    while (*p && isspace(*p))
+        ++p;
+    if (p != s)
+        memmove(s, p, strlen(p) + 1);
+    if (strlen(s) == 0)
+        return NULL;
+
     return s;
 }
 
 FrontendMode toFrontendMode(const char *s)
 {
-    if (!s) return eNA;
-    if (strcasecmp(s, "RA") == 0 || strcasecmp(s, "RetroArch") == 0) return eRA;
-    if (strcasecmp(s, "SA") == 0 || strcasecmp(s, "StandAlone") == 0) return eSA;
-    if (strcasecmp(s, "NA") == 0 || strcasecmp(s, "None") == 0) return eNA;
+    if (!s)
+        return eNA;
+    if (strcasecmp(s, "RA") == 0 || strcasecmp(s, "RetroArch") == 0)
+        return eRA;
+    if (strcasecmp(s, "SA") == 0 || strcasecmp(s, "StandAlone") == 0)
+        return eSA;
+
     return eNA;
 }
 
@@ -176,10 +188,13 @@ const char *fromFrontendMode(FrontendMode m)
 {
     switch (m)
     {
-    case eRA: return "RA";
-    case eSA: return "SA";
+    case eRA:
+        return "RA";
+    case eSA:
+        return "SA";
     case eNA:
-    default:  return "NA";
+    default:
+        return "NA";
     }
 }
 
@@ -213,12 +228,18 @@ int parseFrontendModeArg(int argc, char **argv)
 
 CommandType toCommandType(const char *s)
 {
-    if (!s) return CMD_ROM;
-    if (strcasecmp(s, "EXIT") == 0) return CMD_EXIT;
-    if (strcasecmp(s, "CLEAR") == 0) return CMD_CLEAR;
-    if (strcasecmp(s, "RA") == 0) return CMD_RA;
-    if (strcasecmp(s, "SA") == 0) return CMD_SA;
-    if (strcasecmp(s, "NA") == 0) return CMD_NA;
+    if (!s)
+        return CMD_ROM;
+    if (strcasecmp(s, "EXIT") == 0)
+        return CMD_EXIT;
+    if (strcasecmp(s, "CLEAR") == 0)
+        return CMD_CLEAR;
+    if (strcasecmp(s, "RA") == 0)
+        return CMD_RA;
+    if (strcasecmp(s, "SA") == 0)
+        return CMD_SA;
+    if (strcasecmp(s, "NA") == 0)
+        return CMD_NA;
     // If not a known command, treat as ROM
     return CMD_ROM;
 }
@@ -227,28 +248,35 @@ const char *fromCommandType(CommandType c)
 {
     switch (c)
     {
-    case CMD_EXIT:  return "EXIT";
-    case CMD_CLEAR: return "CLEAR";
-    case CMD_RA:    return "RA";
-    case CMD_SA:    return "SA";
+    case CMD_EXIT:
+        return "EXIT";
+    case CMD_CLEAR:
+        return "CLEAR";
+    case CMD_RA:
+        return "RA";
+    case CMD_SA:
+        return "SA";
     case CMD_ROM:
-    default:        return "ROM";
+    default:
+        return "ROM";
     }
 }
 
 // Get current timestamp in HH:MM:SS format
-void get_timestamp(char *buffer, size_t size) {
+void get_timestamp(char *buffer, size_t size)
+{
     time_t now = time(NULL);
     struct tm *tm_info = localtime(&now);
     strftime(buffer, size, "%H:%M:%S", tm_info);
 }
 
 // Timestamped printf wrapper
-void ts_printf(const char *format, ...) {
+void ts_printf(const char *format, ...)
+{
     char timestamp[16];
     get_timestamp(timestamp, sizeof(timestamp));
     printf("%s ", timestamp);
-    
+
     va_list args;
     va_start(args, format);
     vprintf(format, args);
@@ -257,11 +285,12 @@ void ts_printf(const char *format, ...) {
 }
 
 // Timestamped fprintf wrapper
-void ts_fprintf(FILE *stream, const char *format, ...) {
+void ts_fprintf(FILE *stream, const char *format, ...)
+{
     char timestamp[16];
     get_timestamp(timestamp, sizeof(timestamp));
     fprintf(stream, "%s ", timestamp);
-    
+
     va_list args;
     va_start(args, format);
     vfprintf(stream, format, args);
@@ -270,7 +299,8 @@ void ts_fprintf(FILE *stream, const char *format, ...) {
 }
 
 // Timestamped perror wrapper
-void ts_perror(const char *s) {
+void ts_perror(const char *s)
+{
     char timestamp[16];
     get_timestamp(timestamp, sizeof(timestamp));
     fprintf(stderr, "%s ", timestamp);
