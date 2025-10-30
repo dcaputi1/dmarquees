@@ -49,7 +49,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.14.2"
+#define VERSION "1.3.14.3"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -76,12 +76,11 @@ static uint32_t stride = 0;
 static uint64_t bo_size = 0;
 static void *fb_map = NULL;
 
-static bool g_is_master = false;
 FrontendMode g_frontend_mode = eNA;
 static time_t g_ra_init_hold = 0;
 
 // Try to reset CRTC by becoming master, setting CRTC, then dropping master
-// Returns true if drmModeSetCrtc succeeded, updates g_is_master appropriately
+// Returns true if drmModeSetCrtc succeeded
 static bool try_reset_crtc(void)
 {
     bool crtc_success = false;
@@ -92,31 +91,15 @@ static bool try_reset_crtc(void)
         return false;
     }
 
-    g_is_master = true;
-
     if (drmModeSetCrtc(drm_fd, crtc_id, fb_id, 0, 0, &conn_id, 1, &chosen_mode) != 0)
-    {
         ts_perror("drmModeSetCrtc (try_reset_crtc)");
-    }
     else
-    {
         crtc_success = true;
-        g_needs_crtc_reset = false; // Success, clear retry flag
-    }
 
     if (drmDropMaster(drm_fd) != 0)
         ts_perror("drmDropMaster (try_reset_crtc)");
-    else
-        g_is_master = false;
 
     return crtc_success;
-}
-
-// Handle framebuffer update and CRTC reset for RetroArch mode
-static void handle_fb_update_for_ra_mode(const char* image_description)
-{
-    if (g_frontend_mode == eRA && !g_is_master)
-        try_reset_crtc();
 }
 
 // Pick default marquee name based on frontend mode
@@ -165,8 +148,8 @@ static void show_default_marquee(void)
     scale_and_blit_to_xrgb(img, iw, ih, fbptr, fb_w, fb_h, stride_pixels, /*dest_x=*/0, dest_y);
     free(img);
 
-    // Handle RetroArch mode CRTC reset
-    handle_fb_update_for_ra_mode(0);
+    if (g_frontend_mode == eRA)         // RetroArch mode needs CRTC reset
+        try_reset_crtc();
 }
 
 static void __attribute__((unused)) print_usage(const char *prog)
@@ -345,8 +328,8 @@ static int initialize(void)
     }
 
     // attempt to become DRM master (recommended for daemon)
-    g_is_master = (drmSetMaster(drm_fd) == 0);
-    if (!g_is_master)
+    bool is_master = (drmSetMaster(drm_fd) == 0);
+    if (!is_master)
     {
         ts_perror("drmSetMaster (ignored)");
         // continue: we may still be able to set the CRTC depending on environment
@@ -383,17 +366,12 @@ static int initialize(void)
         ts_printf("dmarquees: drmModeSetCrtc(1) - Initial FB presented\n");
 
     // Release DRM master so other apps (like MAME) can take control
-    if (g_is_master)
+    if (is_master)
     {
         if (drmDropMaster(drm_fd) != 0)
-        {
             ts_fprintf(stderr, "warning: drmDropMaster failed (%s)\n", strerror(errno));
-        }
         else
-        {
-            g_is_master = false;
             ts_printf("dmarquees: DRM master dropped - MAME can safely start.\n");
-        }
     }
     return 0;
 }
@@ -541,21 +519,16 @@ int main(int argc, char **argv)
         }
         free(img);
 
-        // Handle RetroArch mode CRTC reset after ROM image update
+        // RetroArch mode needs CRTC reset after ROM image update
         if (g_frontend_mode == eRA)
-        {
-            g_needs_crtc_reset = true;
             g_ra_init_hold_stop = time(NULL) + CRTC_RESET_HOLD_SEC;
-        }
     }
 
     // cleanup
     destroy_dumb_fb(drm_fd);
     if (drm_fd >= 0)
     {
-        if (g_is_master)
-            drmDropMaster(drm_fd);
-
+        drmDropMaster(drm_fd);
         close(drm_fd);
     }
     unlink(CMD_FIFO);
