@@ -61,6 +61,7 @@
 #define PREFERRED_W 1920
 #define PREFERRED_H 1080
 #define FIFO_RETRY_DELAY_MSEC 250
+#define CRTC_RESET_HOLD_SEC   10
 
 static volatile bool running = true;
 static int drm_fd = -1;
@@ -76,8 +77,8 @@ static uint64_t bo_size = 0;
 static void *fb_map = NULL;
 
 static bool g_is_master = false;
-
 FrontendMode g_frontend_mode = eNA;
+static time_t g_ra_init_hold = 0;
 
 // Try to reset CRTC by becoming master, setting CRTC, then dropping master
 // Returns true if drmModeSetCrtc succeeded, updates g_is_master appropriately
@@ -94,9 +95,14 @@ static bool try_reset_crtc(void)
     g_is_master = true;
 
     if (drmModeSetCrtc(drm_fd, crtc_id, fb_id, 0, 0, &conn_id, 1, &chosen_mode) != 0)
+    {
         ts_perror("drmModeSetCrtc (try_reset_crtc)");
+    }
     else
+    {
         crtc_success = true;
+        g_needs_crtc_reset = false; // Success, clear retry flag
+    }
 
     if (drmDropMaster(drm_fd) != 0)
         ts_perror("drmDropMaster (try_reset_crtc)");
@@ -160,7 +166,7 @@ static void show_default_marquee(void)
     free(img);
 
     // Handle RetroArch mode CRTC reset
-    handle_fb_update_for_ra_mode(name);
+    handle_fb_update_for_ra_mode(0);
 }
 
 static void __attribute__((unused)) print_usage(const char *prog)
@@ -425,18 +431,24 @@ int main(int argc, char **argv)
         ssize_t n = read(fifo, buf, sizeof(buf) - 1);
         close(fifo);
 
-        if (n <= 0)
+        if (n > 0)
+        {
+            char* cmd = trim(buf,n);      // strip newline and whitespace
+            if (!cmd)
+                continue;
+        }
+        else if (g_ra_init_hold && (time(NULL) > g_ra_init_hold))
+        {
+            if (try_reset_crtc())
+                g_ra_init_hold = 0;
+            else
+                g_ra_init_hold = time(NULL) + 1;
+        }
+        else
         {
             usleep(FIFO_RETRY_DELAY_MSEC * 1000);
             continue;
         }
-
-        buf[n] = '\0';
-
-        // strip newline and whitespace
-        char *cmd = trim(buf);
-        if (!(cmd && strlen(cmd)))
-            continue;
 
         ts_printf("dmarquees: command received: '%s'\n", cmd);
 
@@ -475,6 +487,9 @@ int main(int argc, char **argv)
             // Handle as ROM shortname (including unknown commands)
             break;
         }
+
+        if (!running)
+            break;
 
         // If we reach here, it's either eROM or an unknown command - treat as ROM shortname
         if (game_has_multiple_screens(cmd))
@@ -523,16 +538,15 @@ int main(int argc, char **argv)
             memset(bottom, 0x00, bottom_bytes);
 
             scale_and_blit_to_xrgb(img, iw, ih, fbptr, fb_w, fb_h, stride_pixels, dest_x, dest_y);
-
-#ifdef USE_MODE_SET_AFTER_EACH_UPDATE
-            if (drmModeSetCrtc(drm_fd, crtc_id, fb_id, 0, 0, &conn_id, 1, &chosen_mode) != 0)
-                ts_perror("drmModeSetCrtc");
-#endif
         }
         free(img);
 
         // Handle RetroArch mode CRTC reset after ROM image update
-        handle_fb_update_for_ra_mode(cmd);
+        if (g_frontend_mode == eRA)
+        {
+            g_needs_crtc_reset = true;
+            g_ra_init_hold_stop = time(NULL) + CRTC_RESET_HOLD_SEC;
+        }
     }
 
     // cleanup
