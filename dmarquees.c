@@ -406,12 +406,14 @@ int main(int argc, char **argv)
         }
 
         char buf[128];
+        char* cmd = NULL;
+
         ssize_t n = read(fifo, buf, sizeof(buf) - 1);
         close(fifo);
 
         if (n > 0)
         {
-            char* cmd = trim(buf,n);      // strip newline and whitespace
+            cmd = trim(buf,n);      // strip newline and whitespace
             if (!cmd)
                 continue;
         }
@@ -521,7 +523,7 @@ int main(int argc, char **argv)
 
         // RetroArch mode needs CRTC reset after ROM image update
         if (g_frontend_mode == eRA)
-            g_ra_init_hold_stop = time(NULL) + CRTC_RESET_HOLD_SEC;
+            g_ra_init_hold = time(NULL) + CRTC_RESET_HOLD_SEC;
     }
 
     // cleanup
