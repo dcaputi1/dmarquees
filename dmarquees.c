@@ -49,7 +49,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.14.4"
+#define VERSION "1.3.14.5"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -74,29 +74,39 @@ static uint32_t dumb_handle = 0;
 static uint32_t fb_id = 0;
 static uint32_t stride = 0;
 static uint64_t bo_size = 0;
-static void *fb_map = NULL;
+static void* fb_map = NULL;
 
 FrontendMode g_frontend_mode = eNA;
 static time_t g_ra_init_hold = 0;
+static uint8_t* image = nullptr;
 
 // Try to reset CRTC by becoming master, setting CRTC, then dropping master
 // Returns true if drmModeSetCrtc succeeded
 static bool try_reset_crtc(void)
 {
     bool crtc_success = false;
-
-    if (drmSetMaster(drm_fd) != 0)
+    bool got_master = drmSetMaster(drm_fd) == 0;
+    if (!got_master)
     {
         ts_perror("drmSetMaster (try_reset_crtc)");
         return false;
+    }
+    else if (g_ra_init_hold)
+    {
+        ts_printf("dmarquees: master set\n");
     }
 
     if (drmModeSetCrtc(drm_fd, crtc_id, fb_id, 0, 0, &conn_id, 1, &chosen_mode) != 0)
         ts_perror("drmModeSetCrtc (try_reset_crtc)");
     else
-        crtc_success = true;
+    {
+        if (g_ra_init_hold)
+            ts_printf("dmarquees: crtc reset success!\n");
 
-    if (drmDropMaster(drm_fd) != 0)
+        crtc_success = true;
+    }
+
+    if (got_master && (drmDropMaster(drm_fd) != 0))
         ts_perror("drmDropMaster (try_reset_crtc)");
 
     return crtc_success;
@@ -134,8 +144,10 @@ static void show_default_marquee(void)
     memset(bottom, 0x00, bottom_bytes);
 
     int iw = 0, ih = 0;
-    uint8_t *img = load_png_rgba(imgpath, &iw, &ih);
-    if (!img)
+    if (image)
+        free(image);
+    image = load_png_rgba(imgpath, &iw, &ih);
+    if (!image)
     {
         ts_fprintf(stderr, "warning: default marquee load failed: %s\n", imgpath);
         return; // bottom half remains black
@@ -145,8 +157,7 @@ static void show_default_marquee(void)
 
     uint32_t *fbptr = (uint32_t *)fb_map;
     int stride_pixels = stride / 4;
-    scale_and_blit_to_xrgb(img, iw, ih, fbptr, fb_w, fb_h, stride_pixels, /*dest_x=*/0, dest_y);
-    free(img);
+    scale_and_blit_to_xrgb(image, iw, ih, fbptr, fb_w, fb_h, stride_pixels, /*dest_x=*/0, dest_y);
 
     if (g_frontend_mode == eRA)         // RetroArch mode needs CRTC reset
         try_reset_crtc();
@@ -419,6 +430,7 @@ int main(int argc, char **argv)
         }
         else if (g_ra_init_hold && (time(NULL) > g_ra_init_hold))
         {
+            ts_printf("dmarquees: retrying crtc now...\n");
             if (try_reset_crtc())
                 g_ra_init_hold = 0;
             else
@@ -491,8 +503,10 @@ int main(int argc, char **argv)
         }
 
         int iw = 0, ih = 0;
-        uint8_t *img = load_png_rgba(imgpath, &iw, &ih);
-        if (img == NULL)
+        if (image)
+            free(image);
+        image = load_png_rgba(imgpath, &iw, &ih);
+        if (image == NULL)
         {
             ts_fprintf(stderr, "error: png load failed %s\n", imgpath);
             // Fallback: show default marquee
@@ -517,10 +531,9 @@ int main(int argc, char **argv)
             size_t bottom_bytes = (size_t)(fb_h - dest_y) * stride;
             memset(bottom, 0x00, bottom_bytes);
 
-            scale_and_blit_to_xrgb(img, iw, ih, fbptr, fb_w, fb_h, stride_pixels, dest_x, dest_y);
+            scale_and_blit_to_xrgb(image, iw, ih, fbptr, fb_w, fb_h, stride_pixels, dest_x, dest_y);
             ts_printf("dmarquees: image scaled and blit done\n", cmd);
         }
-        free(img);
 
         // RetroArch mode needs CRTC reset after ROM image update
         if (g_frontend_mode == eRA)
