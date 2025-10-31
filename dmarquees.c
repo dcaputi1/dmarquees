@@ -409,7 +409,7 @@ int main(int argc, char **argv)
     // main loop: read FIFO lines and act on them
     while (running)
     {
-        int fifo = open(CMD_FIFO, O_RDONLY);
+        int fifo = open(CMD_FIFO, O_RDONLY | O_NONBLOCK);
         if (fifo < 0)
         {
             ts_perror("open fifo");
