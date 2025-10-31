@@ -49,7 +49,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.14.3"
+#define VERSION "1.3.14.4"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -498,7 +498,7 @@ int main(int argc, char **argv)
             continue;
         }
 
-        ts_printf("dmarquees: displaying game marquee: %s.png\n", cmd);
+        ts_printf("dmarquees: game marquee loaded: %s.png\n", cmd);
 
         // clear bottom half to black first and blit ROM marquee
         if (fb_map)
@@ -516,12 +516,16 @@ int main(int argc, char **argv)
             memset(bottom, 0x00, bottom_bytes);
 
             scale_and_blit_to_xrgb(img, iw, ih, fbptr, fb_w, fb_h, stride_pixels, dest_x, dest_y);
+            ts_printf("dmarquees: image scaled and blit done\n", cmd);
         }
         free(img);
 
         // RetroArch mode needs CRTC reset after ROM image update
         if (g_frontend_mode == eRA)
-            g_ra_init_hold_stop = time(NULL) + CRTC_RESET_HOLD_SEC;
+        {
+            g_ra_init_hold = time(NULL) + CRTC_RESET_HOLD_SEC;
+            ts_printf("dmarquees: RA mode wait 10 seconds\n");
+        }
     }
 
     // cleanup
