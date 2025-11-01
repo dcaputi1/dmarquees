@@ -49,7 +49,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.14.7"
+#define VERSION "1.3.14.8"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -409,7 +409,8 @@ int main(int argc, char **argv)
     // main loop: read FIFO lines and act on them
     while (running)
     {
-        int fifo = open(CMD_FIFO, O_RDONLY | O_NONBLOCK);
+        int flag = _O_RDONLY | (g_frontend_mode == eRA ? 0 : O_NONBLOCK);
+        int fifo = open(CMD_FIFO, O_RDONLY | flag);
         if (fifo < 0)
         {
             ts_perror("open fifo");
