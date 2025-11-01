@@ -409,7 +409,7 @@ int main(int argc, char **argv)
     // main loop: read FIFO lines and act on them
     while (running)
     {
-        int flag = _O_RDONLY | (g_frontend_mode == eRA ? 0 : O_NONBLOCK);
+        int flag = g_frontend_mode == eRA ? 0 : O_NONBLOCK;
         int fifo = open(CMD_FIFO, O_RDONLY | flag);
         if (fifo < 0)
         {
