@@ -49,7 +49,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.14.8"
+#define VERSION "1.3.14.9"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -403,9 +403,8 @@ int main(int argc, char **argv)
     if (initialize() != 0)
         return 1;
 
-    ts_printf("stdout: entering main loop\n");
-    ts_fprintf(stderr, "stderr: listening on %s\n", CMD_FIFO);
-
+    ts_printf("dmarquees: entering main loop\n");
+ 
     // main loop: read FIFO lines and act on them
     while (running)
     {
@@ -419,6 +418,12 @@ int main(int argc, char **argv)
 
         char buf[128];
         char* cmd = NULL;
+        static int spam_count = 0;
+
+        if (spam_count++ < 5)
+            ts_printf("dmarquees: %s on %s\n", flag ? "non-blocking read" : "blocking read", CMD_FIFO);
+        else if (spam_count == 5)
+            ts_printf("dmarquees: further logging for fifo suppressed\n");
 
         ssize_t n = read(fifo, buf, sizeof(buf) - 1);
         close(fifo);
