@@ -49,7 +49,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.14.6"
+#define VERSION "1.3.14.7"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -78,7 +78,7 @@ static void* fb_map = NULL;
 
 FrontendMode g_frontend_mode = eNA;
 static time_t g_ra_init_hold = 0;
-static uint8_t* image = nullptr;
+static uint8_t* image = NULL;
 
 // Try to reset CRTC by becoming master, setting CRTC, then dropping master
 // Returns true if drmModeSetCrtc succeeded
