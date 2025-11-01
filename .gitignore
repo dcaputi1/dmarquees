@@ -2,3 +2,4 @@
 *.o
 *.bak
 dmarquees
+compile_commands.json
