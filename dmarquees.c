@@ -49,7 +49,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.14.10"
+#define VERSION "1.3.14.11"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -387,6 +387,54 @@ static int initialize(void)
     return 0;
 }
 
+static bool show_game_marquee(const char* cmd_str)
+{
+    char imgpath[512];
+    snprintf(imgpath, sizeof(imgpath), "%s/%s.png", IMAGE_DIR, cmd_str);
+
+    struct stat st;
+    if (stat(imgpath, &st) != 0)
+    {
+        ts_fprintf(stderr, "warning: image missing: %s\n", imgpath);
+        return false;
+    }
+
+    int iw = 0, ih = 0;
+
+    if (image)
+        free(image);
+
+    image = load_png_rgba(imgpath, &iw, &ih);
+
+    if (image == NULL)
+    {
+        ts_fprintf(stderr, "error: png load failed %s\n", imgpath);
+        return false;
+    }
+
+    ts_printf("dmarquees: game marquee loaded: %s.png\n", cmd_str);
+
+    // clear bottom half to black first and blit ROM marquee
+    if (fb_map)
+    {
+        uint32_t *fbptr = (uint32_t *)fb_map;
+        int fb_w = chosen_mode.hdisplay;
+        int fb_h = chosen_mode.vdisplay;
+        int stride_pixels = stride / 4;
+        int dest_x = 0;
+        int dest_y = fb_h / 2;
+
+        // Clear bottom half before blit (to avoid remnants)
+        uint8_t *bottom = (uint8_t *)fb_map + (size_t)dest_y * stride;
+        size_t bottom_bytes = (size_t)(fb_h - dest_y) * stride;
+        memset(bottom, 0x00, bottom_bytes);
+
+        scale_and_blit_to_xrgb(image, iw, ih, fbptr, fb_w, fb_h, stride_pixels, dest_x, dest_y);
+        ts_printf("dmarquees: image scaled and blit done\n", cmd_str);
+    }
+    return true;
+}
+
 int main(int argc, char **argv)
 {
     ts_printf("dmarquees: v%s starting...\n", VERSION);
@@ -407,7 +455,7 @@ int main(int argc, char **argv)
 
     CommandType command = CMD_UNKNOWN;
     char buf[128];
-    char* cmd = NULL;
+    char* cmd_str = NULL;
     int spam_count = 0;
 
     // main loop: read FIFO lines and act on them
@@ -417,8 +465,9 @@ int main(int argc, char **argv)
         int fifo = open(CMD_FIFO, O_RDONLY | nonblock ? O_NONBLOCK : 0);
         if (fifo < 0)
         {
-            ts_perror("open fifo");
-            break;
+            ts_perror("open");
+            ts_fprintf(stderr, "dmarquees: FATAL - can't access command fifo\n");
+            break;  // get out of main loop
         }
 
         if (spam_count++ < 5)
@@ -426,15 +475,16 @@ int main(int argc, char **argv)
         else if (spam_count == 6)
             ts_printf("dmarquees: further logging for fifo suppressed\n");
 
-        ssize_t n = read(fifo, buf, sizeof(buf) - 1);
+        ssize_t read_len = read(fifo, buf, sizeof(buf) - 1);
+
         close(fifo);
 
-        if (n > 0)
+        if (read_len > 0)
         {
             // Looks like we have a command!
-            cmd = trim(buf,n);
+            cmd_str = trim(buf,n);
 
-            if (!cmd)
+            if (!cmd_str)
                 continue;   // oops, I guess not!
         }
         else if (g_ra_init_hold && (time(NULL) > g_ra_init_hold))
@@ -453,28 +503,29 @@ int main(int argc, char **argv)
             continue;
         }
 
-        ts_printf("dmarquees: command received: '%s'\n", cmd);
+        ts_printf("dmarquees: command received: '%s'\n", cmd_str);
 
-        command = toCommandType(cmd);
+        command = toCommandType(cmd_str);
+
         switch (command)
         {
         case CMD_RA:
             g_frontend_mode = eRA;
             ts_printf("dmarquees: frontend mode changed to RA\n");
             show_default_marquee();
-            continue;
+            break;
 
         case CMD_SA:
             g_frontend_mode = eSA;
             ts_printf("dmarquees: frontend mode changed to SA\n");
             show_default_marquee();
-            continue;
+            break;
 
         case CMD_NA:
             g_frontend_mode = eNA;
             ts_printf("dmarquees: frontend mode changed to NA\n");
             show_default_marquee();
-            continue;
+            break;
 
         case CMD_EXIT:
             running = false;
@@ -482,72 +533,36 @@ int main(int argc, char **argv)
 
         case CMD_CLEAR:
             show_default_marquee();
-            continue;
+            break;
 
         case CMD_ROM:
-        default:
-            // Handle as ROM shortname (including unknown commands)
+            // If we reach here, it's either eROM or an unknown command - treat as ROM shortname
+            if (game_has_multiple_screens(cmd_str))
+            {
+                ts_printf("dmarquees: Skipping multi-screen game: %s\n", cmd_str);
+                break;
+            }
+
+            // otherwise treat as rom shortname
+            if (show_game_marquee(cmd_str);
+            {
+                // RetroArch mode needs CRTC reset after ROM image update
+                if (g_frontend_mode == eRA)
+                {
+                    g_ra_init_hold = time(NULL) + CRTC_RESET_HOLD_SEC;
+                    ts_printf("dmarquees: RA mode wait 10 seconds\n");
+                }
+            }
+            else
+            {
+                // Fallback: show default marquee
+                show_default_marquee();
+            }
+            break;
+
+        default:    // never happens
             break;
         }
-
-        if (!running)
-            break;
-
-        // If we reach here, it's either eROM or an unknown command - treat as ROM shortname
-        if (game_has_multiple_screens(cmd))
-        {
-            ts_printf("dmarquees: Skipping multi-screen game: %s\n", cmd);
-            continue;
-        }
-
-        // otherwise treat as rom shortname
-        char imgpath[512];
-        snprintf(imgpath, sizeof(imgpath), "%s/%s.png", IMAGE_DIR, cmd);
-        struct stat st;
-        if (stat(imgpath, &st) != 0)
-        {
-            ts_fprintf(stderr, "warning: image missing: %s\n", imgpath);
-            // Fallback: show default marquee
-            show_default_marquee();
-            continue;
-        }
-
-        int iw = 0, ih = 0;
-        if (image)
-            free(image);
-        image = load_png_rgba(imgpath, &iw, &ih);
-        if (image == NULL)
-        {
-            ts_fprintf(stderr, "error: png load failed %s\n", imgpath);
-            // Fallback: show default marquee
-            show_default_marquee();
-            continue;
-        }
-
-        ts_printf("dmarquees: game marquee loaded: %s.png\n", cmd);
-
-        // clear bottom half to black first and blit ROM marquee
-        if (fb_map)
-        {
-            uint32_t *fbptr = (uint32_t *)fb_map;
-            int fb_w = chosen_mode.hdisplay;
-            int fb_h = chosen_mode.vdisplay;
-            int stride_pixels = stride / 4;
-            int dest_x = 0;
-            int dest_y = fb_h / 2;
-
-            // Clear bottom half before blit (to avoid remnants)
-            uint8_t *bottom = (uint8_t *)fb_map + (size_t)dest_y * stride;
-            size_t bottom_bytes = (size_t)(fb_h - dest_y) * stride;
-            memset(bottom, 0x00, bottom_bytes);
-
-            scale_and_blit_to_xrgb(image, iw, ih, fbptr, fb_w, fb_h, stride_pixels, dest_x, dest_y);
-            ts_printf("dmarquees: image scaled and blit done\n", cmd);
-        }
-
-        // RetroArch mode needs CRTC reset after ROM image update
-        if (g_frontend_mode == eRA)
-            g_ra_init_hold = time(NULL) + CRTC_RESET_HOLD_SEC;
     }
 
     // cleanup
