@@ -26,6 +26,7 @@ const char *fromFrontendMode(FrontendMode m);
 // Command type enum and conversion helpers
 typedef enum
 {
+    CMD_UNKNOWN = -1,
     CMD_EXIT = 0,
     CMD_CLEAR = 1,
     CMD_RA = 2,

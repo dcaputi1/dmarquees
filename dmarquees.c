@@ -49,7 +49,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.14.9"
+#define VERSION "1.3.14.10"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -404,12 +404,14 @@ int main(int argc, char **argv)
         return 1;
 
     ts_printf("dmarquees: entering main loop\n");
+
+    CommandType command = CMD_UNKNOWN;
  
     // main loop: read FIFO lines and act on them
     while (running)
     {
-        int flag = g_frontend_mode == eRA ? 0 : O_NONBLOCK;
-        int fifo = open(CMD_FIFO, O_RDONLY | flag);
+        bool nonblock = (g_frontend_mode == eRA && command == CMD_ROM);
+        int fifo = open(CMD_FIFO, O_RDONLY | nonblock ? O_NONBLOCK : 0);
         if (fifo < 0)
         {
             ts_perror("open fifo");
@@ -421,8 +423,8 @@ int main(int argc, char **argv)
         static int spam_count = 0;
 
         if (spam_count++ < 5)
-            ts_printf("dmarquees: %s on %s\n", flag ? "non-blocking read" : "blocking read", CMD_FIFO);
-        else if (spam_count == 5)
+            ts_printf("dmarquees (%d): %s on %s\n", spam_count, nonblock ? "non-blocking read" : "blocking read", CMD_FIFO);
+        else if (spam_count == 6)
             ts_printf("dmarquees: further logging for fifo suppressed\n");
 
         ssize_t n = read(fifo, buf, sizeof(buf) - 1);
@@ -438,9 +440,9 @@ int main(int argc, char **argv)
         {
             ts_printf("dmarquees: retrying crtc now...\n");
             if (try_reset_crtc())
-                g_ra_init_hold = 0;
+                g_ra_init_hold = 0;                 // clear hold
             else
-                g_ra_init_hold = time(NULL) + 1;
+                g_ra_init_hold = time(NULL) + 1;    // try again in 1 second
         }
         else
         {
@@ -450,8 +452,7 @@ int main(int argc, char **argv)
 
         ts_printf("dmarquees: command received: '%s'\n", cmd);
 
-        // Process command using switch statement
-        CommandType command = toCommandType(cmd);
+        command = toCommandType(cmd);
         switch (command)
         {
         case CMD_RA:

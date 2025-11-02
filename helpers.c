@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 199309L  // For clock_gettime
 #include "helpers.h"
 #include <ctype.h>
 #include <png.h>
@@ -262,12 +263,17 @@ const char *fromCommandType(CommandType c)
     }
 }
 
-// Get current timestamp in HH:MM:SS format
+// Get current timestamp in HH:MM:SS.mmm format
 void get_timestamp(char *buffer, size_t size)
 {
-    time_t now = time(NULL);
-    struct tm *tm_info = localtime(&now);
-    strftime(buffer, size, "%H:%M:%S", tm_info);
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    
+    struct tm *tm_info = localtime(&ts.tv_sec);
+    int milliseconds = ts.tv_nsec / 1000000;
+    
+    strftime(buffer, size - 4, "%H:%M:%S", tm_info);  // Leave room for .mmm
+    snprintf(buffer + strlen(buffer), size - strlen(buffer), ".%03d", milliseconds);
 }
 
 // Timestamped printf wrapper
