@@ -482,7 +482,7 @@ int main(int argc, char **argv)
         if (read_len > 0)
         {
             // Looks like we have a command!
-            cmd_str = trim(buf,n);
+            cmd_str = trim(buf,read_len);
 
             if (!cmd_str)
                 continue;   // oops, I guess not!
@@ -544,7 +544,7 @@ int main(int argc, char **argv)
             }
 
             // otherwise treat as rom shortname
-            if (show_game_marquee(cmd_str);
+            if (show_game_marquee(cmd_str))
             {
                 // RetroArch mode needs CRTC reset after ROM image update
                 if (g_frontend_mode == eRA)
