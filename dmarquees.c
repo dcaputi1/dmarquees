@@ -406,7 +406,10 @@ int main(int argc, char **argv)
     ts_printf("dmarquees: entering main loop\n");
 
     CommandType command = CMD_UNKNOWN;
- 
+    char buf[128];
+    char* cmd = NULL;
+    int spam_count = 0;
+
     // main loop: read FIFO lines and act on them
     while (running)
     {
@@ -418,10 +421,6 @@ int main(int argc, char **argv)
             break;
         }
 
-        char buf[128];
-        char* cmd = NULL;
-        static int spam_count = 0;
-
         if (spam_count++ < 5)
             ts_printf("dmarquees (%d): %s on %s\n", spam_count, nonblock ? "non-blocking read" : "blocking read", CMD_FIFO);
         else if (spam_count == 6)
@@ -432,9 +431,11 @@ int main(int argc, char **argv)
 
         if (n > 0)
         {
-            cmd = trim(buf,n);      // strip newline and whitespace
+            // Looks like we have a command!
+            cmd = trim(buf,n);
+
             if (!cmd)
-                continue;
+                continue;   // oops, I guess not!
         }
         else if (g_ra_init_hold && (time(NULL) > g_ra_init_hold))
         {
@@ -443,6 +444,8 @@ int main(int argc, char **argv)
                 g_ra_init_hold = 0;                 // clear hold
             else
                 g_ra_init_hold = time(NULL) + 1;    // try again in 1 second
+
+            continue;
         }
         else
         {
