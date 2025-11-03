@@ -49,7 +49,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.14.11"
+#define VERSION "1.3.14.12"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -89,7 +89,7 @@ static bool try_reset_crtc(void)
     if (!got_master)
     {
         ts_perror("drmSetMaster (try_reset_crtc)");
-        return false;
+        ts_fprintf(stderr, "dmarquees: WARNING - DRM set master failed: ignoring\n");
     }
     else if (g_ra_init_hold)
     {
