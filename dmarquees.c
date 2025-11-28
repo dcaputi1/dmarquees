@@ -49,7 +49,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.14.12"
+#define VERSION "1.3.14.23"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -84,25 +84,20 @@ static uint8_t* image = NULL;
 // Returns true if drmModeSetCrtc succeeded
 static bool try_reset_crtc(void)
 {
+    ts_printf("dmarquees: trying CRTC reset\n");
+
     bool crtc_success = false;
     bool got_master = drmSetMaster(drm_fd) == 0;
     if (!got_master)
-    {
         ts_perror("drmSetMaster (try_reset_crtc)");
-        ts_fprintf(stderr, "dmarquees: WARNING - DRM set master failed: ignoring\n");
-    }
-    else if (g_ra_init_hold)
-    {
+    else
         ts_printf("dmarquees: master set\n");
-    }
 
     if (drmModeSetCrtc(drm_fd, crtc_id, fb_id, 0, 0, &conn_id, 1, &chosen_mode) != 0)
         ts_perror("drmModeSetCrtc (try_reset_crtc)");
     else
     {
-        if (g_ra_init_hold)
-            ts_printf("dmarquees: crtc reset success!\n");
-
+        ts_printf("dmarquees: crtc reset success!\n");
         crtc_success = true;
     }
 
@@ -155,12 +150,8 @@ static void show_default_marquee(void)
 
     ts_printf("dmarquees: showing default marquee: %s\n", imgpath);
 
-    uint32_t *fbptr = (uint32_t *)fb_map;
-    int stride_pixels = stride / 4;
-    scale_and_blit_to_xrgb(image, iw, ih, fbptr, fb_w, fb_h, stride_pixels, /*dest_x=*/0, dest_y);
-
-    if (g_frontend_mode == eRA)         // RetroArch mode needs CRTC reset
-        try_reset_crtc();
+    scale_and_blit_to_xrgb(image, iw, ih, (uint32_t*)fb_map, fb_w, fb_h, stride / 4, 0, dest_y);
+    try_reset_crtc();
 }
 
 static void __attribute__((unused)) print_usage(const char *prog)
@@ -417,7 +408,7 @@ static bool show_game_marquee(const char* cmd_str)
     // clear bottom half to black first and blit ROM marquee
     if (fb_map)
     {
-        uint32_t *fbptr = (uint32_t *)fb_map;
+        uint32_t* fbptr = (uint32_t*)fb_map;
         int fb_w = chosen_mode.hdisplay;
         int fb_h = chosen_mode.vdisplay;
         int stride_pixels = stride / 4;
@@ -425,12 +416,12 @@ static bool show_game_marquee(const char* cmd_str)
         int dest_y = fb_h / 2;
 
         // Clear bottom half before blit (to avoid remnants)
-        uint8_t *bottom = (uint8_t *)fb_map + (size_t)dest_y * stride;
+        uint8_t* bottom = (uint8_t*)fb_map + (size_t)dest_y * stride;
         size_t bottom_bytes = (size_t)(fb_h - dest_y) * stride;
-        memset(bottom, 0x00, bottom_bytes);
+        memset(bottom, 0, bottom_bytes);
 
         scale_and_blit_to_xrgb(image, iw, ih, fbptr, fb_w, fb_h, stride_pixels, dest_x, dest_y);
-        ts_printf("dmarquees: image scaled and blit done\n", cmd_str);
+        try_reset_crtc();
     }
     return true;
 }
@@ -461,8 +452,7 @@ int main(int argc, char **argv)
     // main loop: read FIFO lines and act on them
     while (running)
     {
-        bool nonblock = (g_frontend_mode == eRA && command == CMD_ROM);
-        int fifo = open(CMD_FIFO, O_RDONLY | nonblock ? O_NONBLOCK : 0);
+        int fifo = open(CMD_FIFO, O_RDONLY);
         if (fifo < 0)
         {
             ts_perror("open");
@@ -471,7 +461,7 @@ int main(int argc, char **argv)
         }
 
         if (spam_count++ < 5)
-            ts_printf("dmarquees (%d): %s on %s\n", spam_count, nonblock ? "non-blocking read" : "blocking read", CMD_FIFO);
+            ts_printf("dmarquees (%d): read on %s\n", spam_count, CMD_FIFO);
         else if (spam_count == 6)
             ts_printf("dmarquees: further logging for fifo suppressed\n");
 
@@ -544,16 +534,7 @@ int main(int argc, char **argv)
             }
 
             // otherwise treat as rom shortname
-            if (show_game_marquee(cmd_str))
-            {
-                // RetroArch mode needs CRTC reset after ROM image update
-                if (g_frontend_mode == eRA)
-                {
-                    g_ra_init_hold = time(NULL) + CRTC_RESET_HOLD_SEC;
-                    ts_printf("dmarquees: RA mode wait 10 seconds\n");
-                }
-            }
-            else
+            if (!show_game_marquee(cmd_str))
             {
                 // Fallback: show default marquee
                 show_default_marquee();
