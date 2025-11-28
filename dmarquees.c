@@ -49,7 +49,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.3.17"
+#define VERSION "1.3.14"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -61,8 +61,6 @@
 #define PREFERRED_W 1920
 #define PREFERRED_H 1080
 #define FIFO_RETRY_DELAY_MSEC 250
-#define ERROR_LOG_THROTTLE_SEC 1
-#define RA_INIT_HOLD_SEC 5
 
 static volatile bool running = true;
 static int drm_fd = -1;
@@ -75,134 +73,30 @@ static uint32_t dumb_handle = 0;
 static uint32_t fb_id = 0;
 static uint32_t stride = 0;
 static uint64_t bo_size = 0;
-static void* fb_map = NULL;
+static void *fb_map = NULL;
 
 static bool g_is_master = false;
 
 FrontendMode g_frontend_mode = eNA;
 
-// State for retry logic and error throttling
-static bool g_needs_crtc_reset = false;
-static time_t g_last_crtc_error_log = 0;
-static char g_current_image_path[512] = {0};
-static time_t g_ra_init_hold_start = 0;
-static bool g_in_ra_init_hold = false;
-
-// Check if another process currently holds DRM master
-static bool is_drm_master_held_by_other(void)
-{
-    // Try to become master temporarily to test availability
-    if (drmSetMaster(drm_fd) == 0)
-    {
-        // We got master, so it wasn't held by another process
-        drmDropMaster(drm_fd);
-        g_is_master = false;
-        return false;
-    }
-    // Failed to get master, likely held by another process
-    return true;
-}
-
-// Try to reset CRTC by becoming master, setting CRTC, then dropping master
-// Returns true if drmModeSetCrtc succeeded, updates g_is_master appropriately
-static bool try_reset_crtc(void)
-{
-    bool crtc_success = false;
-    time_t now = time(NULL);
-
-    if (drmSetMaster(drm_fd) != 0)
-    {
-        // Only log error if we haven't logged recently to avoid spam
-        if (now - g_last_crtc_error_log >= ERROR_LOG_THROTTLE_SEC)
-        {
-            ts_perror("drmSetMaster (try_reset_crtc)");
-            g_last_crtc_error_log = now;
-        }
-        return false;
-    }
-
-    g_is_master = true;
-
-    if (drmModeSetCrtc(drm_fd, crtc_id, fb_id, 0, 0, &conn_id, 1, &chosen_mode) != 0)
-    {
-        if (now - g_last_crtc_error_log >= ERROR_LOG_THROTTLE_SEC)
-        {
-            ts_perror("drmModeSetCrtc (try_reset_crtc)");
-            g_last_crtc_error_log = now;
-        }
-    }
-    else
-    {
-        crtc_success = true;
-        g_needs_crtc_reset = false; // Success, clear retry flag
-    }
-
-    if (drmDropMaster(drm_fd) != 0)
-    {
-        if (now - g_last_crtc_error_log >= ERROR_LOG_THROTTLE_SEC)
-        {
-            ts_perror("drmDropMaster (try_reset_crtc)");
-            g_last_crtc_error_log = now;
-        }
-    }
-    else
-    {
-        g_is_master = false;
-    }
-
-    return crtc_success;
-}
-
-// Handle framebuffer update and CRTC reset for RetroArch mode
-static void handle_fb_update_for_ra_mode(const char* image_description)
-{
-    if (g_frontend_mode == eRA && !g_is_master)
-    {
-        // Store current image info for retry logic
-        snprintf(g_current_image_path, sizeof(g_current_image_path), "%s", image_description);
-        
-        // Start RA init hold period to give lr-mame time to acquire DRM master
-        if (strcmp(image_description, DEF_RA_MARQUEE_NAME) != 0)
-        {
-            // Not the initial RetroArch logo, start hold period
-            g_ra_init_hold_start = time(NULL);
-            g_in_ra_init_hold = true;
-
-            ts_printf("dmarquees: Starting RA init hold period for %s (waiting %d seconds)\n", 
-                     image_description, RA_INIT_HOLD_SEC);
-        }
-        else
-        {
-            // Initial RA logo, no hold period
-            g_in_ra_init_hold = false;
-            g_ra_init_hold_start = 0;
-
-            ts_printf("dmarquees: Displayed RA logo, no init hold period\n");
-        }
-
-        g_needs_crtc_reset = true;
-    }
-}
-
 // Pick default marquee name based on frontend mode
-static const char* default_marquee_name_for(FrontendMode m)
+static const char *default_marquee_name_for(FrontendMode m)
 {
     switch (m)
     {
-        case eSA: return DEF_SA_MARQUEE_NAME;
-        case eRA: return DEF_RA_MARQUEE_NAME;
-        case eNA:
-        default: return DEF_MARQUEE_NAME;
+    case eSA: return DEF_SA_MARQUEE_NAME;
+    case eRA: return DEF_RA_MARQUEE_NAME;
+    case eNA:
+    default:  return DEF_MARQUEE_NAME;
     }
 }
 
 // Draw the default marquee (bottom half). Clears bottom half to black first.
 static void show_default_marquee(void)
 {
-    if (!fb_map)
-        return;
+    if (!fb_map) return;
 
-    const char* name = default_marquee_name_for(g_frontend_mode);
+    const char *name = default_marquee_name_for(g_frontend_mode);
     char imgpath[512];
     snprintf(imgpath, sizeof(imgpath), "%s/%s.png", DEF_MARQUEE_DIR, name);
 
@@ -211,12 +105,12 @@ static void show_default_marquee(void)
     int dest_y = fb_h / 2;
 
     // Clear only bottom half to black
-    uint8_t* bottom = (uint8_t*)fb_map + (size_t)dest_y * stride;
+    uint8_t *bottom = (uint8_t *)fb_map + (size_t)dest_y * stride;
     size_t bottom_bytes = (size_t)(fb_h - dest_y) * stride;
     memset(bottom, 0x00, bottom_bytes);
 
     int iw = 0, ih = 0;
-    uint8_t* img = load_png_rgba(imgpath, &iw, &ih);
+    uint8_t *img = load_png_rgba(imgpath, &iw, &ih);
     if (!img)
     {
         ts_fprintf(stderr, "warning: default marquee load failed: %s\n", imgpath);
@@ -225,16 +119,24 @@ static void show_default_marquee(void)
 
     ts_printf("dmarquees: showing default marquee: %s\n", imgpath);
 
-    uint32_t* fbptr = (uint32_t*)fb_map;
+    uint32_t *fbptr = (uint32_t *)fb_map;
     int stride_pixels = stride / 4;
     scale_and_blit_to_xrgb(img, iw, ih, fbptr, fb_w, fb_h, stride_pixels, /*dest_x=*/0, dest_y);
     free(img);
 
-    // Handle RetroArch mode CRTC reset
-    handle_fb_update_for_ra_mode(name);
+    if (g_frontend_mode == eRA && !g_is_master)
+    {
+        // In RetroArch mode, we need to set the CRTC again to make the image visible
+        if (drmSetMaster(drm_fd) != 0)
+            ts_perror("drmSetMaster (RA mode");
+        else if (drmModeSetCrtc(drm_fd, crtc_id, fb_id, 0, 0, &conn_id, 1, &chosen_mode) != 0)
+            ts_perror("drmModeSetCrtc (RA mode)");
+        else if (drmDropMaster(drm_fd) != 0)
+            ts_perror("drmDropMaster (RA mode)");
+    }
 }
 
-static void __attribute__((unused)) print_usage(const char* prog)
+static void __attribute__((unused)) print_usage(const char *prog)
 {
     ts_fprintf(stderr, "Usage: %s [-f SA|RA|NA]\n", prog);
 }
@@ -246,15 +148,15 @@ static void sigint_handler(int sig)
 }
 
 /* Find connector and mode (same logic as before) */
-static int find_connector_mode(int fd, uint32_t* out_conn, uint32_t* out_crtc, drmModeModeInfo* out_mode)
+static int find_connector_mode(int fd, uint32_t *out_conn, uint32_t *out_crtc, drmModeModeInfo *out_mode)
 {
-    drmModeRes* res = drmModeGetResources(fd);
+    drmModeRes *res = drmModeGetResources(fd);
     if (!res)
         return -1;
     // preferred
     for (int i = 0; i < res->count_connectors; ++i)
     {
-        drmModeConnector* conn = drmModeGetConnector(fd, res->connectors[i]);
+        drmModeConnector *conn = drmModeGetConnector(fd, res->connectors[i]);
         if (!conn)
             continue;
         if (conn->connection != DRM_MODE_CONNECTED)
@@ -269,7 +171,7 @@ static int find_connector_mode(int fd, uint32_t* out_conn, uint32_t* out_crtc, d
                 uint32_t chosen_crtc = 0;
                 if (conn->encoder_id)
                 {
-                    drmModeEncoder* enc = drmModeGetEncoder(fd, conn->encoder_id);
+                    drmModeEncoder *enc = drmModeGetEncoder(fd, conn->encoder_id);
                     if (enc)
                     {
                         chosen_crtc = enc->crtc_id;
@@ -291,7 +193,7 @@ static int find_connector_mode(int fd, uint32_t* out_conn, uint32_t* out_crtc, d
     // fallback
     for (int i = 0; i < res->count_connectors; ++i)
     {
-        drmModeConnector* conn = drmModeGetConnector(fd, res->connectors[i]);
+        drmModeConnector *conn = drmModeGetConnector(fd, res->connectors[i]);
         if (!conn)
             continue;
         if (conn->connection != DRM_MODE_CONNECTED)
@@ -307,7 +209,7 @@ static int find_connector_mode(int fd, uint32_t* out_conn, uint32_t* out_crtc, d
         uint32_t chosen_crtc = 0;
         if (conn->encoder_id)
         {
-            drmModeEncoder* enc = drmModeGetEncoder(fd, conn->encoder_id);
+            drmModeEncoder *enc = drmModeGetEncoder(fd, conn->encoder_id);
             if (enc)
             {
                 chosen_crtc = enc->crtc_id;
@@ -425,8 +327,8 @@ static int initialize(void)
         return 1;
     }
 
-    ts_printf("dmarquees: Selected connector %u mode %dx%d crtc %u\n", conn_id, chosen_mode.hdisplay,
-              chosen_mode.vdisplay, crtc_id);
+    ts_printf("dmarquees: Selected connector %u mode %dx%d crtc %u\n", conn_id, chosen_mode.hdisplay, chosen_mode.vdisplay,
+           crtc_id);
 
     // create persistent dumb framebuffer sized to chosen_mode
     if (create_dumb_fb(drm_fd, chosen_mode.hdisplay, chosen_mode.vdisplay) != 0)
@@ -463,15 +365,16 @@ static int initialize(void)
     return 0;
 }
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
     ts_printf("dmarquees: v%s starting...\n", VERSION);
 
     // parse command line for frontend mode
     int parse_result = parseFrontendModeArg(argc, argv);
     if (parse_result != 0)
+    {
         return parse_result;
-
+    }
     ts_printf("dmarquees: frontend=%s\n", fromFrontendMode(g_frontend_mode));
 
     signal(SIGINT, sigint_handler);
@@ -498,41 +401,6 @@ int main(int argc, char** argv)
 
         if (n <= 0)
         {
-            // No new command, check if we need to retry CRTC reset
-            if (g_needs_crtc_reset && g_frontend_mode == eRA)
-            {
-                time_t now = time(NULL);
-                
-                if (g_in_ra_init_hold)
-                {
-                    // Check if we should abort init hold due to DRM master activity
-                    bool master_held = is_drm_master_held_by_other();
-                    static bool prev_master_held = false;
-                    
-                    // Detect transition: master was held, now available (lr-mame finished)
-                    if (prev_master_held && !master_held)
-                    {
-                        ts_printf("dmarquees: DRM master released by other process, ending init hold early\n");
-                        g_in_ra_init_hold = false;
-                    }
-                    // Check if init hold timeout expired
-                    else if (now - g_ra_init_hold_start >= RA_INIT_HOLD_SEC)
-                    {
-                        ts_printf("dmarquees: RA init hold timeout expired\n");
-                        g_in_ra_init_hold = false;
-                    }
-                    
-                    prev_master_held = master_held;
-                }
-                
-                // Only try CRTC reset if not in init hold period
-                if (!g_in_ra_init_hold)
-                {
-                    if (try_reset_crtc())
-                        ts_printf("dmarquees: CRTC reset successful for %s\n", g_current_image_path);
-                }
-            }
-            
             usleep(FIFO_RETRY_DELAY_MSEC * 1000);
             continue;
         }
@@ -540,51 +408,46 @@ int main(int argc, char** argv)
         buf[n] = '\0';
 
         // strip newline and whitespace
-        char* cmd = trim(buf);
+        char *cmd = trim(buf);
         if (!(cmd && strlen(cmd)))
             continue;
 
         ts_printf("dmarquees: command received: '%s'\n", cmd);
 
-        // Clear retry flag when new command received
-        g_needs_crtc_reset = false;
-        g_current_image_path[0] = '\0';
-        g_in_ra_init_hold = false;
-
         // Process command using switch statement
         CommandType command = toCommandType(cmd);
         switch (command)
         {
-            case CMD_RA:
-                g_frontend_mode = eRA;
-                ts_printf("dmarquees: frontend mode changed to RA\n");
-                show_default_marquee();
-                continue;
+        case CMD_RA:
+            g_frontend_mode = eRA;
+            ts_printf("dmarquees: frontend mode changed to RA\n");
+            show_default_marquee();
+            continue;
 
-            case CMD_SA:
-                g_frontend_mode = eSA;
-                ts_printf("dmarquees: frontend mode changed to SA\n");
-                show_default_marquee();
-                continue;
+        case CMD_SA:
+            g_frontend_mode = eSA;
+            ts_printf("dmarquees: frontend mode changed to SA\n");
+            show_default_marquee();
+            continue;
 
-            case CMD_NA:
-                g_frontend_mode = eNA;
-                ts_printf("dmarquees: frontend mode changed to NA\n");
-                show_default_marquee();
-                continue;
+        case CMD_NA:
+            g_frontend_mode = eNA;
+            ts_printf("dmarquees: frontend mode changed to NA\n");
+            show_default_marquee();
+            continue;
 
-            case CMD_EXIT:
-                running = false;
-                break;
+        case CMD_EXIT:
+            running = false;
+            break;
 
-            case CMD_CLEAR:
-                show_default_marquee();
-                continue;
+        case CMD_CLEAR:
+            show_default_marquee();
+            continue;
 
-            case CMD_ROM:
-            default:
-                // Handle as ROM shortname (including unknown commands)
-                break;
+        case CMD_ROM:
+        default:
+            // Handle as ROM shortname (including unknown commands)
+            break;
         }
 
         // If we reach here, it's either eROM or an unknown command - treat as ROM shortname
@@ -607,7 +470,7 @@ int main(int argc, char** argv)
         }
 
         int iw = 0, ih = 0;
-        uint8_t* img = load_png_rgba(imgpath, &iw, &ih);
+        uint8_t *img = load_png_rgba(imgpath, &iw, &ih);
         if (img == NULL)
         {
             ts_fprintf(stderr, "error: png load failed %s\n", imgpath);
@@ -621,7 +484,7 @@ int main(int argc, char** argv)
         // clear bottom half to black first and blit ROM marquee
         if (fb_map)
         {
-            uint32_t* fbptr = (uint32_t*)fb_map;
+            uint32_t *fbptr = (uint32_t *)fb_map;
             int fb_w = chosen_mode.hdisplay;
             int fb_h = chosen_mode.vdisplay;
             int stride_pixels = stride / 4;
@@ -629,7 +492,7 @@ int main(int argc, char** argv)
             int dest_y = fb_h / 2;
 
             // Clear bottom half before blit (to avoid remnants)
-            uint8_t* bottom = (uint8_t*)fb_map + (size_t)dest_y * stride;
+            uint8_t *bottom = (uint8_t *)fb_map + (size_t)dest_y * stride;
             size_t bottom_bytes = (size_t)(fb_h - dest_y) * stride;
             memset(bottom, 0x00, bottom_bytes);
 
@@ -641,9 +504,6 @@ int main(int argc, char** argv)
 #endif
         }
         free(img);
-
-        // Handle RetroArch mode CRTC reset after ROM image update
-        handle_fb_update_for_ra_mode(cmd);
     }
 
     // cleanup
@@ -651,8 +511,9 @@ int main(int argc, char** argv)
     if (drm_fd >= 0)
     {
         if (g_is_master)
+        {
             drmDropMaster(drm_fd);
-
+        }
         close(drm_fd);
     }
     unlink(CMD_FIFO);
