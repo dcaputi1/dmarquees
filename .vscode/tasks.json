@@ -9,7 +9,10 @@
             "options": {
                 "cwd": "${workspaceFolder}"
             },
-            "group": "build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
             "presentation": {
                 "echo": true,
                 "reveal": "always",
@@ -51,10 +54,7 @@
                 "panel": "shared"
             },
             "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
+            "group": "build"
         }
     ]
 }
