@@ -40,10 +40,20 @@ install: $(TARGET)
 	@cp -p $(TARGET) $(INSTALL_DIR)/
 	@echo "Installed: $(INSTALL_DIR)/$(TARGET)"
 
+	# Install runtime resources (images directory) if present
+	@if [ -d images ]; then \
+		echo "Copying images/ to $(INSTALL_DIR)/images..."; \
+		cp -a images $(INSTALL_DIR)/; \
+		echo "Installed: $(INSTALL_DIR)/images"; \
+	fi
+
 # Uninstall (remove installed binary)
 uninstall:
 	@echo "Removing $(INSTALL_DIR)/$(TARGET) if present..."
 	@rm -f $(INSTALL_DIR)/$(TARGET) || true
+	@echo "Removing $(INSTALL_DIR)/images if present..."
+	@rm -rf $(INSTALL_DIR)/images || true
+	# Try to remove the install dir if empty (don't force removal of non-empty dirs)
 	@rmdir --ignore-fail-on-non-empty $(INSTALL_DIR) || true
 	@echo "Uninstall complete."
 
