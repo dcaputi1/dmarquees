@@ -11,6 +11,7 @@
      EXIT          => exit the daemon
      RA            => set frontend mode to RetroArch
      SA            => set frontend mode to StandAlone
+     RESET         => reset the CRTC (re-acquire display)
  - Image is scaled nearest-neighbor to fill the width and bottom-half of the screen.
  - Uses a single persistent dumb framebuffer; the daemon blits into the mapped buffer
    and calls drmModeSetCrtc() once at startup to show the FB. Subsequent blits update
@@ -49,7 +50,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.4"
+#define VERSION "1.4.1"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -523,6 +524,10 @@ int main(int argc, char **argv)
 
         case CMD_CLEAR:
             show_default_marquee();
+            break;
+
+        case CMD_RESET:
+            try_reset_crtc();
             break;
 
         case CMD_ROM:

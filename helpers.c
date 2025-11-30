@@ -177,9 +177,9 @@ FrontendMode toFrontendMode(const char *s)
 {
     if (!s)
         return eNA;
-    if (strcasecmp(s, "RA") == 0 || strcasecmp(s, "RetroArch") == 0)
+    if (strcmp(s, "RA") == 0 || strcmp(s, "RetroArch") == 0)
         return eRA;
-    if (strcasecmp(s, "SA") == 0 || strcasecmp(s, "StandAlone") == 0)
+    if (strcmp(s, "SA") == 0 || strcmp(s, "StandAlone") == 0)
         return eSA;
 
     return eNA;
@@ -209,7 +209,7 @@ int parseFrontendModeArg(int argc, char **argv)
         {
         case 'f':
             g_frontend_mode = toFrontendMode(optarg);
-            if (g_frontend_mode == eNA && strcasecmp(optarg, "NA") != 0 && strcasecmp(optarg, "None") != 0)
+            if (g_frontend_mode == eNA && strcmp(optarg, "NA") != 0 && strcmp(optarg, "None") != 0)
             {
                 fprintf(stderr, "error: invalid frontend '%s'\n", optarg);
                 fprintf(stderr, "Usage: %s [-f SA|RA|NA]\n", argv[0]);
@@ -231,16 +231,18 @@ CommandType toCommandType(const char *s)
 {
     if (!s)
         return CMD_ROM;
-    if (strcasecmp(s, "EXIT") == 0)
+    if (strcmp(s, "EXIT") == 0)
         return CMD_EXIT;
-    if (strcasecmp(s, "CLEAR") == 0)
+    if (strcmp(s, "CLEAR") == 0)
         return CMD_CLEAR;
-    if (strcasecmp(s, "RA") == 0)
+    if (strcmp(s, "RA") == 0)
         return CMD_RA;
-    if (strcasecmp(s, "SA") == 0)
+    if (strcmp(s, "SA") == 0)
         return CMD_SA;
-    if (strcasecmp(s, "NA") == 0)
+    if (strcmp(s, "NA") == 0)
         return CMD_NA;
+    if (strcmp(s, "RESET") == 0)
+        return CMD_RESET;
     // If not a known command, treat as ROM
     return CMD_ROM;
 }
@@ -257,6 +259,8 @@ const char *fromCommandType(CommandType c)
         return "RA";
     case CMD_SA:
         return "SA";
+    case CMD_RESET:
+        return "RESET";
     case CMD_ROM:
     default:
         return "ROM";
