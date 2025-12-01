@@ -50,7 +50,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.4.2"
+#define VERSION "1.4.3"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -359,14 +359,6 @@ static int initialize(void)
 
     memset(fb_map, 0x00, bo_size); // Clear framebuffer (black)
 
-    show_default_marquee();     // draw default marquee (RetroPie NA frontend)
-
-    // set CRTC once to show our FB (this may fail with EPERM if another master exists)
-    if (drmModeSetCrtc(drm_fd, crtc_id, fb_id, 0, 0, &conn_id, 1, &chosen_mode) != 0)
-        ts_perror("drmModeSetCrtc(1)"); // we'll still run and accept commands; writes will not be visible until we succeed
-    else
-        ts_printf("dmarquees: drmModeSetCrtc(1) - Initial FB presented\n");
-
     // Release DRM master so other apps (like MAME) can take control
     if (is_master)
     {
@@ -375,6 +367,9 @@ static int initialize(void)
         else
             ts_printf("dmarquees: DRM master dropped - MAME can safely start.\n");
     }
+
+    show_default_marquee();     // draw default marquee (RetroPie NA frontend)
+
     return 0;
 }
 
