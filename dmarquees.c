@@ -50,7 +50,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.4.3"
+#define VERSION "1.5"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -102,9 +102,13 @@ static bool try_reset_crtc(void)
         crtc_success = true;
     }
 
-    if (got_master && (drmDropMaster(drm_fd) != 0))
-        ts_perror("drmDropMaster (try_reset_crtc)");
-
+    if (got_master)
+    {
+        if (drmDropMaster(drm_fd) != 0)
+            ts_perror("drmDropMaster (try_reset_crtc)");
+        else
+            ts_printf("dmarquees: master dropped\n");
+    }
     return crtc_success;
 }
 

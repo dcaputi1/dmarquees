@@ -18,7 +18,7 @@ LDFLAGS = $(shell pkg-config --libs libdrm) -lpng
 LOGFILE = build.log
 
 # Default build
-all: $(TARGET)
+all: $(TARGET) install
 
 # Install directory (can be overridden: make INSTALL_DIR=/some/path install)
 INSTALL_DIR ?= $(HOME)/marquees

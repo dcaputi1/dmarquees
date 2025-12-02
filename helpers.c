@@ -135,14 +135,33 @@ void scale_and_blit_to_xrgb(const uint8_t *src_rgba, int src_w, int src_h, uint3
     if (region_w <= 0 || region_h <= 0)
         return;
 
-    for (int y = 0; y < region_h; ++y)
+    // Scale to fit width exactly (1920 pixels), preserve aspect ratio for height
+    float scale = (float)region_w / (float)src_w;
+    int scaled_w = region_w;  // Always fill the width
+    int scaled_h = (int)(src_h * scale);
+
+    // Position image at bottom of screen: top edge at (dst_h - scaled_h)
+    int offset_x = dst_x0;
+    int offset_y = dst_h - scaled_h;
+    
+    // Clamp offset_y to not go above dest_y
+    if (offset_y < dst_y0)
+        offset_y = dst_y0;
+
+    for (int y = 0; y < scaled_h; ++y)
     {
-        int src_y = (y * src_h) / region_h;
+        // Skip if we're rendering above the visible region
+        if (offset_y + y < dst_y0)
+            continue;
+        if (offset_y + y >= dst_h)
+            break;
+            
+        int src_y = (y * src_h) / scaled_h;
         const uint8_t *src_row = src_rgba + (size_t)src_y * src_w * 4;
-        uint32_t *dst_row = dst + (size_t)(dst_y0 + y) * dst_stride + dst_x0;
-        for (int x = 0; x < region_w; ++x)
+        uint32_t *dst_row = dst + (size_t)(offset_y + y) * dst_stride + offset_x;
+        for (int x = 0; x < scaled_w; ++x)
         {
-            int src_x = (x * src_w) / region_w;
+            int src_x = (x * src_w) / scaled_w;
             const uint8_t *p = src_row + src_x * 4;
             uint8_t r = p[0];
             uint8_t g = p[1];
