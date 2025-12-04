@@ -12,7 +12,7 @@
      RA            => set frontend mode to RetroArch
      SA            => set frontend mode to StandAlone
      RESET         => reset the CRTC (re-acquire display)
- - Image is scaled nearest-neighbor to fill the width and bottom-half of the screen.
+ - Image is scaled nearest-neighbor to fit the screen width while preserving aspect ratio.
  - Uses a single persistent dumb framebuffer; the daemon blits into the mapped buffer
    and calls drmModeSetCrtc() once at startup to show the FB. Subsequent blits update
    the same FB memory (the kernel presents the updated contents).
@@ -124,7 +124,7 @@ static const char *default_marquee_name_for(FrontendMode m)
     }
 }
 
-// Draw the default marquee (bottom half). Clears bottom half to black first.
+// Draw the default marquee. Clears screen to black first.
 static void show_default_marquee(void)
 {
     if (!fb_map)
@@ -136,12 +136,9 @@ static void show_default_marquee(void)
 
     int fb_w = chosen_mode.hdisplay;
     int fb_h = chosen_mode.vdisplay;
-    int dest_y = fb_h / 2;
 
-    // Clear only bottom half to black
-    uint8_t *bottom = (uint8_t *)fb_map + (size_t)dest_y * stride;
-    size_t bottom_bytes = (size_t)(fb_h - dest_y) * stride;
-    memset(bottom, 0x00, bottom_bytes);
+    // Clear entire screen to black
+    memset(fb_map, 0x00, bo_size);
 
     int iw = 0, ih = 0;
     if (image)
@@ -150,12 +147,12 @@ static void show_default_marquee(void)
     if (!image)
     {
         ts_fprintf(stderr, "warning: default marquee load failed: %s\n", imgpath);
-        return; // bottom half remains black
+        return; // screen remains black
     }
 
     ts_printf("dmarquees: showing default marquee: %s\n", imgpath);
 
-    scale_and_blit_to_xrgb(image, iw, ih, (uint32_t*)fb_map, fb_w, fb_h, stride / 4, 0, dest_y);
+    scale_and_blit_to_xrgb(image, iw, ih, (uint32_t*)fb_map, fb_w, fb_h, stride / 4, 0);
     try_reset_crtc();
 }
 
@@ -404,7 +401,7 @@ static bool show_game_marquee(const char* cmd_str)
 
     ts_printf("dmarquees: game marquee loaded: %s.png\n", cmd_str);
 
-    // clear bottom half to black first and blit ROM marquee
+    // clear screen to black first and blit ROM marquee
     if (fb_map)
     {
         uint32_t* fbptr = (uint32_t*)fb_map;
@@ -412,14 +409,11 @@ static bool show_game_marquee(const char* cmd_str)
         int fb_h = chosen_mode.vdisplay;
         int stride_pixels = stride / 4;
         int dest_x = 0;
-        int dest_y = fb_h / 2;
 
-        // Clear bottom half before blit (to avoid remnants)
-        uint8_t* bottom = (uint8_t*)fb_map + (size_t)dest_y * stride;
-        size_t bottom_bytes = (size_t)(fb_h - dest_y) * stride;
-        memset(bottom, 0, bottom_bytes);
+        // Clear screen before blit (to avoid remnants)
+        memset(fb_map, 0, bo_size);
 
-        scale_and_blit_to_xrgb(image, iw, ih, fbptr, fb_w, fb_h, stride_pixels, dest_x, dest_y);
+        scale_and_blit_to_xrgb(image, iw, ih, fbptr, fb_w, fb_h, stride_pixels, dest_x);
         try_reset_crtc();
     }
     return true;

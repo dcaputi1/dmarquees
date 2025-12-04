@@ -43,7 +43,7 @@ uint8_t *load_png_rgba(const char *path, int *out_w, int *out_h);
 bool game_has_multiple_screens(const char *romname);
 void scale_and_blit_to_xrgb(const uint8_t *src_rgba, int src_w, int src_h,
                             uint32_t *dst, int dst_w, int dst_h, int dst_stride,
-                            int dest_x, int dest_y);
+                            int dest_x);
 char *trim(char *s, size_t len);
 int parseFrontendModeArg(int argc, char **argv);
 

@@ -122,36 +122,30 @@ bool game_has_multiple_screens(const char *romname)
 
 /* Nearest-neighbor scale/blit RGBA -> XRGB8888 framebuffer (dest is uint32_t array) */
 void scale_and_blit_to_xrgb(const uint8_t *src_rgba, int src_w, int src_h, uint32_t *dst, int dst_w, int dst_h,
-                            int dst_stride, int dest_x, int dest_y)
+                            int dst_stride, int dest_x)
 {
     if (!src_rgba || !dst)
         return;
 
-    // Determine destination region: fill width and from dest_y to bottom.
+    // Determine destination region: fill width from dest_x, use full height.
     int dst_x0 = dest_x >= 0 ? dest_x : 0;
-    int dst_y0 = dest_y >= 0 ? dest_y : 0;
     int region_w = dst_w - dst_x0;
-    int region_h = dst_h - dst_y0;
-    if (region_w <= 0 || region_h <= 0)
+    if (region_w <= 0)
         return;
 
-    // Scale to fit width exactly (1920 pixels), preserve aspect ratio for height
+    // Scale to fit width exactly, preserve aspect ratio for height
     float scale = (float)region_w / (float)src_w;
     int scaled_w = region_w;  // Always fill the width
     int scaled_h = (int)(src_h * scale);
 
-    // Position image at bottom of screen: top edge at (dst_h - scaled_h)
+    // Position image at bottom of the screen
     int offset_x = dst_x0;
     int offset_y = dst_h - scaled_h;
-    
-    // Clamp offset_y to not go above dest_y
-    if (offset_y < dst_y0)
-        offset_y = dst_y0;
 
     for (int y = 0; y < scaled_h; ++y)
     {
-        // Skip if we're rendering above the visible region
-        if (offset_y + y < dst_y0)
+        // Skip if rendering outside screen bounds
+        if (offset_y + y < 0)
             continue;
         if (offset_y + y >= dst_h)
             break;
