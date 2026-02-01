@@ -30,12 +30,6 @@ install: all
 		echo "Skipped: $(INSTALL_DIR)/bin/dmarquees (up to date)"; \
 	fi
 	
-	@if [ ! -f $(INSTALL_DIR)/bin/analyze_games ] || [ analyze_games/analyze_games -nt $(INSTALL_DIR)/bin/analyze_games ]; then \
-		cp -p analyze_games/analyze_games $(INSTALL_DIR)/bin/ && echo "Updated: $(INSTALL_DIR)/bin/analyze_games"; \
-	else \
-		echo "Skipped: $(INSTALL_DIR)/bin/analyze_games (up to date)"; \
-	fi
-	
 	@# Install runtime resources (images directory)
 	@if [ -d images ]; then \
 		if [ ! -d $(INSTALL_DIR)/images ]; then \
@@ -74,7 +68,6 @@ install-force: all
 	
 	@# Force install executables
 	@cp -fp dmarquees/dmarquees $(INSTALL_DIR)/bin/ && echo "Installed: $(INSTALL_DIR)/bin/dmarquees"
-	@cp -fp analyze_games/analyze_games $(INSTALL_DIR)/bin/ && echo "Installed: $(INSTALL_DIR)/bin/analyze_games"
 	
 	@# Force install runtime resources (images directory)
 	@if [ -d images ]; then \
@@ -105,7 +98,6 @@ clean:
 uninstall:
 	@echo "Removing installed files..."
 	@rm -f $(INSTALL_DIR)/bin/dmarquees
-	@rm -f $(INSTALL_DIR)/bin/analyze_games
 	@rm -rf $(INSTALL_DIR)/images
 	@rm -rf $(INSTALL_DIR)/plugins
 	@rmdir --ignore-fail-on-non-empty $(INSTALL_DIR)/bin || true

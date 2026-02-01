@@ -48,7 +48,7 @@ steps:
    sudo ldconfig -v | grep libhid
    (verify ldconfig shows libhid.so.0 -> libhid.so.0.0.0)
 9. run ~/IvarArcade/Backup_RetroPie/ra_final.sh (formerly cp_opt.sh)
-10.run ~/marquees/bin/analyze_games (not sudo!)
+10.run ~/IvarArcade/analyze_games/analyze_games (not sudo!)
 11.sudo ~/scripts/set_asound.sh (for Trixie sound problem - not needed for Bookworm Debian base OS)
 12. 2/1/2026 - TBD: test skyscraper (config.ini is in configs/all/skyscraper)
 
