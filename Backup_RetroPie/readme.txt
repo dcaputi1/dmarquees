@@ -22,6 +22,7 @@ h. install experimantal mame package (~2 hours from source)
 i. install experimental lr-mame (~2 hours from source)
    1/11/2026 - installed from binary
 j. enable autostart emulationstation
+k. install Skyscraper
 k. edit autostart.sh and replace 'emulationstation' with 'wayfire-pi' (for remote gui)
 
 steps:
@@ -49,6 +50,7 @@ steps:
 9. run ~/IvarArcade/Backup_RetroPie/ra_final.sh (formerly cp_opt.sh)
 10.run ~/marquees/bin/analyze_games (not sudo!)
 11.sudo ~/scripts/set_asound.sh (for Trixie sound problem - not needed for Bookworm Debian base OS)
+12. 2/1/2026 - TBD: test skyscraper (config.ini is in configs/all/skyscraper)
 
 optional:
 A. sudo apt install meld
