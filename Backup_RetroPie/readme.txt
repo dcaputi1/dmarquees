@@ -46,8 +46,7 @@ steps:
    ./build.sh
    sudo ldconfig -v | grep libhid
    (verify ldconfig shows libhid.so.0 -> libhid.so.0.0.0)
-9. sudo ~/IvarArcade/Backup_RetroPie/cp_opt.sh
-   1/13/2026 - not much to 'copy' from opt (TBD - omit and rename the script)
+9. run ~/IvarArcade/Backup_RetroPie/ra_final.sh (formerly cp_opt.sh)
 10.run ~/marquees/bin/analyze_games (not sudo!)
 11.sudo ~/scripts/set_asound.sh (for Trixie sound problem - not needed for Bookworm Debian base OS)
 
