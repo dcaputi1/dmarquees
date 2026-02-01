@@ -7,7 +7,7 @@ SCRAPER="screenscraper"   # arcadedb for metadata; screenscraper for art
 LIST="$HOME/favorites_mame.txt"
 
 # Force where gamelist/media get generated (so we know where to look)
-OUTDIR="$HOME/RetroPie/roms/mame"
+OUTDIR="$HOME/RetroPie/roms/arcade"
 MARQ_DIR="$OUTDIR/media/marquees"
 
 SCRAPE_FLAGS=(
