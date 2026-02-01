@@ -54,6 +54,7 @@
 #define VERSION "1.6.0"
 #define DEVICE_PATH "/dev/dri/card1"
 #define IMAGE_DIR "/home/danc/mnt/marquees"
+#define IMAGE_DIR_ALT "/home/danc/RetroPie/roms/mame/media/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
 #define PROGRAM_DIR "/home/danc/IvarArcade"
 #define DEF_MARQUEE_DIR PROGRAM_DIR "/images"
@@ -387,8 +388,14 @@ static bool show_game_marquee(const char* cmd_str)
     struct stat st;
     if (stat(imgpath, &st) != 0)
     {
-        ts_fprintf(stderr, "warning: image missing: %s\n", imgpath);
-        return false;
+        // Try IMAGE_DIR_ALT as fallback
+        snprintf(imgpath, sizeof(imgpath), "%s/%s.png", IMAGE_DIR_ALT, cmd_str);
+        if (stat(imgpath, &st) != 0)
+        {
+            ts_fprintf(stderr, "warning: image missing in both directories: %s/%s.png\n", IMAGE_DIR, cmd_str);
+            return false;
+        }
+        ts_printf("dmarquees: using alternate image directory: %s\n", imgpath);
     }
 
     int iw = 0, ih = 0;

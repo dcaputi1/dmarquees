@@ -186,8 +186,24 @@ The object of the game is to reach one of a variety of destinations against a ti
 	</game>
 	<game>
 		<path>./pong.zip</path>
-		<name>Pong (Rev E) external [TTL]</name>
+		<name>Pong</name>
 		<favorite>true</favorite>
+		<desc>Pong is a basic simulation of the racket sport of table tennis. A small square representing a ping pong ball travels across the screen in a linear trajectory. If the square strikes the perimeter of the playing field, or one of the simulated paddles, the square ricochets based on the angle of the impact.
+
+Game play consists of players moving their respective paddles vertically to defend their scoring zones. Players score one point by maneuvering the square past their opponent's paddle.
+
+Pong can be played either by a single player pitted against a computerized opponent, or by two players each controlling a paddle.
+
+Scoring went up to 21 pts.</desc>
+		<image>./media/screenshots/pong.png</image>
+		<marquee>./media/marquees/pong.png</marquee>
+		<video>./media/videos/pong.mp4</video>
+		<rating>0.9</rating>
+		<releasedate>19720101T000000</releasedate>
+		<developer/>
+		<publisher>Atari</publisher>
+		<genre>Action, Action / Breakout games</genre>
+		<players>2</players>
 		<playcount>1</playcount>
 		<lastplayed>20250105T133510</lastplayed>
 	</game>
@@ -544,6 +560,22 @@ Galaga introduces a number of new features over its predecessor, Galaxian. Among
 		<path>./gauntlet.zip</path>
 		<name>Gauntlet</name>
 		<favorite>true</favorite>
+		<desc>Gauntlet is a maze-based shoot-em-up for up to four players. Heavily influenced by classic fantasy conventions, players take on the role of either Thor the Warrior, Thyra the Valkyrie, Merlin the Wizard, or Questor the Elf and must play cooperatively as they explore and fight their way through the enemy-packed mazes. Competitive play is encouraged as players must fight for the limited amount of food, treasure, magic potions and power-up items that litter the dungeons.
+
+Each of Gauntlet's four characters have different strengths and weaknesses: Thyra has the strongest armour, Thor is best at hand-to-hand combat, Questor has the fastest speed and Merlin has the most powerful magic attacks. The object of the game is simply to survive as long as possible while exploring Gauntlet's mazes in search of treasure, food, magic potions and, ultimately, the exit that leads to the next dungeon.
+
+The potions - shown as blue bottles - that litter the levels offer either improved character abilities (such as 'speed' or 'extra shot power') or can be used as a 'smart bomb', destroying some or all of the on-screen monsters. Potions are also the only way to kill the game's 'Death' character that appears in many of the stages. Magic potions can be kept and used at the player's discretion by pressing 'Magic' button, although each potion can only be used once.
+
+The first seven mazes are always the same, but from level 8 onwards, players will find themselves on any one of over a hundred different mazes. If players survive for long enough, the mazes will be repeated in a different order. How long a player lasts depends upon the player's 'health' level. Health continually depletes as time progresses and further health is lost by contact with various monsters or their projectiles. Health can be replenished by consuming the food found in the mazes or by inserting more credits. The many treasure chests that litter the levels can be plundered for points, and collecting treasure increases a player's score multiplier when two or more players are playing the game.</desc>
+		<image>./media/screenshots/gauntlet.png</image>
+		<marquee>./media/marquees/gauntlet.png</marquee>
+		<video>./media/videos/gauntlet.mp4</video>
+		<rating>0.7</rating>
+		<releasedate>19850101T000000</releasedate>
+		<developer>Atari</developer>
+		<publisher>Atari</publisher>
+		<genre>Action / Labyrinth, Action</genre>
+		<players>4</players>
 	</game>
 	<game>
 		<path>./gtg2.zip</path>
@@ -625,11 +657,35 @@ Player control consists of a Midi Trak-Ball control and a FIRE button. The Arche
 		<path>./popeye.zip</path>
 		<name>Popeye</name>
 		<favorite>true</favorite>
+		<desc>Popeye is a superb and demanding platform game featuring characters from the famous King Features Syndicate cartoon show of the same name. The aim of the game is to rescue Popeye's girlfriend, Olive Oyl. This is achieved by catching a set number of objects thrown down by Olive from the top of the screen; such as hearts, letters and musical notes. Popeye is constantly pursued in his quest by love rival, Brutus (originally known as Bluto). Popeye must either run away from Brutus or grab some spinach and punch him off the screen (he will, of course, return).
+
+Should any of Olive Oyl's items fail to be caught, they will fall into the water at the bottom of the screen. Popeye will then have only a few seconds to retrieve the object or a life is lost. Several other Popeye characters also make an appearance in the game; namely Wimpy, Swee'Pea, the Sea Hag, and her vulture Bernard. The game's three levels are the dock scene, the street scene and the shipboard scene. These repeat with increasing difficulty.</desc>
+		<image>./media/screenshots/popeye.png</image>
+		<marquee>./media/marquees/popeye.png</marquee>
+		<video>./media/videos/popeye.mp4</video>
+		<rating>0.9</rating>
+		<releasedate>19820101T000000</releasedate>
+		<developer>Nintendo</developer>
+		<publisher>Nintendo</publisher>
+		<genre>Platform, Platform / Run &amp; Jump</genre>
+		<players>2</players>
 	</game>
 	<game>
 		<path>./invaders.zip</path>
 		<name>Space Invaders / Space Invaders M</name>
 		<favorite>true</favorite>
+		<desc>The most influential video game of all time. A single player moves an armed 'base' to the left or right along the bottom of the screen and fires at the endless waves of aliens that tirelessly parade across the screen towards earth.
+There are 4 buildings (shields) at the bottom of the screen behind which the player can hide, but these will eventually be destroyed by enemy missiles or by direct contact with the invaders themselves. Player shots will also destroy shields.
+The descent of the aliens accelerates as they are eliminated, making them more difficult to hit. A flying saucer will fly across the top of the screen at regular intervals and can be fired for extra points.</desc>
+		<image>./media/screenshots/invaders.png</image>
+		<marquee>./media/marquees/invaders.png</marquee>
+		<video>./media/videos/invaders.mp4</video>
+		<rating>0.9</rating>
+		<releasedate>19780101T000000</releasedate>
+		<developer>Taito</developer>
+		<publisher>Taito</publisher>
+		<genre>Shooter / Space Invaders Like, Shooter</genre>
+		<players>2</players>
 		<playcount>9</playcount>
 		<lastplayed>20250219T220815</lastplayed>
 	</game>
@@ -920,17 +976,19 @@ The mini-game is available at the start of each wave and the way it works is thi
 	<game>
 		<path>./berzerk.zip</path>
 		<name>Berzerk</name>
-		<desc>The player controls a green stick man. Using a joystick and a firing button that activates a laser-like weapon, the player navigates a simple maze filled with many robots, who fire lasers back at the player character. A player can be killed by being shot, by running into a robot or an exploding robot, coming into contact with the electrified walls of the maze itself, or by being touched by the player's nemesis, Evil Otto.</desc>
+		<desc>The player controls the 'Humanoid' and must negotiate a number of robot-filled rooms; each with up to as many as eleven, laser-firing enemy robots. The Humanoid can be killed either by a single shot from a robot, by running into a robot, by running into a wall of the maze, or by being touched by the player's nemesis, 'Evil Otto'.
+
+To advance through the game, players must fight their way through each room to an opening at one of the far walls. Each robot destroyed is worth 50 points and while it's possible to progress without killing every robot in each room, destroying all of them will earn the player a per-maze bonus (worth ten points per robot). The game has an impressive 64,000 mazes, with each level designed to be more difficult than the last.</desc>
 		<image>./media/screenshots/berzerk.png</image>
 		<marquee>./media/marquees/berzerk.png</marquee>
+		<video>./media/videos/berzerk.mp4</video>
 		<rating>0.2</rating>
 		<releasedate>19800101T000000</releasedate>
-		<developer>Stern Electronics</developer>
-		<publisher>Stern Electronics, Inc.</publisher>
-		<genre>Action / Labyrinth, Shooter Small, Action</genre>
+		<developer>Stern</developer>
+		<publisher>Stern</publisher>
+		<genre>Action / Labyrinth, Action</genre>
 		<players>2</players>
 		<favorite>true</favorite>
-		<kidgame>true</kidgame>
 		<playcount>4</playcount>
 		<lastplayed>20250314T114415</lastplayed>
 	</game>

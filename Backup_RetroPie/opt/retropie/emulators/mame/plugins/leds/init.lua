@@ -53,11 +53,11 @@ local function set_led_mask(mask)
 
     local cmd = string.format("python3 %s%s %02x &", SCRIPT_PATH, SCRIPT_FILE, mask)
     local result = os.execute(cmd)
-    if result then
-        print(string.format("LED mask 0x%02x sent successfully.", mask))
-    else
-        print(string.format("Failed to send LED mask 0x%02x.", mask))
-    end
+--  if result then
+--      print(string.format("LED mask 0x%02x sent successfully.", mask))
+--  else
+--      print(string.format("Failed to send LED mask 0x%02x.", mask))
+--  end
 end
 
 local function match_field_name(name, substr1, substr2)
