@@ -4,6 +4,14 @@
 		<path>./breakout.zip</path>
 		<name>Breakout [TTL]</name>
 		<favorite>true</favorite>
+		<desc>A ball-and-paddle game where the object is to collect points while hitting a ball towards a wall of bricks. When hit, the tiles disappear and the ball rebounds.</desc>
+		<image>./media/screenshots/breakout.png</image>
+		<video>./media/videos/breakout.mp4</video>
+		<developer>Atari</developer>
+		<genre>Ball & Paddle</genre>
+		<releasedate>19760101T000000</releasedate>
+		<marquee>./media/marquees/breakout.png</marquee>
+		<players>2</players>
 		<playcount>2</playcount>
 		<lastplayed>20250119T230739</lastplayed>
 	</game>
@@ -896,6 +904,7 @@ The mini-game is available at the start of each wave and the way it works is thi
 		<desc>Draw boxes to claim as much screen as possible without getting in the path of the "Qix" and "Sparx". Draw slower for more points and hope that you have enough coins. Simple but very addicting!</desc>
 		<image>./media/screenshots/qix.png</image>
 		<video>./media/videos/qix.mp4</video>
+		<marquee>./media/marquees/qix.png</marquee>
 		<rating />
 		<releasedate>19811018T000000</releasedate>
 		<developer>Taito America Corporation</developer>

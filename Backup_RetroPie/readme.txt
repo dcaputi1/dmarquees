@@ -89,4 +89,6 @@ problem log:
         [x] moved default.cfg R/O to EOF (but no can do - see next comment)
         [x] xinmo swap unable to write default.cfg (keep it 666)
 1/20/26 [x] redo again - games don't load (make install-force wasn't run?)
-1/24/26 [ ] leds don't work unless start buttons are defined (some games use player buttons)
+1/24/26 [X] leds don't work unless start buttons are defined (some games use player buttons)
+1/31/26 [X] running sa mame vector game in ra breaks tab menu return key
+        [ ] fix pics, vids, marquees - skyscraper needed 

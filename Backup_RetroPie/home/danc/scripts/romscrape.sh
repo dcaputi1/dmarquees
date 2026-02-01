@@ -46,13 +46,21 @@ Skyscraper -p "$PLATFORM" -s cache -i "$ROMDIR" -g "$OUTDIR" \
   "${GEN_FLAGS[@]}" \
   --includefrom "$LIST"
 
-echo
-echo "==> Marquee resolutions in: $MARQ_DIR"
-if [[ ! -d "$MARQ_DIR" ]]; then
-  echo "  (no marquee output directory found)"
-  exit 0
+# Archive the generated gamelist with a timestamp
+if [[ -f "$OUTDIR/gamelist.xml" ]]; then
+  TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+  mv "$OUTDIR/gamelist.xml" "$OUTDIR/gamelist_$TIMESTAMP.xml"
+  echo "==> Archived gamelist to: gamelist_$TIMESTAMP.xml"
 fi
 
-find "$MARQ_DIR" -type f -iname '*.png' -print0 \
-| xargs -0 -r file \
-| sed -nE 's/^(.*): .* ([0-9]+) x ([0-9]+).*/  \1  ->  \2x\3/p'
+# echo
+# echo "==> Marquee resolutions in: $MARQ_DIR"
+# if [[ ! -d "$MARQ_DIR" ]]; then
+#   echo "  (no marquee output directory found)"
+#   exit 0
+# fi
+#
+# find "$MARQ_DIR" -type f -iname '*.png' -print0 \
+# | xargs -0 -r file \
+# | sed -nE 's/^(.*): .* ([0-9]+) x ([0-9]+).*/  \1  ->  \2x\3/p'
+
