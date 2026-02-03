@@ -22,6 +22,7 @@
 		<desc>Cruis'n USA is an arcade racing game originally released in 1994. It was developed by Midway Games and published and distributed by Nintendo. It is the first game in the Cruis'n series and features locations around the United States.</desc>
 		<image>./media/screenshots/crusnusa.png</image>
 		<marquee>./media/marquees/crusnusa.png</marquee>
+		<video>./media/videos/crusnusa.mp4</video>
 		<rating />
 		<releasedate>19941101T000000</releasedate>
 		<developer>Midway</developer>
@@ -307,6 +308,7 @@ Space Duel offers players a choice of 4 different game versions. One player can 
 		<desc>Strap on your helmet, climb aboard your X-Wing Fighter, and prepare to take on the Empire! The first scene is the Space Attack, with waves of hostile space-craft attacking your lonely but powerful ship. You battle to the Death Star, and once there fly close to the ground in a daring attempt to blast the space towers and flying stars, steering your way through the barrage. Finally, you emerge in the trench, jumping and ducking the stretch barriers and shooting the missile emplacements fastened to each side of the death-defying walls. There are many levels to the game with stirring music and speech synthesis - fast and furious action is guaranteed throughout!</desc>
 		<image>./media/screenshots/starwars.png</image>
 		<marquee>./media/marquees/starwars.png</marquee>
+		<video>./media/videos/starwars.mp4</video>
 		<rating>0.8</rating>
 		<releasedate>19830101T000000</releasedate>
 		<developer>Midway</developer>
@@ -322,7 +324,7 @@ Space Duel offers players a choice of 4 different game versions. One player can 
 		<thumbnail />
 		<image>./media/screenshots/sf.png</image>
 		<marquee>./media/marquees/sf.png</marquee>
-		<video />
+		<video>./media/videos/sf.mp4</video>
 		<rating>0.9</rating>
 		<desc>Martial arts masters Ryu and Ken enter a worldwide martial arts tournament spanning 5 nations as they face 10 of the world's greatest fighters. The game can be played alone or with 2 players competing, with Player 1 taking the role of Ryu and Player 2 as Ken. The predecessor to the ultra-popular "Street Fighter II - The World Warrior".</desc>
 		<releasedate>19870101T000000</releasedate>
@@ -338,7 +340,7 @@ Space Duel offers players a choice of 4 different game versions. One player can 
 		<thumbnail />
 		<image>./media/screenshots/sf2.png</image>
 		<marquee>./media/marquees/sf2.png</marquee>
-		<video />
+		<video>./media/videos/sf2.mp4</video>
 		<rating />
 		<desc>Street Fighter II: The World Warrior is a competitive fighting game originally released for the arcades in 1991. It is the second entry in the Street Fighter series and the arcade sequel to the original Street Fighter released in 1987. It is Capcom's fourteenth title that runs on the CP System arcade hardware. Street Fighter II improves upon the many concepts introduced in the first game, including the use of command-based special moves and a six-button configuration, while offering players a selection of multiple playable characters, each with their own unique fighting style, and introducing a combo system and competitive multiplayer combat between two players.
 
@@ -358,7 +360,7 @@ By 1994, the game had been played by at least 25 million people in the United St
 		<thumbnail />
 		<image>./media/screenshots/trackfld.png</image>
 		<marquee>./media/marquees/trackfld.png</marquee>
-		<video />
+		<video>./media/videos/trackfld.mp4</video>
 		<rating>0.9</rating>
 		<desc>Track &amp; Field, known in Japan as Hyper Olympic (ハイパーオリンピック?), is a 1983 Olympic-themed arcade game developed and published by Konami.
 
@@ -705,6 +707,7 @@ The descent of the aliens accelerates as they are eliminated, making them more d
 As a cabinet-style arcade game, Spy Hunter was produced in both sit-down and standard upright versions with the latter being more common.[citation needed] The game's controls consist of a steering wheel in the form of a futuristic aircraft-style yoke with several special-purpose buttons, a two-position stick shift (offering 'low' and 'high' gears), and a pedal used for acceleration. It is a single-player game.</desc>
 		<image>./media/screenshots/spyhunt.png</image>
 		<marquee>./media/marquees/spyhunt.png</marquee>
+		<video>./media/videos/spyhunt.mp4</video>
 		<rating />
 		<releasedate>19830101T000000</releasedate>
 		<developer>Midway</developer>
@@ -939,6 +942,7 @@ The mini-game is available at the start of each wave and the way it works is thi
 		<desc>Tetris (In Russian: Тетрис) is a puzzle video game originally designed and programmed by Alexey Pajitnov in the Soviet Union. It was released on June 6, 1984, while he was working for the Dorodnicyn Computing Centre of the Academy of Science of the USSR in Moscow, Russian Soviet Federative Socialist Republic. He derived its name from the Greek numerical prefix tetra- (all of the game's pieces contain four segments) and tennis, Pajitnov's favorite sport.</desc>
 		<image>./media/screenshots/tetris.png</image>
 		<marquee>./media/marquees/tetris.png</marquee>
+		<video>./media/videos/tetris.mp4</video>
 		<rating />
 		<releasedate>19881201T000000</releasedate>
 		<developer>Atari Games</developer>
@@ -955,6 +959,7 @@ The mini-game is available at the start of each wave and the way it works is thi
 		<desc>Tron is a coin-operated arcade video game manufactured and distributed by Bally Midway in 1982. It is based on the Walt Disney Productions motion picture Tron released in the same year. The game consists of four subgames inspired by the events of the science fiction film. It features some characters and equipment seen in the film, e.g. the Light Cycles, battle tanks, the Input/Output Tower.</desc>
 		<image>./media/screenshots/tron.png</image>
 		<marquee>./media/marquees/tron.png</marquee>
+		<video>./media/videos/tron.mp4</video>
 		<rating>0.9</rating>
 		<releasedate>19820101T000000</releasedate>
 		<developer>Midway</developer>
@@ -971,6 +976,7 @@ The mini-game is available at the start of each wave and the way it works is thi
 		<desc>Zaxxon is a 1982 arcade game developed and released by Sega. Some sources claim that Japanese electronics company Ikegami Tsushinki also worked on the development of Zaxxon. The game gives the player the experience of flying a fighter craft through a fortress while shooting at enemy entities (missiles, enemy gunfire, etc.) The object of the game is to hit as many targets as possible without being shot down or running out of fuel—which can be replenished, paradoxically, by blowing up fuel drums.</desc>
 		<image>./media/screenshots/zaxxon.png</image>
 		<marquee>./media/marquees/zaxxon.png</marquee>
+		<video>./media/videos/zaxxon.mp4</video>
 		<rating>0.9</rating>
 		<releasedate>19820101T000000</releasedate>
 		<developer>Ikegami Tsushinki</developer>
