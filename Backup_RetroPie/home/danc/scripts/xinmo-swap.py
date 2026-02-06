@@ -3,6 +3,9 @@ import os
 import sys
 import glob
 import xml.etree.ElementTree as ET
+import termios
+import tty
+import select
 
 # Soft-coded joystick code positions
 XIN1_CODE = "JOYCODE_2_"
@@ -100,8 +103,8 @@ def main():
     print(f"Default.cfg joystick order is {'normal' if default_is_normal else 'swapped'}")
     print(f"Detected swapped_flag = {swapped_flag}")
 
-    # Convert swapped_flag to boolean for clarity
     hardware_swapped = (swapped_flag == "1")
+    print("WARNING - XinMo controllers swapped! (press any key)")
 
     # Determine if a swap is needed:
     # Swap if hardware swapped XOR config swapped
@@ -113,10 +116,6 @@ def main():
         print("No swap needed. Configuration matches hardware state.")
         sys.exit(0)
 
-    # Output warning and wait for key or timeout
-    import threading
-    import time
-    import sys
 
     def wait_key():
         try:
@@ -125,7 +124,6 @@ def main():
             msvcrt.getch()
         except ImportError:
             # Unix
-            import sys, termios, tty, select
             fd = sys.stdin.fileno()
             old_settings = termios.tcgetattr(fd)
             try:
