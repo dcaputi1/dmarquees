@@ -6,6 +6,11 @@
 # Install directory
 INSTALL_DIR ?= $(HOME)/marquees
 
+# Set the shell configuration specifically for rsync-back AI generated script
+SHELL := /bin/bash
+.ONESHELL:
+SHELLFLAGS := -eu -o pipefail -c
+
 all: dmarquees analyze_games
 
 # Build dmarquees
@@ -129,12 +134,32 @@ help:
 
 # Sync-back: Copy updated files from system location back to project
 sync-back:
-	@echo "Syncing back updated files from system to project..."
-	@if [ ! -d /opt/retropie/emulators/mame ]; then \
-		echo "Skipped: /opt/retropie/emulators/mame (not found in system location)"; \
-	else \
-		mkdir -p Backup_RetroPie/opt/retropie/emulators/mame; \
-		echo "Syncing all emulators/mame directories back to project..."; \
-		rsync -av --update --no-perms --no-owner --no-group --omit-dir-times /opt/retropie/emulators/mame/ Backup_RetroPie/opt/retropie/emulators/mame/ && echo "Back-synced: /opt/retropie/emulators/mame/"; \
+	echo "Syncing back updated files from system to project..."
+
+	if [[ ! -d /opt/retropie/emulators/mame ]]; then
+		echo "Skipped: /opt/retropie/emulators/mame (not found in system location)"
+		exit 0
 	fi
-	@echo "Sync-back complete!"
+
+	ROOT="$$(pwd)"
+	SRC="/opt/retropie/emulators/mame"
+	DST="$$ROOT/Backup_RetroPie/opt/retropie/emulators/mame"
+
+	mkdir -p "$$DST"
+	echo "Syncing updated + new files, but ONLY into dirs that already exist in the project..."
+
+	cd "$$SRC"
+
+	# Build a NUL-delimited list of files whose parent dir already exists in $$DST
+	find . -type f -print0 \
+	| while IFS= read -r -d '' f; do
+		if [[ -d "$$DST/$$(dirname "$$f")" ]]; then
+			printf '%s\0' "$$f"
+		fi
+	done \
+	| rsync -a --update --from0 --files-from=- \
+		--no-perms --no-owner --no-group --omit-dir-times \
+		"$$SRC/" "$$DST/"
+
+	echo "Back-synced: $$SRC/ -> $$DST/"
+	echo "Sync-back complete!"
