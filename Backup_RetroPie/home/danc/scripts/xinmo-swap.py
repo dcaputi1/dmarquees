@@ -104,18 +104,15 @@ def main():
     print(f"Detected swapped_flag = {swapped_flag}")
 
     hardware_swapped = (swapped_flag == "1")
-    print("WARNING - XinMo controllers swapped! (press any key)")
-
+ 
     # Determine if a swap is needed:
     # Swap if hardware swapped XOR config swapped
     config_swapped = not default_is_normal
     need_swap = hardware_swapped ^ config_swapped  # XOR logic
 
-
     if not need_swap:
         print("No swap needed. Configuration matches hardware state.")
         sys.exit(0)
-
 
     def wait_key():
         try:
@@ -134,8 +131,9 @@ def main():
             finally:
                 termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
-    print("WARNING - XinMo controllers swapped! (press any key)")
-    wait_key()
+    if hardware_swapped:
+        print("WARNING - XinMo controllers swapped! (press any key)")
+        wait_key()
 
     print("Performing joystick swap on all .cfg files...")
     total_swaps = process_directory(cfg_directory)
