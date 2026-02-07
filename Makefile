@@ -134,32 +134,26 @@ help:
 
 # Sync-back: Copy updated files from system location back to project
 sync-back:
-	echo "Syncing back updated files from system to project..."
-
-	if [[ ! -d /opt/retropie/emulators/mame ]]; then
-		echo "Skipped: /opt/retropie/emulators/mame (not found in system location)"
-		exit 0
+	@echo "Syncing back updated files from system to project..."
+	@if [[ ! -d /opt/retropie/emulators/mame ]]; then \
+		echo "Skipped: /opt/retropie/emulators/mame (not found in system location)"; \
+		exit 0; \
 	fi
-
-	ROOT="$$(pwd)"
-	SRC="/opt/retropie/emulators/mame"
-	DST="$$ROOT/Backup_RetroPie/opt/retropie/emulators/mame"
-
-	mkdir -p "$$DST"
-	echo "Syncing updated + new files, but ONLY into dirs that already exist in the project..."
-
-	cd "$$SRC"
-
-	# Build a NUL-delimited list of files whose parent dir already exists in $$DST
+	@ROOT="$$(pwd)"; \
+	SRC="/opt/retropie/emulators/mame"; \
+	DST="$$ROOT/Backup_RetroPie/opt/retropie/emulators/mame"; \
+	mkdir -p "$$DST"; \
+	echo "Syncing updated + new files, but ONLY into dirs that already exist in the project..."; \
+	cd "$$SRC"; \
 	find . -type f -print0 \
-	| while IFS= read -r -d '' f; do
-		if [[ -d "$$DST/$$(dirname "$$f")" ]]; then
-			printf '%s\0' "$$f"
-		fi
+	| while IFS= read -r -d '' f; do \
+		if [[ -d "$$DST/$$(dirname "$$f")" ]]; then \
+			printf '%s\0' "$$f"; \
+		fi; \
 	done \
-	| rsync -a --update --from0 --files-from=- \
+	| rsync -ai --update --from0 --files-from=- --no-implied-dirs \
+		--exclude='/mame' \
 		--no-perms --no-owner --no-group --omit-dir-times \
-		"$$SRC/" "$$DST/"
-
-	echo "Back-synced: $$SRC/ -> $$DST/"
+		"$$SRC/" "$$DST/"; \
+	echo "Back-synced: $$SRC/ -> $$DST/"; \
 	echo "Sync-back complete!"
