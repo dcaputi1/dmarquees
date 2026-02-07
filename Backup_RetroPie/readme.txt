@@ -27,30 +27,27 @@ k. edit autostart.sh and replace 'emulationstation' with 'wayfire-pi' (for remot
 
 steps:
 1. ~/IvarArcade/Backup_RetroPie/cp_roms.sh (~1 hours)
-2. create empty roms breakout.zip and pong.zip:
-   touch ~/RetroPie/roms/arcade/breakout.zip
-   touch ~/RetroPie/roms/arcade/pong.zip
-3. add paths for mame and (optional) retroarch, frontends to /etc/profile (user long path)
+2. add paths for mame and (optional) retroarch, frontends to /etc/profile (user long path)
    :/opt/retropie/emulators/mame:/opt/retropie/emulators/retroarch/bin
-4. sudo ~/IvarArcade/Backup_RetroPie/analyze_games.sh (installs tinyxml2 and python3-hid packages)
-5. mkdir -p /opt/retropie/configs/all/retroarch/config/MAME
-6. build and install IvarArcade project components:
+3. sudo ~/IvarArcade/Backup_RetroPie/analyze_games.sh (installs tinyxml2 and python3-hid packages)
+4. mkdir -p /opt/retropie/configs/all/retroarch/config/MAME
+5. build and install IvarArcade project components:
    cd ~/IvarArcade
    make all
    make install-force # deploys binaries, scripts, plugins, etc...
    1/11/2026 - TBD: combine those 2 steps?
-7. reboot (for path to take effect)
-8. clone, build, install ultrastikcmd tool for per-game joystick mapping:
+6. reboot (for path to take effect)
+7. clone, build, install ultrastikcmd tool for per-game joystick mapping:
    mkdir -p ~/IvarArcade/tools/linux
    cd ~/IvarArcade/tools/linux
    git clone https://github.com/dcaputi1/UltrastikCmd.git
    ./build.sh
    sudo ldconfig -v | grep libhid
    (verify ldconfig shows libhid.so.0 -> libhid.so.0.0.0)
-9. run ~/IvarArcade/Backup_RetroPie/ra_final.sh (formerly cp_opt.sh)
-10.run ~/IvarArcade/analyze_games/analyze_games (not sudo!)
-11.sudo ~/scripts/set_asound.sh (for Trixie sound problem - not needed for Bookworm Debian base OS)
-12. 2/1/2026 - TBD: test skyscraper (config.ini is in configs/all/skyscraper)
+8. run ~/IvarArcade/Backup_RetroPie/ra_final.sh (formerly cp_opt.sh)
+9. run ~/IvarArcade/analyze_games/analyze_games (not sudo!)
+10.sudo ~/scripts/set_asound.sh (for Trixie sound problem - not needed for Bookworm Debian base OS)
+11. 2/1/2026 - TBD: test skyscraper (config.ini is in configs/all/skyscraper)
 
 optional:
 A. sudo apt install meld
