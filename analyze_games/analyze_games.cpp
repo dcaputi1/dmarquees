@@ -137,6 +137,8 @@ void writeShaderFile(const GameInfo& info)
     }
 
     out << line << endl;
+    out << "SCANLINE_WEIGHT = \"1.500000\"" << endl;
+    out << "SCANLINE_GAP_BRIGHTNESS = \"0.500000\"" << endl;
     out.close();
 }
 
