@@ -120,7 +120,8 @@ help:
 	@echo "  install       - Build and install all components (skip existing)"
 	@echo "  install-force - Build and install all components (overwrite all)"
 	@echo "  clean         - Remove all build artifacts"
-	@echo "  uninstall     - Remove installed files"
+	@echo "  uninstall     - Remove installed files (untested)"
+	@echo "  sync-back     - Copies lr-mame/MAME config from /opt/ to ./Backup_RetroPie"
 	@echo "  help          - Show this help message"
 	@echo ""
 	@echo "Variables:"
@@ -132,28 +133,139 @@ help:
 	@echo "  make install INSTALL_DIR=/usr/local/ivararcade"
 	@echo "  make clean"
 
-# Sync-back: Copy updated files from system location back to project
 sync-back:
-	@echo "Syncing back updated files from system to project..."
-	@if [[ ! -d /opt/retropie/emulators/mame ]]; then \
-		echo "Skipped: /opt/retropie/emulators/mame (not found in system location)"; \
-		exit 0; \
+	@echo "Syncing back updated config from lr-mame/MAME to project..."
+
+	@ROOT="$$(pwd)"
+	@SRC="/opt/retropie/emulators/mame"
+	@DST="$$ROOT/Backup_RetroPie/opt/retropie/emulators/mame"
+
+	@if [[ ! -d "$$SRC" ]]; then
+		echo "ERROR: $$SRC not found"
+		exit 1
 	fi
-	@ROOT="$$(pwd)"; \
-	SRC="/opt/retropie/emulators/mame"; \
-	DST="$$ROOT/Backup_RetroPie/opt/retropie/emulators/mame"; \
-	mkdir -p "$$DST"; \
-	echo "Syncing updated + new files, but ONLY into dirs that already exist in the project..."; \
-	cd "$$SRC"; \
-	find . -type f -print0 \
-	| while IFS= read -r -d '' f; do \
-		if [[ -d "$$DST/$$(dirname "$$f")" ]]; then \
-			printf '%s\0' "$$f"; \
-		fi; \
+
+	# 1) Preflight: XinMo swap sanity check
+	@if [[ -x "$$HOME/scripts/xinmo-swapcheck.py" || -f "$$HOME/scripts/xinmo-swapcheck.py" ]]; then
+		"$$HOME/scripts/xinmo-swapcheck.py"
+		rc="$$?"
+		if [[ "$$rc" -ne 0 ]]; then
+			echo "ERROR: xinmo-swapcheck.py failed (exit $$rc). Aborting sync-back."
+			exit 1
+		fi
+	else
+		echo "ERROR: $$HOME/scripts/xinmo-swapcheck.py not found. Aborting sync-back."
+		exit 1
+	fi
+
+	# 2) Preflight: cfg_ra and cfg_sa must both exist; cfg must NOT exist
+	@if [[ ! -d "$$SRC/cfg_ra" ]]; then \
+		echo "ERROR: Missing required folder: $$SRC/cfg_ra"; \
+		exit 1; \
+	fi
+	@if [[ ! -d "$$SRC/cfg_sa" ]]; then \
+		echo "ERROR: Missing required folder: $$SRC/cfg_sa"; \
+		exit 1; \
+	fi
+	@if [[ -d "$$SRC/cfg" ]]; then \
+		echo "ERROR: Forbidden folder exists: $$SRC/cfg"; \
+		echo "       (cfg_ra and cfg_sa must exist, and cfg must not.)"; \
+		exit 1; \
+	fi
+
+	# 3) Preflight: detect cfg nesting bug (cfg_ra/cfg or cfg_sa/cfg)
+	@bad_cfg="$$(find "$$SRC" -type d \( -path "*/cfg_ra/cfg" -o -path "*/cfg_sa/cfg" \) -print -quit)"
+	@if [[ -n "$$bad_cfg" ]]; then
+		echo "ERROR: Detected nested cfg folder bug: $$bad_cfg"
+		echo "       Fix/move it first; refusing to sync-back."
+		exit 1
+	fi
+
+	@mkdir -p "$$DST"
+	@echo "Syncing updated + new files, but ONLY into dirs that already exist in the project..."
+
+	@is_useful_ini_change() {
+		local src="$$1"
+		local dst="$$2"
+
+		# Ignore comment/blank lines + strip CR for safety.
+		# Then remove known-noise keys (metadata + sound/mixer-ish).
+		local IGNORE_RE='^(#|;|$$)|\r$$|^(play|plays|play_count|playcount|last_play|lastplay|play_time|playtime|time_played|times_played|credits|coin|coins|highscore|hiscore|score|scores|nvram|autofire|cheat|cheats|ui_.*|ui|state|history|bookkeeping)[[:space:]]*='
+		local IGNORE_SOUND_RE='^(sound|samples|samplerate|audio_latency|volume|attenuation|speaker_report|mixer|slider|bgm|music|snd|panning|compressor|equalizer)[[:space:]]*='
+
+		# Keys we consider intentional/valuable if they changed
+		local ALLOW_RE='^(ctrlr|joystick|mouse|lightgun|trackball|paddle|dial|adstick|pedal|positional|multikeyboard|multimouse|steadykey|joystick_contradictory|joystick_deadzone|joystick_saturation|joystick_map|input|coin_lockout)[[:space:]]*='
+		local ALLOW_VIDEO_RE='^(numscreens|screen0|aspect|resolution|view|rotate|ror|rol|flipx|flipy|refresh|switchres|prescale|keepaspect|unevenstretch|intoverscan|intscalex|intscaley|video|monitorprovider)[[:space:]]*='
+
+		# Build "meaningful" normalized content for src/dst, then diff them.
+		local t1="$$(mktemp)"
+		local t2="$$(mktemp)"
+		trap 'rm -f "$$t1" "$$t2"' RETURN
+
+		# Normalize
+		grep -vE "$$IGNORE_RE" "$$src" 2>/dev/null | grep -vE "$$IGNORE_SOUND_RE" | sed 's/\r$$//' > "$$t1" || true
+		if [[ -f "$$dst" ]]; then
+			grep -vE "$$IGNORE_RE" "$$dst" 2>/dev/null | grep -vE "$$IGNORE_SOUND_RE" | sed 's/\r$$//' > "$$t2" || true
+		else
+			: > "$$t2"
+		fi
+
+		# If no meaningful differences, skip
+		if diff -q "$$t1" "$$t2" >/dev/null 2>&1; then
+			return 1
+		fi
+
+		# Examine changed lines (only +/- lines, not headers), strip +/-.
+		local changed
+		changed="$$(diff -u "$$t2" "$$t1" \
+			| grep -E '^[+-]' \
+			| grep -vE '^[+-]{3} ' \
+			| sed 's/^[+-]//')"
+
+		# If after filtering we somehow have nothing, skip
+		if [[ -z "$$changed" ]]; then
+			return 1
+		fi
+
+		# If any changed line matches allowed keys → copy
+		if echo "$$changed" | grep -Eq "$$ALLOW_RE|$$ALLOW_VIDEO_RE"; then
+			return 0
+		fi
+
+		# Otherwise: treat as not useful (noise or unknown) → skip
+		return 1
+	}
+
+	@cd "$$SRC"
+
+	@find . -type f -print0 \
+	| while IFS= read -r -d '' f; do
+		# Only copy into dirs that already exist in the destination tree
+		if [[ ! -d "$$DST/$$(dirname "$$f")" ]]; then
+			continue
+		fi
+
+		# Skip the top-level mame binary explicitly (adjust if yours is different)
+		if [[ "$$f" == "./mame" ]]; then
+			continue
+		fi
+
+		# INI policy: only copy if useful/intentional
+		if [[ "$$f" == *.ini ]]; then
+			srcp="$$SRC/$${f#./}"
+			dstp="$$DST/$${f#./}"
+			if ! is_useful_ini_change "$$srcp" "$$dstp"; then
+				echo "SKIP ini (noise/unknown): $${f#./}"
+				continue
+			fi
+		fi
+
+		printf '%s\0' "$$f"
 	done \
 	| rsync -ai --update --from0 --files-from=- --no-implied-dirs \
 		--exclude='/mame' \
 		--no-perms --no-owner --no-group --omit-dir-times \
-		"$$SRC/" "$$DST/"; \
-	echo "Back-synced: $$SRC/ -> $$DST/"; \
-	echo "Sync-back complete!"
+		"$$SRC/" "$$DST/"
+
+	@echo "Back-synced: $$SRC/ -> $$DST/"
+	@echo "Sync-back complete!"
