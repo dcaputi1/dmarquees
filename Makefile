@@ -1,17 +1,17 @@
 # IvarArcade Parent Makefile
 # Builds both dmarquees and analyze_games executables
-#
+
 # MAKEFILE_VERSION = 2026-02-10T14:10
+
+# Set the shell configuration specifically for sync-back (policy script)
+SHELL := /bin/bash
+.ONESHELL:
+SHELLFLAGS := -eu -o pipefail -c
 
 .PHONY: all dmarquees analyze_games install install-force clean help sync-back
 
 # Install directory
 INSTALL_DIR ?= $(HOME)/marquees
-
-# Set the shell configuration specifically for rsync-back AI generated script
-SHELL := /bin/bash
-.ONESHELL:
-SHELLFLAGS := -eu -o pipefail -c
 
 all: dmarquees analyze_games
 
@@ -147,16 +147,12 @@ sync-back:
 		echo "ERROR: $$SRC not found"
 		exit 1
 	fi
+	@if [[ ! -d "$$DST" ]]; then
+		echo "ERROR: Destination root not found: $$DST"
+		exit 1
+	fi
 
-	# 1) Preflight: XinMo swap sanity check (currently disabled)
-	# if [[ -x "$$HOME/scripts/xinmo-swapcheck.py" || -f "$$HOME/scripts/xinmo-swapcheck.py" ]]; then
-	# 	"$$HOME/scripts/xinmo-swapcheck.py" || { echo "ERROR: xinmo-swapcheck.py failed. Aborting."; exit 1; }
-	# else
-	# 	echo "ERROR: $$HOME/scripts/xinmo-swapcheck.py not found. Aborting."
-	# 	exit 1
-	# fi
-
-	# 2) Preflight: cfg_ra and cfg_sa must both exist under MAME, and cfg must NOT exist
+	# Preflight (MAME): cfg_ra and cfg_sa must both exist; cfg must NOT exist
 	@if [[ ! -d "$$MAME_DIR/cfg_ra" ]]; then
 		echo "ERROR: Missing required folder: $$MAME_DIR/cfg_ra"
 		exit 1
@@ -171,7 +167,7 @@ sync-back:
 		exit 1
 	fi
 
-	# 3) Preflight: detect cfg nesting bug (cfg_ra/cfg or cfg_sa/cfg) under MAME
+	# Preflight (MAME): detect cfg nesting bug (cfg_ra/cfg or cfg_sa/cfg)
 	@bad_cfg="$$(find "$$MAME_DIR" -type d \( -path "*/cfg_ra/cfg" -o -path "*/cfg_sa/cfg" \) -print -quit)"
 	@if [[ -n "$$bad_cfg" ]]; then
 		echo "ERROR: Detected nested cfg folder bug: $$bad_cfg"
@@ -179,8 +175,7 @@ sync-back:
 		exit 1
 	fi
 
-	@mkdir -p "$$DST"
-	@echo "Syncing updated + new files, but ONLY into dirs that already exist in the project..."
+	@echo "Building filtered file list (no new dirs created; mixer treated as noise)..."
 
 	@is_useful_ini_change() {
 		local src="$$1"
@@ -203,9 +198,7 @@ sync-back:
 			: > "$$t2"
 		fi
 
-		if diff -q "$$t1" "$$t2" >/dev/null 2>&1; then
-			return 1
-		fi
+		diff -q "$$t1" "$$t2" >/dev/null 2>&1 && return 1
 
 		local changed
 		changed="$$(diff -u "$$t2" "$$t1" \
@@ -214,12 +207,17 @@ sync-back:
 			| sed 's/^[+-]//')"
 
 		[[ -n "$$changed" ]] || return 1
-
 		echo "$$changed" | grep -Eq "$$ALLOW_RE|$$ALLOW_VIDEO_RE"
 	}
 
 	@is_mixer_only_cfg() {
 		local src="$$1"
+
+		# If it has an <input> section, it is never "mixer-only".
+		if grep -qi '<[[:space:]]*input[[:space:]>]' "$$src" 2>/dev/null; then
+			return 1
+		fi
+
 		local remainder
 		remainder="$$(sed -e 's/\r$$//' \
 			-e '/^<\?xml[[:space:]]/d' \
@@ -229,6 +227,7 @@ sync-back:
 			"$$src" 2>/dev/null \
 			| sed -E 's/<mameconfig[^>]*>//g; s/<\/mameconfig>//g; s/<system[^>]*>//g; s/<\/system>//g' \
 			| tr -d '[:space:]')"
+
 		[[ -z "$$remainder" ]]
 	}
 
@@ -257,46 +256,41 @@ sync-back:
 		[[ "$$a" != "$$b" ]]
 	}
 
+	@declare -A SKIPPED_DIRS
+	@SKIP_DIR_NAMES=(autoconfig-presets)
+
 	@cd "$$SRC"
 
-	@SKIP_FOLDERS=(autoconfig-presets)
+	@echo "[skip] pruned dir names (not traversed): $${SKIP_DIR_NAMES[*]}" >&2
 
-	# Log skip folders once (only if present in SRC)
-	@for d in "$${SKIP_FOLDERS[@]}"; do \
-		if [[ -d "$$SRC/$$d" ]]; then \
-			echo "[skip] $$d/ (pruned)" >&2; \
-		fi; \
-	done
-
-	@declare -A SKIPPED_DIRS
-
-	@find_cmd=(find .)
-	@if ((${#SKIP_FOLDERS[@]})); then \
-		find_cmd+=('\('); \
-		first=1; \
-		for d in "$${SKIP_FOLDERS[@]}"; do \
-			if (( first == 0 )); then find_cmd+=(-o); fi; \
-			# Match both the folder itself and everything underneath it
-			find_cmd+=(-path "./$$d" -o -path "./$$d/*"); \
-			first=0; \
-		done; \
-		find_cmd+=('\)' -prune -o); \
-	fi; \
-	find_cmd+=(-type f -print0); \
-	"$${find_cmd[@]}" \
+	@find . \
+		\( -type d \( $(printf -- '-name %q -o ' "$${SKIP_DIR_NAMES[@]}") -false \) -prune \) \
+		-o -type f -print0 \
 	| while IFS= read -r -d '' f; do
-		# Only copy into dirs that already exist in the destination tree
-		if [[ ! -d "$$DST/$$(dirname "$$f")" ]]; then
-			rel_dir="$$(dirname "$${f#./}")"
-			if [[ -z "$${SKIPPED_DIRS[$$rel_dir]+x}" ]]; then
-				SKIPPED_DIRS[$$rel_dir]=1
-				echo "[skip] new-dir (would create): $$rel_dir/" >&2
-			fi
+		# Explicit skip: the MAME binary
+		if [[ "$$f" == "./emulators/mame/mame" ]]; then
 			continue
 		fi
 
-		# Skip the MAME binary explicitly (SRC is /opt/retropie now)
-		if [[ "$$f" == "./emulators/mame/mame" ]]; then
+		# Only copy into dirs that already exist in the destination tree.
+		# Log only the top-most missing directory once (avoid nested spam).
+		if [[ ! -d "$$DST/$$(dirname "$$f")" ]]; then
+			miss="$$(dirname "$${f#./}")"
+			top="$$miss"
+			while [[ "$$top" != "." ]]; do
+				parent="$$(dirname "$$top")"
+				if [[ -d "$$DST/$$parent" ]]; then
+					break
+				fi
+				top="$$parent"
+			done
+			if [[ "$$top" == "." ]]; then
+				top="$$miss"
+			fi
+			if [[ -z "$${SKIPPED_DIRS[$$top]+x}" ]]; then
+				SKIPPED_DIRS[$$top]=1
+				echo "[skip] new-dir (would create): $$top/" >&2
+			fi
 			continue
 		fi
 
@@ -310,12 +304,11 @@ sync-back:
 			fi
 		fi
 
-		# CFG policy:
-		# - XML-ish cfg:
-		#     - skip mixer-only
-		#     - if existing: copy only if meaningful change ignoring <mixer>
-		#     - if new: copy only if it contains <input>
-		# - non-XML cfg (retroarch.cfg etc): keep (no XML filtering)
+		# CFG policy (XML-ish cfg only):
+		# - mixer treated as noise in all cases
+		# - skip mixer-only cfg
+		# - existing cfg: copy only if meaningful change ignoring mixer
+		# - new XML cfg: copy only if it contains <input>
 		if [[ "$$f" == *.cfg ]]; then
 			srcp="$$SRC/$${f#./}"
 			dstp="$$DST/$${f#./}"
