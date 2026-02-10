@@ -136,209 +136,159 @@ help:
 	@echo "  make clean"
 
 sync-back:
-	@echo "Syncing back updated config from lr-mame/MAME to project..."
+	@echo "Syncing back updated config from /opt/retropie to project..."
 
 	@ROOT="$$(pwd)"
 	@SRC="/opt/retropie"
 	@DST="$$ROOT/Backup_RetroPie/opt/retropie"
 	@MAME_DIR="$$SRC/emulators/mame"
 
-	@if [[ ! -d "$$SRC" ]]; then
-		echo "ERROR: $$SRC not found"
-		exit 1
+	@if [[ ! -d "$$SRC" ]]; then \
+		echo "ERROR: $$SRC not found"; \
+		exit 1; \
 	fi
-	@if [[ ! -d "$$DST" ]]; then
-		echo "ERROR: Destination root not found: $$DST"
-		exit 1
-	fi
-
-	# Preflight (MAME): cfg_ra and cfg_sa must both exist; cfg must NOT exist
-	@if [[ ! -d "$$MAME_DIR/cfg_ra" ]]; then
-		echo "ERROR: Missing required folder: $$MAME_DIR/cfg_ra"
-		exit 1
-	fi
-	@if [[ ! -d "$$MAME_DIR/cfg_sa" ]]; then
-		echo "ERROR: Missing required folder: $$MAME_DIR/cfg_sa"
-		exit 1
-	fi
-	@if [[ -d "$$MAME_DIR/cfg" ]]; then
-		echo "ERROR: Forbidden folder exists: $$MAME_DIR/cfg"
-		echo "       (cfg_ra and cfg_sa must exist, and cfg must not.)"
-		exit 1
+	@if [[ ! -d "$$DST" ]]; then \
+		echo "ERROR: destination tree not found: $$DST"; \
+		exit 1; \
 	fi
 
-	# Preflight (MAME): detect cfg nesting bug (cfg_ra/cfg or cfg_sa/cfg)
-	@bad_cfg="$$(find "$$MAME_DIR" -type d \( -path "*/cfg_ra/cfg" -o -path "*/cfg_sa/cfg" \) -print -quit)"
-	@if [[ -n "$$bad_cfg" ]]; then
-		echo "ERROR: Detected nested cfg folder bug: $$bad_cfg"
-		echo "       Fix/move it first; refusing to sync-back."
-		exit 1
+	@if [[ ! -d "$$MAME_DIR/cfg_ra" ]]; then \
+		echo "ERROR: Missing required folder: $$MAME_DIR/cfg_ra"; \
+		exit 1; \
+	fi
+	@if [[ ! -d "$$MAME_DIR/cfg_sa" ]]; then \
+		echo "ERROR: Missing required folder: $$MAME_DIR/cfg_sa"; \
+		exit 1; \
+	fi
+	@if [[ -d "$$MAME_DIR/cfg" ]]; then \
+		echo "ERROR: Forbidden folder exists: $$MAME_DIR/cfg"; \
+		echo "       (cfg_ra and cfg_sa must exist, and cfg must not.)"; \
+		exit 1; \
 	fi
 
-	@echo "Building filtered file list (no new dirs created; mixer treated as noise)..."
+	@bad_cfg="$$(find "$$MAME_DIR" -type d \( -path "*/cfg_ra/cfg" -o -path "*/cfg_sa/cfg" \) -print -quit)"; \
+	if [[ -n "$$bad_cfg" ]]; then \
+		echo "ERROR: Detected nested cfg folder bug: $$bad_cfg"; \
+		echo "       Fix/move it first; refusing to sync-back."; \
+		exit 1; \
+	fi
 
 	@is_useful_ini_change() {
-		local src="$$1"
-		local dst="$$2"
-
-		local IGNORE_RE='^(#|;|$$)|\r$$|^(play|plays|play_count|playcount|last_play|lastplay|play_time|playtime|time_played|times_played|credits|coin|coins|highscore|hiscore|score|scores|nvram|autofire|cheat|cheats|ui_.*|ui|state|history|bookkeeping)[[:space:]]*='
-		local IGNORE_SOUND_RE='^(sound|samples|samplerate|audio_latency|volume|attenuation|speaker_report|mixer|slider|bgm|music|snd|panning|compressor|equalizer)[[:space:]]*='
-
-		local ALLOW_RE='^(ctrlr|joystick|mouse|lightgun|trackball|paddle|dial|adstick|pedal|positional|multikeyboard|multimouse|steadykey|joystick_contradictory|joystick_deadzone|joystick_saturation|joystick_map|input|coin_lockout)[[:space:]]*='
-		local ALLOW_VIDEO_RE='^(numscreens|screen0|aspect|resolution|view|rotate|ror|rol|flipx|flipy|refresh|switchres|prescale|keepaspect|unevenstretch|intoverscan|intscalex|intscaley|video|monitorprovider)[[:space:]]*='
-
-		local t1="$$(mktemp)"
-		local t2="$$(mktemp)"
-		trap 'rm -f "$$t1" "$$t2"' RETURN
-
-		grep -vE "$$IGNORE_RE" "$$src" 2>/dev/null | grep -vE "$$IGNORE_SOUND_RE" | sed 's/\r$$//' > "$$t1" || true
+		local src="$$1"; local dst="$$2";
+		local IGNORE_RE='^(#|;|$$)|\r$$|^(play|plays|play_count|playcount|last_play|lastplay|play_time|playtime|time_played|times_played|credits|coin|coins|highscore|hiscore|score|scores|nvram|autofire|cheat|cheats|ui_.*|ui|state|history|bookkeeping)[[:space:]]*=';
+		local IGNORE_SOUND_RE='^(sound|samples|samplerate|audio_latency|volume|attenuation|speaker_report|mixer|slider|bgm|music|snd|panning|compressor|equalizer)[[:space:]]*=';
+		local ALLOW_RE='^(ctrlr|joystick|mouse|lightgun|trackball|paddle|dial|adstick|pedal|positional|multikeyboard|multimouse|steadykey|joystick_contradictory|joystick_deadzone|joystick_saturation|joystick_map|input|coin_lockout)[[:space:]]*=';
+		local ALLOW_VIDEO_RE='^(numscreens|screen0|aspect|resolution|view|rotate|ror|rol|flipx|flipy|refresh|switchres|prescale|keepaspect|unevenstretch|intoverscan|intscalex|intscaley|video|monitorprovider)[[:space:]]*=';
+		local t1="$$(mktemp)"; local t2="$$(mktemp)";
+		trap 'rm -f "$$t1" "$$t2"' RETURN;
+		grep -vE "$$IGNORE_RE" "$$src" 2>/dev/null | grep -vE "$$IGNORE_SOUND_RE" | sed 's/\r$$//' > "$$t1" || true;
 		if [[ -f "$$dst" ]]; then
-			grep -vE "$$IGNORE_RE" "$$dst" 2>/dev/null | grep -vE "$$IGNORE_SOUND_RE" | sed 's/\r$$//' > "$$t2" || true
+			grep -vE "$$IGNORE_RE" "$$dst" 2>/dev/null | grep -vE "$$IGNORE_SOUND_RE" | sed 's/\r$$//' > "$$t2" || true;
 		else
-			: > "$$t2"
+			: > "$$t2";
 		fi
-
-		diff -q "$$t1" "$$t2" >/dev/null 2>&1 && return 1
-
-		local changed
-		changed="$$(diff -u "$$t2" "$$t1" \
-			| grep -E '^[+-]' \
-			| grep -vE '^[+-]{3} ' \
-			| sed 's/^[+-]//')"
-
-		[[ -n "$$changed" ]] || return 1
-		echo "$$changed" | grep -Eq "$$ALLOW_RE|$$ALLOW_VIDEO_RE"
+		diff -q "$$t1" "$$t2" >/dev/null 2>&1 && return 1;
+		local changed;
+		changed="$$(diff -u "$$t2" "$$t1" | grep -E '^[+-]' | grep -vE '^[+-]{3} ' | sed 's/^[+-]//')";
+		[[ -n "$$changed" ]] || return 1;
+		echo "$$changed" | grep -Eq "$$ALLOW_RE|$$ALLOW_VIDEO_RE";
 	}
 
 	@is_mixer_only_cfg() {
-		local src="$$1"
-
-		# If it has an <input> section, it is never "mixer-only".
-		if grep -qi '<[[:space:]]*input[[:space:]>]' "$$src" 2>/dev/null; then
-			return 1
+		local src="$$1";
+		if grep -qi '<[[:space:]]*input[[:space:]>]' "$$src"; then
+			return 1;
 		fi
-
-		local remainder
+		local remainder;
 		remainder="$$(sed -e 's/\r$$//' \
 			-e '/^<\?xml[[:space:]]/d' \
-			-e '/^[[:space:]]*<!--/d' \
+			-e '/^[[:space:]]*<!--[[:space:]]*/d' \
 			-e '/^[[:space:]]*$$/d' \
 			-e ':a; /<mixer[>[:space:]]/{N; /<\/mixer>/!ba; s/<mixer[>[:space:]][^>]*>.*<\/mixer>//s;}' \
 			"$$src" 2>/dev/null \
 			| sed -E 's/<mameconfig[^>]*>//g; s/<\/mameconfig>//g; s/<system[^>]*>//g; s/<\/system>//g' \
-			| tr -d '[:space:]')"
-
-		[[ -z "$$remainder" ]]
+			| tr -d '[:space:]')";
+		[[ -z "$$remainder" ]];
 	}
 
 	@is_useful_xml_cfg_change() {
-		local src="$$1"
-		local dst="$$2"
-
+		local src="$$1"; local dst="$$2";
 		normalize_cfg() {
 			sed -e 's/\r$$//' \
 				-e '/^<\?xml[[:space:]]/d' \
-				-e '/^[[:space:]]*<!--/d' \
+				-e '/^[[:space:]]*<!--[[:space:]]*/d' \
 				-e '/^[[:space:]]*$$/d' \
 				-e ':a; /<mixer[>[:space:]]/{N; /<\/mixer>/!ba; s/<mixer[>[:space:]][^>]*>.*<\/mixer>//s;}' \
-				"$$1" 2>/dev/null \
-			| tr -d '[:space:]'
+				"$$1" 2>/dev/null | tr -d '[:space:]';
 		}
-
-		local a b
-		a="$$(normalize_cfg "$$src")"
-		if [[ -f "$$dst" ]]; then
-			b="$$(normalize_cfg "$$dst")"
-		else
-			b=""
-		fi
-
-		[[ "$$a" != "$$b" ]]
+		local a b;
+		a="$$(normalize_cfg "$$src")";
+		if [[ -f "$$dst" ]]; then b="$$(normalize_cfg "$$dst")"; else b=""; fi;
+		[[ "$$a" != "$$b" ]];
 	}
 
-	@declare -A SKIPPED_DIRS
-	@SKIP_DIR_NAMES=(autoconfig-presets)
+	@cd "$$SRC";
+	declare -A SKIPPED_DIRS;
+	SKIP_DIR_NAMES=(autoconfig-presets);
+	echo "[skip] pruned dir names (not traversed): $${SKIP_DIR_NAMES[*]}" >&2;
 
-	@cd "$$SRC"
-
-	@echo "[skip] pruned dir names (not traversed): $${SKIP_DIR_NAMES[*]}" >&2
-
-	@find . \
-		\( -type d \( $(printf -- '-name %q -o ' "$${SKIP_DIR_NAMES[@]}") -false \) -prune \) \
-		-o -type f -print0 \
+	find . \
+	\( -type d \( $$(for d in "$${SKIP_DIR_NAMES[@]}"; do printf -- '-name %q -o ' "$$d"; done) -false \) \) -prune \
+	-o -type f -print0 \
 	| while IFS= read -r -d '' f; do
-		# Explicit skip: the MAME binary
 		if [[ "$$f" == "./emulators/mame/mame" ]]; then
-			continue
+			echo "[skip] binary: $${f#./}" >&2;
+			continue;
 		fi
-
-		# Only copy into dirs that already exist in the destination tree.
-		# Log only the top-most missing directory once (avoid nested spam).
-		if [[ ! -d "$$DST/$$(dirname "$$f")" ]]; then
-			miss="$$(dirname "$${f#./}")"
-			top="$$miss"
-			while [[ "$$top" != "." ]]; do
-				parent="$$(dirname "$$top")"
-				if [[ -d "$$DST/$$parent" ]]; then
-					break
-				fi
-				top="$$parent"
+		dst_dir="$$DST/$$(dirname "$$f")";
+		if [[ ! -d "$$dst_dir" ]]; then
+			rel_dir="$$(dirname "$${f#./}")";
+			cur="$$rel_dir";
+			while [[ "$$cur" != "." ]]; do
+				parent="$$(dirname "$$cur")";
+				[[ -d "$$DST/$$parent" ]] && break;
+				cur="$$parent";
 			done
-			if [[ "$$top" == "." ]]; then
-				top="$$miss"
+			if [[ -z "$${SKIPPED_DIRS[$$cur]+x}" ]]; then
+				SKIPPED_DIRS[$$cur]=1;
+				echo "[skip] new-dir (would create): $$cur/" >&2;
 			fi
-			if [[ -z "$${SKIPPED_DIRS[$$top]+x}" ]]; then
-				SKIPPED_DIRS[$$top]=1
-				echo "[skip] new-dir (would create): $$top/" >&2
-			fi
-			continue
+			continue;
 		fi
-
-		# INI policy: only copy if useful/intentional
 		if [[ "$$f" == *.ini ]]; then
-			srcp="$$SRC/$${f#./}"
-			dstp="$$DST/$${f#./}"
+			srcp="$$SRC/$${f#./}";
+			dstp="$$DST/$${f#./}";
 			if ! is_useful_ini_change "$$srcp" "$$dstp"; then
-				echo "[skip] ini (noise/unknown): $${f#./}" >&2
-				continue
+				echo "[skip] ini (noise/unknown): $${f#./}" >&2;
+				continue;
 			fi
 		fi
-
-		# CFG policy (XML-ish cfg only):
-		# - mixer treated as noise in all cases
-		# - skip mixer-only cfg
-		# - existing cfg: copy only if meaningful change ignoring mixer
-		# - new XML cfg: copy only if it contains <input>
 		if [[ "$$f" == *.cfg ]]; then
-			srcp="$$SRC/$${f#./}"
-			dstp="$$DST/$${f#./}"
-
+			srcp="$$SRC/$${f#./}";
+			dstp="$$DST/$${f#./}";
 			if head -n 5 "$$srcp" 2>/dev/null | grep -qiE '^\s*<\?xml|<mameconfig\b|^\s*<'; then
 				if is_mixer_only_cfg "$$srcp"; then
-					echo "[skip] cfg (mixer-only): $${f#./}" >&2
-					continue
+					echo "[skip] cfg (mixer-only): $${f#./}" >&2;
+					continue;
 				fi
-
 				if [[ -f "$$dstp" ]]; then
 					if ! is_useful_xml_cfg_change "$$srcp" "$$dstp"; then
-						echo "[skip] cfg (only mixer/whitespace changes): $${f#./}" >&2
-						continue
+						echo "[skip] cfg (only mixer/whitespace changes): $${f#./}" >&2;
+						continue;
 					fi
 				else
 					if ! grep -qi '<[[:space:]]*input[[:space:]>]' "$$srcp"; then
-						echo "[skip] cfg (new XML cfg without <input>): $${f#./}" >&2
-						continue
+						echo "[skip] cfg (new XML cfg without <input>): $${f#./}" >&2;
+						continue;
 					fi
 				fi
 			fi
 		fi
-
-		printf '%s\0' "$$f"
+		printf '%s\0' "$$f";
 	done \
 	| rsync -ai --update --from0 --files-from=- --no-implied-dirs \
-		--exclude='/emulators/mame/mame' \
 		--no-perms --no-owner --no-group --omit-dir-times \
-		"$$SRC/" "$$DST/"
+		"$$SRC/" "$$DST/";
 
-	@echo "Back-synced: $$SRC/ -> $$DST/"
+	@echo "Back-synced: $$SRC/ -> $$DST/";
 	@echo "Sync-back complete!"
