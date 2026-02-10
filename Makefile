@@ -229,7 +229,7 @@ sync-back:
 
 	@cd "$$SRC";
 	declare -A SKIPPED_DIRS;
-	SKIP_DIR_NAMES=(autoconfig-presets);
+	SKIP_DIR_NAMES=(autoconfig-presets skyscraper ctrlr plugins arcade);
 	echo "[skip] pruned dir names (not traversed): $${SKIP_DIR_NAMES[*]}" >&2;
 
 	find . \
