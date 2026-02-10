@@ -1,6 +1,7 @@
-# MAKEFILE_VERSION = 2026-02-09T14:50-new
 # IvarArcade Parent Makefile
 # Builds both dmarquees and analyze_games executables
+#
+# MAKEFILE_VERSION = 2026-02-10T14:10
 
 .PHONY: all dmarquees analyze_games install install-force clean help sync-back
 
@@ -258,9 +259,31 @@ sync-back:
 
 	@cd "$$SRC"
 
+	@SKIP_FOLDERS=(autoconfig-presets)
+
+	# Log skip folders once (only if present in SRC)
+	@for d in "$${SKIP_FOLDERS[@]}"; do \
+		if [[ -d "$$SRC/$$d" ]]; then \
+			echo "[skip] $$d/ (pruned)" >&2; \
+		fi; \
+	done
+
 	@declare -A SKIPPED_DIRS
 
-	@find . -type f -print0 \
+	@find_cmd=(find .)
+	@if ((${#SKIP_FOLDERS[@]})); then \
+		find_cmd+=('\('); \
+		first=1; \
+		for d in "$${SKIP_FOLDERS[@]}"; do \
+			if (( first == 0 )); then find_cmd+=(-o); fi; \
+			# Match both the folder itself and everything underneath it
+			find_cmd+=(-path "./$$d" -o -path "./$$d/*"); \
+			first=0; \
+		done; \
+		find_cmd+=('\)' -prune -o); \
+	fi; \
+	find_cmd+=(-type f -print0); \
+	"$${find_cmd[@]}" \
 	| while IFS= read -r -d '' f; do
 		# Only copy into dirs that already exist in the destination tree
 		if [[ ! -d "$$DST/$$(dirname "$$f")" ]]; then
