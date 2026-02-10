@@ -258,11 +258,17 @@ sync-back:
 
 	@cd "$$SRC"
 
+	@declare -A SKIPPED_DIRS
+
 	@find . -type f -print0 \
 	| while IFS= read -r -d '' f; do
 		# Only copy into dirs that already exist in the destination tree
 		if [[ ! -d "$$DST/$$(dirname "$$f")" ]]; then
-			echo "[skip] new-dir (would create): $${f#./}" >&2
+			rel_dir="$$(dirname "$${f#./}")"
+			if [[ -z "$${SKIPPED_DIRS[$$rel_dir]+x}" ]]; then
+				SKIPPED_DIRS[$$rel_dir]=1
+				echo "[skip] new-dir (would create): $$rel_dir/" >&2
+			fi
 			continue
 		fi
 
