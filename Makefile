@@ -176,7 +176,7 @@ sync-back:
 		fi
 		local tag_re=""
 		local t
-		for t in "$$${USEFUL_CFG_SECTIONS[@]}"; do
+		for t in "$${USEFUL_CFG_SECTIONS[@]}"; do
 			tag_re+="<\\s*$$t\\b|"
 		done
 		tag_re="$${tag_re%|}"
@@ -186,21 +186,14 @@ sync-back:
 	}
 
 	# --- Phase A: sync only MODIFIED files that ALREADY EXIST in the target tree ---
-	cd "$$SRC"
-	find . -type f -print0 \
-	| while IFS= read -r -d '' f; do
-		rel="$${f#./}"
-		# Only include if the destination file already exists.
-		if [[ -f "$$DST/$$rel" ]]; then
-			printf '%s\0' "$$f"
-		fi
-	done \
-	| rsync -ai --update --from0 --files-from=- --no-implied-dirs \
+	# NOTE: --existing prevents new files from being created in the target tree.
+	rsync -ai --existing --update \
 		--no-perms --no-owner --no-group --omit-dir-times \
 		"$$SRC/" "$$DST/"
 
+
 	# --- Phase B: copy NEW files from approved folders (subject to cfg rules) ---
-	for d in "$$${NEW_FILE_DIRS[@]}"; do
+	for d in "$${NEW_FILE_DIRS[@]}"; do
 		src_dir="$$MAME_DIR/$$d"
 		dst_dir="$$DST/emulators/mame/$$d"
 		[[ -d "$$src_dir" ]] || { echo "ERROR: Missing new-file source folder: $$src_dir"; exit 1; }
@@ -224,4 +217,4 @@ sync-back:
 			"$$src_dir/" "$$dst_dir/"
 	done
 
-	@echo "sync-back $$SRC/ -> $$DST/ complete!"
+	@echo "sync-back: $$SRC/ -> $$DST/ ... complete!"
