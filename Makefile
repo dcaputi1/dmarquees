@@ -138,157 +138,90 @@ help:
 sync-back:
 	@echo "Syncing back updated config from /opt/retropie to project..."
 
-	@ROOT="$$(pwd)"
-	@SRC="/opt/retropie"
-	@DST="$$ROOT/Backup_RetroPie/opt/retropie"
-	@MAME_DIR="$$SRC/emulators/mame"
+	ROOT="$$(pwd)"
+	SRC="/opt/retropie"
+	DST="$$ROOT/Backup_RetroPie/opt/retropie"
+	MAME_DIR="$$SRC/emulators/mame"
 
-	@if [[ ! -d "$$SRC" ]]; then \
-		echo "ERROR: $$SRC not found"; \
-		exit 1; \
-	fi
-	@if [[ ! -d "$$DST" ]]; then \
-		echo "ERROR: destination tree not found: $$DST"; \
-		exit 1; \
-	fi
+	# --- safety checks ---
+	[[ -d "$$SRC" ]] || { echo "ERROR: $$SRC not found"; exit 1; }
+	[[ -d "$$DST" ]] || { echo "ERROR: destination tree not found: $$DST"; exit 1; }
 
-	@if [[ ! -d "$$MAME_DIR/cfg_ra" ]]; then \
-		echo "ERROR: Missing required folder: $$MAME_DIR/cfg_ra"; \
-		exit 1; \
+	[[ -d "$$MAME_DIR/cfg_ra" ]] || { echo "ERROR: Missing required folder: $$MAME_DIR/cfg_ra"; exit 1; }
+	[[ -d "$$MAME_DIR/cfg_sa" ]] || { echo "ERROR: Missing required folder: $$MAME_DIR/cfg_sa"; exit 1; }
+	if [[ -d "$$MAME_DIR/cfg" ]]; then
+		echo "ERROR: Forbidden folder exists: $$MAME_DIR/cfg"
+		echo "       (cfg_ra and cfg_sa must exist, and cfg must not.)"
+		exit 1
 	fi
-	@if [[ ! -d "$$MAME_DIR/cfg_sa" ]]; then \
-		echo "ERROR: Missing required folder: $$MAME_DIR/cfg_sa"; \
-		exit 1; \
-	fi
-	@if [[ -d "$$MAME_DIR/cfg" ]]; then \
-		echo "ERROR: Forbidden folder exists: $$MAME_DIR/cfg"; \
-		echo "       (cfg_ra and cfg_sa must exist, and cfg must not.)"; \
-		exit 1; \
+	bad_cfg="$$(find "$$MAME_DIR" -type d \( -path "*/cfg_ra/cfg" -o -path "*/cfg_sa/cfg" \) -print -quit)"
+	if [[ -n "$$bad_cfg" ]]; then
+		echo "ERROR: Detected nested cfg folder bug: $$bad_cfg"
+		echo "       Fix/move it first; refusing to sync-back."
+		exit 1
 	fi
 
-	@bad_cfg="$$(find "$$MAME_DIR" -type d \( -path "*/cfg_ra/cfg" -o -path "*/cfg_sa/cfg" \) -print -quit)"; \
-	if [[ -n "$$bad_cfg" ]]; then \
-		echo "ERROR: Detected nested cfg folder bug: $$bad_cfg"; \
-		echo "       Fix/move it first; refusing to sync-back."; \
-		exit 1; \
-	fi
+	# --- config knobs you maintain ---
+	# 1) Where NEW files are allowed to be created (relative to $$MAME_DIR)
+	NEW_FILE_DIRS=(cfg_ra cfg_sa)
+	# 2) Useful sections for XML .cfg files
+	USEFUL_CFG_SECTIONS=(input video)
 
-	@is_useful_ini_change() {
-		local src="$$1"; local dst="$$2";
-		local IGNORE_RE='^(#|;|$$)|\r$$|^(play|plays|play_count|playcount|last_play|lastplay|play_time|playtime|time_played|times_played|credits|coin|coins|highscore|hiscore|score|scores|nvram|autofire|cheat|cheats|ui_.*|ui|state|history|bookkeeping)[[:space:]]*=';
-		local IGNORE_SOUND_RE='^(sound|samples|samplerate|audio_latency|volume|attenuation|speaker_report|mixer|slider|bgm|music|snd|panning|compressor|equalizer)[[:space:]]*=';
-		local ALLOW_RE='^(ctrlr|joystick|mouse|lightgun|trackball|paddle|dial|adstick|pedal|positional|multikeyboard|multimouse|steadykey|joystick_contradictory|joystick_deadzone|joystick_saturation|joystick_map|input|coin_lockout)[[:space:]]*=';
-		local ALLOW_VIDEO_RE='^(numscreens|screen0|aspect|resolution|view|rotate|ror|rol|flipx|flipy|refresh|switchres|prescale|keepaspect|unevenstretch|intoverscan|intscalex|intscaley|video|monitorprovider)[[:space:]]*=';
-		local t1="$$(mktemp)"; local t2="$$(mktemp)";
-		trap 'rm -f "$$t1" "$$t2"' RETURN;
-		grep -vE "$$IGNORE_RE" "$$src" 2>/dev/null | grep -vE "$$IGNORE_SOUND_RE" | sed 's/\r$$//' > "$$t1" || true;
-		if [[ -f "$$dst" ]]; then
-			grep -vE "$$IGNORE_RE" "$$dst" 2>/dev/null | grep -vE "$$IGNORE_SOUND_RE" | sed 's/\r$$//' > "$$t2" || true;
-		else
-			: > "$$t2";
+	# Return 0 if: XML-ish .cfg AND it contains NONE of the useful sections.
+	is_default_only_cfg() {
+		local f="$$1"
+		# Only apply rule to XML-ish cfg files; non-XML cfg files are always allowed.
+		if ! head -n 5 "$$f" 2>/dev/null | grep -qiE '^\s*<\?xml|<mameconfig\b|^\s*<'; then
+			return 1
 		fi
-		diff -q "$$t1" "$$t2" >/dev/null 2>&1 && return 1;
-		local changed;
-		changed="$$(diff -u "$$t2" "$$t1" | grep -E '^[+-]' | grep -vE '^[+-]{3} ' | sed 's/^[+-]//')";
-		[[ -n "$$changed" ]] || return 1;
-		echo "$$changed" | grep -Eq "$$ALLOW_RE|$$ALLOW_VIDEO_RE";
+		local tag_re=""
+		local t
+		for t in "$$${USEFUL_CFG_SECTIONS[@]}"; do
+			tag_re+="<\\s*$$t\\b|"
+		done
+		tag_re="$${tag_re%|}"
+		# If we find ANY useful section tag, it is NOT default-only.
+		grep -qiE "$$tag_re" "$$f" && return 1
+		return 0
 	}
 
-	@is_mixer_only_cfg() {
-		local src="$$1";
-		if grep -qi '<[[:space:]]*input[[:space:]>]' "$$src"; then
-			return 1;
-		fi
-		local remainder;
-		remainder="$$(sed -e 's/\r$$//' \
-			-e '/^<\?xml[[:space:]]/d' \
-			-e '/^[[:space:]]*<!--[[:space:]]*/d' \
-			-e '/^[[:space:]]*$$/d' \
-			-e ':a; /<mixer[>[:space:]]/{N; /<\/mixer>/!ba; s/<mixer[>[:space:]][^>]*>.*<\/mixer>//s;}' \
-			"$$src" 2>/dev/null \
-			| sed -E 's/<mameconfig[^>]*>//g; s/<\/mameconfig>//g; s/<system[^>]*>//g; s/<\/system>//g' \
-			| tr -d '[:space:]')";
-		[[ -z "$$remainder" ]];
-	}
-
-	@is_useful_xml_cfg_change() {
-		local src="$$1"; local dst="$$2";
-		normalize_cfg() {
-			sed -e 's/\r$$//' \
-				-e '/^<\?xml[[:space:]]/d' \
-				-e '/^[[:space:]]*<!--[[:space:]]*/d' \
-				-e '/^[[:space:]]*$$/d' \
-				-e ':a; /<mixer[>[:space:]]/{N; /<\/mixer>/!ba; s/<mixer[>[:space:]][^>]*>.*<\/mixer>//s;}' \
-				"$$1" 2>/dev/null | tr -d '[:space:]';
-		}
-		local a b;
-		a="$$(normalize_cfg "$$src")";
-		if [[ -f "$$dst" ]]; then b="$$(normalize_cfg "$$dst")"; else b=""; fi;
-		[[ "$$a" != "$$b" ]];
-	}
-
-	@cd "$$SRC";
-	declare -A SKIPPED_DIRS;
-	SKIP_DIR_NAMES=(autoconfig-presets skyscraper ctrlr plugins arcade);
-	echo "[skip] pruned dir names (not traversed): $${SKIP_DIR_NAMES[*]}" >&2;
-
-	find . \
-	\( -type d \( $$(for d in "$${SKIP_DIR_NAMES[@]}"; do printf -- '-name %q -o ' "$$d"; done) -false \) \) -prune \
-	-o -type f -print0 \
+	# --- Phase A: sync only MODIFIED files that ALREADY EXIST in the target tree ---
+	cd "$$SRC"
+	find . -type f -print0 \
 	| while IFS= read -r -d '' f; do
-		if [[ "$$f" == "./emulators/mame/mame" ]]; then
-			echo "[skip] binary: $${f#./}" >&2;
-			continue;
+		rel="$${f#./}"
+		# Only include if the destination file already exists.
+		if [[ -f "$$DST/$$rel" ]]; then
+			printf '%s\0' "$$f"
 		fi
-		dst_dir="$$DST/$$(dirname "$$f")";
-		if [[ ! -d "$$dst_dir" ]]; then
-			rel_dir="$$(dirname "$${f#./}")";
-			cur="$$rel_dir";
-			while [[ "$$cur" != "." ]]; do
-				parent="$$(dirname "$$cur")";
-				[[ -d "$$DST/$$parent" ]] && break;
-				cur="$$parent";
-			done
-			if [[ -z "$${SKIPPED_DIRS[$$cur]+x}" ]]; then
-				SKIPPED_DIRS[$$cur]=1;
-				echo "[skip] new-dir (would create): $$cur/" >&2;
-			fi
-			continue;
-		fi
-		if [[ "$$f" == *.ini ]]; then
-			srcp="$$SRC/$${f#./}";
-			dstp="$$DST/$${f#./}";
-			if ! is_useful_ini_change "$$srcp" "$$dstp"; then
-				echo "[skip] ini (noise/unknown): $${f#./}" >&2;
-				continue;
-			fi
-		fi
-		if [[ "$$f" == *.cfg ]]; then
-			srcp="$$SRC/$${f#./}";
-			dstp="$$DST/$${f#./}";
-			if head -n 5 "$$srcp" 2>/dev/null | grep -qiE '^\s*<\?xml|<mameconfig\b|^\s*<'; then
-				if is_mixer_only_cfg "$$srcp"; then
-					echo "[skip] cfg (mixer-only): $${f#./}" >&2;
-					continue;
-				fi
-				if [[ -f "$$dstp" ]]; then
-					if ! is_useful_xml_cfg_change "$$srcp" "$$dstp"; then
-						echo "[skip] cfg (only mixer/whitespace changes): $${f#./}" >&2;
-						continue;
-					fi
-				else
-					if ! grep -qi '<[[:space:]]*input[[:space:]>]' "$$srcp"; then
-						echo "[skip] cfg (new XML cfg without <input>): $${f#./}" >&2;
-						continue;
-					fi
-				fi
-			fi
-		fi
-		printf '%s\0' "$$f";
 	done \
 	| rsync -ai --update --from0 --files-from=- --no-implied-dirs \
 		--no-perms --no-owner --no-group --omit-dir-times \
-		"$$SRC/" "$$DST/";
+		"$$SRC/" "$$DST/"
 
-	@echo "Back-synced: $$SRC/ -> $$DST/";
-	@echo "Sync-back complete!"
+	# --- Phase B: copy NEW files from approved folders (subject to cfg rules) ---
+	for d in "$$${NEW_FILE_DIRS[@]}"; do
+		src_dir="$$MAME_DIR/$$d"
+		dst_dir="$$DST/emulators/mame/$$d"
+		[[ -d "$$src_dir" ]] || { echo "ERROR: Missing new-file source folder: $$src_dir"; exit 1; }
+		[[ -d "$$dst_dir" ]] || { echo "ERROR: Missing target folder (must already exist): $$dst_dir"; exit 1; }
+
+		cd "$$src_dir"
+		find . -type f -print0 \
+		| while IFS= read -r -d '' f; do
+			rel="$${f#./}"
+			# Only include if destination file does NOT exist.
+			if [[ ! -f "$$dst_dir/$$rel" ]]; then
+				# Special rule: skip default-only XML cfg files.
+				if [[ "$$rel" == *.cfg ]] && is_default_only_cfg "$$src_dir/$$rel"; then
+					continue
+				fi
+				printf '%s\0' "$$f"
+			fi
+		done \
+		| rsync -ai --ignore-existing --from0 --files-from=- --no-implied-dirs \
+			--no-perms --no-owner --no-group --omit-dir-times \
+			"$$src_dir/" "$$dst_dir/"
+	done
+
+	@echo "sync-back $$SRC/ -> $$DST/ complete!"
