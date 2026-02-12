@@ -9,7 +9,7 @@ log() {
 set -x
 
 # Copy RetroArch/EmulationStation media assets ExtremeSSD backup
-cp -vrf /media/danc/ExtremeSSD/Backup_RetroPie/home/danc/ /home/
+cp -vrf /media/danc/ExtremeSSD/McAtariPi5/home/danc/ /home/
 
 # Create MAME home directory symlink
 # note: -sfn replaces RetroArch mame package configs link

@@ -55,15 +55,15 @@ install: all
 		fi; \
 	fi
 	
-	@# Sync Backup_RetroPie contents to system (only newer files)
+	@# Sync McAtariPi5 contents to system (only newer files)
 	@# This handles plugins, scripts, configs, and all other system files
-	@if [ ! -d Backup_RetroPie ]; then \
-		echo "Error: Backup_RetroPie source directory missing"; \
+	@if [ ! -d McAtariPi5 ]; then \
+		echo "Error: McAtariPi5 source directory missing"; \
 	else \
 		echo "Syncing /opt directory (newer files only)..."; \
-		rsync -a --update --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS Backup_RetroPie/opt/ /opt/; \
+		rsync -a --update --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS McAtariPi5/opt/ /opt/; \
 		echo "Syncing /home directory (newer files only)..."; \
-		rsync -a --update --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS Backup_RetroPie/home/ /home/; \
+		rsync -a --update --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS McAtariPi5/home/ /home/; \
 	fi
 	
 	@echo "Installation complete!"
@@ -81,14 +81,14 @@ install-force: all
 		cp -af images $(INSTALL_DIR)/ && echo "Installed: $(INSTALL_DIR)/images"; \
 	fi
 	
-	@# Force sync Backup_RetroPie contents to system (overwrite all files)
-	@if [ ! -d Backup_RetroPie ]; then \
-		echo "Error: Backup_RetroPie source directory missing"; \
+	@# Force sync McAtariPi5 contents to system (overwrite all files)
+	@if [ ! -d McAtariPi5 ]; then \
+		echo "Error: McAtariPi5 source directory missing"; \
 	else \
 		echo "Syncing /opt directory (forcing overwrites)..."; \
-		rsync -a --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS Backup_RetroPie/opt/ /opt/; \
+		rsync -a --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS McAtariPi5/opt/ /opt/; \
 		echo "Syncing /home directory (forcing overwrites)..."; \
-		rsync -a --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS Backup_RetroPie/home/ /home/; \
+		rsync -a --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS McAtariPi5/home/ /home/; \
 	fi
 	
 	@echo "Force installation complete!"
@@ -123,7 +123,7 @@ help:
 	@echo "  install-force - Build and install all components (overwrite all)"
 	@echo "  clean         - Remove all build artifacts"
 	@echo "  uninstall     - Remove installed files (untested)"
-	@echo "  sync-back     - Copies lr-mame/MAME config from /opt/ to ./Backup_RetroPie"
+	@echo "  sync-back     - Copies lr-mame/MAME config from /opt/ to ./McAtariPi5"
 	@echo "  help          - Show this help message"
 	@echo ""
 	@echo "Variables:"
@@ -140,7 +140,7 @@ sync-back:
 
 	ROOT="$$(pwd)"
 	SRC="/opt/retropie"
-	DST="$$ROOT/Backup_RetroPie/opt/retropie"
+	DST="$$ROOT/McAtariPi5/opt/retropie"
 	MAME_DIR="$$SRC/emulators/mame"
 
 	# --- safety checks ---

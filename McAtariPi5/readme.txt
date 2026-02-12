@@ -11,7 +11,7 @@ e. preferences, pi config, localization US UTF-8 for all
 f. reboot and run:
 > locale (confirm all US UTF-8)
 > git clone https://github.com/dcaputi1/IvarArcade.git
-  then reload this readme.txt from ~/IvarArcade/Backup_RetroPie, make sure nothing above changed
+  then reload this readme.txt from ~/IvarArcade/McAtariPi5, make sure nothing above changed
 > git clone --depth=1 https://github.com/RetroPie/RetroPie-Setup.git
 > cd RetroPie-Setup
 > sudo ./retropie_setup.sh
@@ -26,10 +26,10 @@ k. install Skyscraper
 k. edit autostart.sh and replace 'emulationstation' with 'wayfire-pi' (for remote gui)
 
 steps:
-1. ~/IvarArcade/Backup_RetroPie/cp_roms.sh (~1 hours)
+1. ~/IvarArcade/McAtariPi5/cp_roms.sh (~1 hours)
 2. add paths for mame and (optional) retroarch, frontends to /etc/profile (user long path)
    :/opt/retropie/emulators/mame:/opt/retropie/emulators/retroarch/bin
-3. sudo ~/IvarArcade/Backup_RetroPie/analyze_games.sh (installs tinyxml2 and python3-hid packages)
+3. sudo ~/IvarArcade/McAtariPi5/analyze_games.sh (installs tinyxml2 and python3-hid packages)
 4. mkdir -p /opt/retropie/configs/all/retroarch/config/MAME
 5. build and install IvarArcade project components:
    cd ~/IvarArcade
@@ -44,7 +44,7 @@ steps:
    ./build.sh
    sudo ldconfig -v | grep libhid
    (verify ldconfig shows libhid.so.0 -> libhid.so.0.0.0)
-8. run ~/IvarArcade/Backup_RetroPie/ra_final.sh (formerly cp_opt.sh)
+8. run ~/IvarArcade/McAtariPi5/ra_final.sh (formerly cp_opt.sh)
 9. run ~/IvarArcade/analyze_games/analyze_games (not sudo!)
 10.sudo ~/scripts/set_asound.sh (for Trixie sound problem - not needed for Bookworm Debian base OS)
 11. 2/1/2026 - TBD: test skyscraper (config.ini is in configs/all/skyscraper)
