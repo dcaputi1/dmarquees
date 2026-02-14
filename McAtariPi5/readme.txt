@@ -95,6 +95,7 @@ problem log:
 2/13/26 Re-baseline -
         [x] cp_roms.sh not executable
         [x] make install-force failed (missing chown -R danc /opt/retropie)
-        [ ] ra_final.sh log shows twice (once with '+' once without)
+        [x] ra_final.sh log shows twice (once with '+' once without)
         [x] analyze_games failed: couldn't write ini files (re: install-force fail)
+        [x] ra asteriods fail (missing +x on run_mame.sh)
         
