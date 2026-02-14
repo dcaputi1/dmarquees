@@ -6,6 +6,7 @@ a. use pi imager tool to create an SD pi5 64-bit full OS image with:
    enabled wifi credentials, wifi country US, user danc, host McAtariPi5
 b. boot to desktop GUI
 c. enable raspberry pi connect
+   (email: dcaputi@optonline.net, pass: E....D....123!)
 d. install updates
 e. preferences, pi config, localization US UTF-8 for all
 f. reboot and run:
@@ -22,8 +23,9 @@ h. install experimantal mame package (~2 hours from source)
 i. install experimental lr-mame (~2 hours from source)
    1/11/2026 - installed from binary
 j. enable autostart emulationstation
-k. install Skyscraper
-k. edit autostart.sh and replace 'emulationstation' with 'wayfire-pi' (for remote gui)
+k. install optional package Skyscraper
+l. edit autostart.sh and replace 'emulationstation' with 'wayfire-pi' (TBD: Trixie?)
+> sudo chown -R danc /opt/retropie
 
 steps:
 1. ~/IvarArcade/McAtariPi5/cp_roms.sh (~1 hours)
@@ -41,6 +43,7 @@ steps:
    mkdir -p ~/IvarArcade/tools/linux
    cd ~/IvarArcade/tools/linux
    git clone https://github.com/dcaputi1/UltrastikCmd.git
+   cd UltrastikCmd
    ./build.sh
    sudo ldconfig -v | grep libhid
    (verify ldconfig shows libhid.so.0 -> libhid.so.0.0.0)
@@ -51,7 +54,6 @@ steps:
 
 optional:
 A. sudo apt install meld
-B. sudo apt install joystick
 C. sudo apt install jstest-gtk
 D. sudo apt install code
 required:
@@ -90,3 +92,9 @@ problem log:
 1/24/26 [X] leds don't work unless start buttons are defined (some games use player buttons)
 1/31/26 [X] running sa mame vector game in ra breaks tab menu return key
         [ ] fix pics, vids, marquees - skyscraper needed 
+2/13/26 Re-baseline -
+        [x] cp_roms.sh not executable
+        [x] make install-force failed (missing chown -R danc /opt/retropie)
+        [ ] ra_final.sh log shows twice (once with '+' once without)
+        [x] analyze_games failed: couldn't write ini files (re: install-force fail)
+        
