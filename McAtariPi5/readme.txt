@@ -98,4 +98,6 @@ problem log:
         [x] ra_final.sh log shows twice (once with '+' once without)
         [x] analyze_games failed: couldn't write ini files (re: install-force fail)
         [x] ra asteriods fail (missing +x on run_mame.sh)
-        
+        [x] sa asteriods inputs NFG
+        [ ] sa popeye performance/sound bad
+         
