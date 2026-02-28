@@ -10,6 +10,12 @@ run() {
 	"$@"
 }
 
+# Ensure ExtremeSSD is mounted before proceeding
+if [ ! -d "/media/danc/ExtremeSSD" ]; then
+	echo "Error: backup drive not found at /media/danc/ExtremeSSD. Aborting."
+	exit 1
+fi
+
 # Copy RetroArch/EmulationStation media assets ExtremeSSD backup
 step "Copying RetroArch/EmulationStation media assets from ExtremeSSD backup"
 run cp -vrf /media/danc/ExtremeSSD/McAtariPi5/home/danc/ /home/

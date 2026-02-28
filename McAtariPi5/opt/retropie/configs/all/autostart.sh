@@ -20,7 +20,7 @@ launch_desktop()
         wayfire-pi
         return
     fi
-    
+
     # Trixie uses this crap
     sudo systemctl start lightdm
 }
@@ -78,7 +78,7 @@ setup_dmarquees()
     else
         echo "[autostart] dmarquees already running."
     fi
-    
+
     if pgrep -x dmarquees >/dev/null; then
         echo "[autostart] dmarquees started successfully."
     else
@@ -131,7 +131,7 @@ swap_banner_art()
     local MARQUEES_ZIP="/home/danc/MAME_0.256_EXTRAs/marquees.zip"
     local CPANEL_ZIP="/home/danc/MAME_0.256_EXTRAs/cpanel.zip"
     local CMD_FIFO="/tmp/dmarquees_cmd"
-    
+
     # Check what's currently mounted
     if [ -f "$CURRENT_MOUNT_STATE" ]; then
         MOUNTED=$(cat "$CURRENT_MOUNT_STATE")
@@ -139,16 +139,16 @@ swap_banner_art()
         MOUNTED="marquees"
         echo "marquees" > "$CURRENT_MOUNT_STATE"
     fi
-    
+
     echo "[autostart] Current mount: $MOUNTED"
-    
+
     # Unmount current
     if mountpoint -q "$MNT"; then
         echo "[autostart] Unmounting $MOUNTED..."
         fusermount -u "$MNT"
         sleep 0.5
     fi
-    
+
     # Toggle to the other one
     if [ "$MOUNTED" = "marquees" ]; then
         # Switch to cpanel
@@ -171,12 +171,12 @@ swap_banner_art()
         echo "marquees" > "$CURRENT_MOUNT_STATE"
         echo "[autostart] Switched to Marquee artwork"
     fi
-    
+
     # Signal daemon to refresh (commented out - frontend marquees aren't loaded from zip files)
  #   if pgrep -x dmarquees >/dev/null; then
  #       echo "REFRESH" > "$CMD_FIFO" 2>/dev/null || true
  #   fi
-    
+
     sleep 1
 }
 
@@ -248,7 +248,7 @@ CHOICE=$(dialog --timeout $TIMEOUT --title "Arcade Menu" --default-item "$DEF_KE
       "${MENU_ITEMS[@]}" \
        2>&1 > /dev/tty)
 
-### clear   WARNING: this kills dmarquees ability to display artwork!
+### clear   WARNING: this clear command kills dmarquees ability to display artwork!
 printf "\033[2J\033[H"
 
 if [[ "$CHOICE" == "" ]]; then
@@ -321,3 +321,4 @@ $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_ra 0
 $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_sa 0
 
 shutdown_dmarquees
+

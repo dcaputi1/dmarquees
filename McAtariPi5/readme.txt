@@ -14,6 +14,7 @@ f. reboot and run:
 > git clone https://github.com/dcaputi1/IvarArcade.git
   then reload this readme.txt from ~/IvarArcade/McAtariPi5, make sure nothing above changed
 > git clone --depth=1 https://github.com/RetroPie/RetroPie-Setup.git
+  2/28/2026 - use dcaputi1/Retropie-Setup.git for Trixie
 > cd RetroPie-Setup
 > sudo ./retropie_setup.sh
 g. install all core packs
@@ -23,8 +24,10 @@ h. install experimantal mame package (~2 hours from source)
 i. install experimental lr-mame (~2 hours from source)
    1/11/2026 - installed from binary
 j. enable autostart emulationstation
+   note: deferring this step later will corrupt custom autostart.sh
 k. install optional package Skyscraper
-l. edit autostart.sh and replace 'emulationstation' with 'wayfire-pi' (TBD: Trixie?)
+l. edit autostart.sh and replace 'emulationstation' with desktop launch
+   'wayfire-pi' for Bookworm, 'sudo systemctl start lightdm' for Trixie
 > sudo chown -R danc /opt/retropie
 
 steps:
@@ -91,13 +94,22 @@ problem log:
 1/20/26 [x] redo again - games don't load (make install-force wasn't run?)
 1/24/26 [X] leds don't work unless start buttons are defined (some games use player buttons)
 1/31/26 [X] running sa mame vector game in ra breaks tab menu return key
-        [ ] fix pics, vids, marquees - skyscraper needed 
+        [x] fix pics, vids, marquees - skyscraper needed 
 2/13/26 Re-baseline -
         [x] cp_roms.sh not executable
         [x] make install-force failed (missing chown -R danc /opt/retropie)
         [x] ra_final.sh log shows twice (once with '+' once without)
         [x] analyze_games failed: couldn't write ini files (re: install-force fail)
-        [x] ra asteriods fail (missing +x on run_mame.sh)
+        [x] ra asteriods fail (missings +x on run_mame.sh)
         [x] sa asteriods inputs NFG
         [ ] sa popeye performance/sound bad
-         
+2/26/26 Trixie baseline
+        [x] build all packages from source and keep code in tmp/build
+        [x] UltrastikCmd build fail - AI fixed (I hope!)
+        [ ] iCode Atari paddles integration - always using js0-js4 NFG!
+            For now, I'll just plug iCode in after startup.
+        [ ] enhance xinmo-swap to deal with ALL random jsN device order?
+        [ ] trouble with USB power - need to add another 5v supply?
+2/28/26 [ ] need custom 2-way joystick map for 4-way far left/right (Defender)
+        [ ] autostart on Trixie: ES doesn't start but Command Prompt runs ES
+            also, exit to desktop prompts for password
