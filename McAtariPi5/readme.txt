@@ -40,7 +40,6 @@ steps:
    cd ~/IvarArcade
    make all
    make install-force # deploys binaries, scripts, plugins, etc...
-   1/11/2026 - TBD: combine those 2 steps?
 6. reboot (for path to take effect)
 7. clone, build, install ultrastikcmd tool for per-game joystick mapping:
    mkdir -p ~/IvarArcade/tools/linux
@@ -53,7 +52,6 @@ steps:
 8. run ~/IvarArcade/McAtariPi5/ra_final.sh (formerly cp_opt.sh)
 9. run ~/IvarArcade/analyze_games/analyze_games (not sudo!)
 10.sudo ~/scripts/set_asound.sh (for Trixie sound problem - not needed for Bookworm Debian base OS)
-11. 2/1/2026 - TBD: test skyscraper (config.ini is in configs/all/skyscraper)
 
 optional:
 A. sudo apt install meld
