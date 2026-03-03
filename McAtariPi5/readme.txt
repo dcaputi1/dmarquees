@@ -108,6 +108,7 @@ problem log:
             For now, I'll just plug iCode in after startup.
         [ ] enhance xinmo-swap to deal with ALL random jsN device order?
         [ ] trouble with USB power - need to add another 5v supply?
-2/28/26 [ ] need custom 2-way joystick map for 4-way far left/right (Defender)
-        [ ] autostart on Trixie: ES doesn't start but Command Prompt runs ES
-            also, exit to desktop prompts for password
+2/28/26 [x] need custom 2-way joystick map for 4-way far left/right (Defender)
+        [x] autostart on Trixie: ES doesn't start but Command Prompt runs ES
+            also, exit to desktop prompts for password (note prelim.j above)
+3/3/26  [x] defender 2-way Ultrastik map NFG using L/R as "reverse"

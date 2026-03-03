@@ -96,7 +96,14 @@ bool extractGameInfo(XMLDocument& doc, const string& shortName, GameInfo& info)
             const char* ctrlType = control->Attribute("type");
             const char* waysAttr = control->Attribute("ways");
 
-            if (ctrlType && string(ctrlType) == "joy" && waysAttr)
+            // special case for 2-way (i.e. defender, etc...)
+            string wayStr = waysAttr ? waysAttr : "n/a";
+            if (wayStr == "horizontal2" || wayStr == "vertical2")
+            {
+                info.ways = 2;
+                break;
+            }
+            else if (ctrlType && string(ctrlType) == "joy" && waysAttr)
             {
                 try
                 {
@@ -229,7 +236,12 @@ void writeJoystickIni(const GameInfo& info)
             cerr << "Failed to write INI file: " << filePath << endl;
             return;
         }
-        out << (qbert ? qbertLn : mapLine) << endl;
+        if (isDefender)
+            out << defender << endl;
+        else if (isQbert)
+            out << qbertLn << endl;
+        else
+            out << mapLine << endl;
         out.close();
     }
 }
