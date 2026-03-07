@@ -157,11 +157,7 @@ void writeJoystickIni(const GameInfo& info)
     // so we treat it as an 8-way joystick even though it's defined as 4-way.
     bool isQbert = (info.shortName == "qbert");
 
-    // Special case: defender will have a 2-way joystick with far left/right positions for reverse
-    // (a standard 4-way doesn't work well when L/R is defined as reverse)
-    bool isDefender = (info.shortName == "defender");
-
-    if ((info.ways == 8 || info.ways == -1) && !isQbert && !isDefender)
+    if ((info.ways == 8 || info.ways == -1) && !isQbert)
     {
         // 8-way joystick or no joystick: no .ini file needed
         return;
@@ -179,16 +175,6 @@ void writeJoystickIni(const GameInfo& info)
                         "222256666."
                         "2222s6666."
                         "2222s6666";
-    string defender = "joystick_map "   // 2-way with far L/R for reverse
-                        "s8888888s."
-                        "ss88888ss."
-                        "4ss888ss6."
-                        "445555566."
-                        "445555566."
-                        "445555566."
-                        "4ss222ss6."
-                        "ss22222ss."
-                        "s2222222s";
 
     // Check if file exists and if it already contains a joystick map
     if (fs::exists(filePath))
@@ -218,12 +204,7 @@ void writeJoystickIni(const GameInfo& info)
             return;
         }
 
-        if (isDefender)
-            out << defender << endl;
-        else if (isQbert)
-            out << qbertLn << endl;
-        else
-            out << mapLine << endl;
+        out << (isQbert ? qbertLn : mapLine) << endl;
 
         out.close();
     }
@@ -236,12 +217,9 @@ void writeJoystickIni(const GameInfo& info)
             cerr << "Failed to write INI file: " << filePath << endl;
             return;
         }
-        if (isDefender)
-            out << defender << endl;
-        else if (isQbert)
-            out << qbertLn << endl;
-        else
-            out << mapLine << endl;
+
+        out << (isQbert ? qbertLn : mapLine) << endl;
+
         out.close();
     }
 }

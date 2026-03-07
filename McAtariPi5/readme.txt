@@ -112,3 +112,4 @@ problem log:
         [x] autostart on Trixie: ES doesn't start but Command Prompt runs ES
             also, exit to desktop prompts for password (note prelim.j above)
 3/3/26  [x] defender 2-way Ultrastik map NFG using L/R as "reverse"
+3/6/26  [x] defender L/R reverse NFG either, using defenderlr plugin
