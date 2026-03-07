@@ -302,6 +302,27 @@ Space Duel offers players a choice of 4 different game versions. One player can 
 		<lastplayed>20240427T034234</lastplayed>
 	</game>
 	<game>
+		<path>/home/danc/RetroPie/roms/arcade/stargate.zip</path>
+		<name>Stargate</name>
+		<favorite>true</favorite>
+		<thumbnail/>
+		<image>/home/danc/RetroPie/roms/arcade/media/screenshots/stargate.png</image>
+		<marquee>/home/danc/RetroPie/roms/arcade/media/marquees/stargate.png</marquee>
+		<texture/>
+		<video>/home/danc/RetroPie/roms/arcade/media/videos/stargate.mp4</video>
+		<rating>0.9</rating>
+		<desc>Stargate, also known as &apos;Defender II&apos;, will transport you to a whole new dimension in video games! Not only will the skills you learned with &quot;Defender&quot; be challenged and refined, but new strategies must come into play if you are to be victorious in rescuing the humanoids from the clutches of the aliens and in entering the Stargate! Your ability to react quickly and with on-target precision will be tested against the evil Yllabian Space Guppies, Dynamos, Space Hums, Firebombers and their Fireballs, Phreds, Big Reds and Munchies! If you succeed in maneuvering your ship into the Stargate, you&apos;ll be instantly trans-located to that part of the planet where the humanoids are being abducted! To open up spectacular scoring possibilities, rescue four Humanoids, re-enter Stargate and you&apos;ll warp 3 waves ahead in space and time, setting off dazzling special effects and racking up high points!
+
+	If you must destroy everything in your path or risk self-destruction, activate the Inviso anti-matter cloaking device and become invisible and invulnerable! Inviso time plus a new ship and a Smart Bomb are earned with every 10,000 points you score!
+
+	If all ten Humanoids in a wave are abducted, the universe will explode into smithereens, leaving deadly Mutants on the attack! Survive until Wave 5 and the universe will be restored, the humanoids safe... but you&apos;ll be the target of an Yllabian Dog Fight! There&apos;ll be no Landers to abduct the Humanoids, but all the other aliens will have stronger and larger forces concentrated against you! It will be an out space battle reaching the outer limits of aggression and will call up your last ounce of determination and courage!</desc>
+		<releasedate>19810101T000000</releasedate>
+		<developer>Vid Kidz</developer>
+		<publisher>Williams</publisher>
+		<genre>Shoot&apos;em Up / Horizontal, Shoot&apos;em Up</genre>
+		<players>2</players>
+	</game>
+  	<game>
 		<path>./starwars.zip</path>
 		<name>Star Wars</name>
 		<favorite>true</favorite>

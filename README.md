@@ -60,3 +60,13 @@ Here's a list of stuff I keep forgetting about:
 
 - vector games in lr-mame look like crap. To work-around this, I use mame standalone as the emulator. Unfortunately, that requires some special config handling. Off hand I don't remember how it hooks in (used AI to get it working - go figure) but look in emulators.cfg and run_mame.sh
 - much more stuff TBD
+
+How to add a game to the "favorites"
+1. run ~/scripts/romscrape.sh <newgame.zip>
+2. copy new <game>...</game> section from ~/RetroPie/roms/arcade/gamelist*.xml to ~/IvarArcade/McAtariPie/opt/retropie/configs/all/emulationstation/gamelists/arcade/gamelist.xml (source path is dumb - TBD: fix)
+3. add <favorite>true</favorite> to new <game>
+4. make install (to rsync gamelist.xml)
+5. copy new media from ~/RetroPie/roms/arcade/media/... to /media/danc/ExtremeSSD/McAtariPie/home/danc/RetroPie/roms/arcade/media/...
+6. run ~/IvarArcade/analyze_games/analyze_games to create shader file and optional Ultrastik joystick_map ini file
+7. a vector game will need runcommand menu option set to mame (default is lr-mame)
+8. map conroller buttons in ES and MAME GUI
