@@ -25,13 +25,13 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="1.8351563"
-     inkscape:cx="425.03192"
-     inkscape:cy="414.67858"
-     inkscape:window-width="3816"
-     inkscape:window-height="2026"
-     inkscape:window-x="4104"
-     inkscape:window-y="264"
+     inkscape:zoom="0.91757815"
+     inkscape:cx="437.02"
+     inkscape:cy="455.00212"
+     inkscape:window-width="1902"
+     inkscape:window-height="1033"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
      inkscape:window-maximized="0"
      inkscape:current-layer="layer1"
      inkscape:document-units="in" />
@@ -112,11 +112,11 @@
        xml:space="preserve"
        style="font-size:23.5297px;font-family:Arial;text-anchor:middle;fill:#000000;stroke-width:1.17661"
        x="806.61298"
-       y="526.79443"
+       y="528.79443"
        id="text-btn-3"><tspan
          id="tspan-btn-3"
          x="806.61298"
-         y="526.79443"
+         y="528.79443"
          style="stroke-width:1.17661">X</tspan></text>
     <circle
        style="display:inline;fill:none;stroke:#000000;stroke-width:1.32576;stroke-opacity:1"
@@ -174,5 +174,95 @@
        rx="40.604931"
        ry="40.604927"
        inkscape:label="joystick" />
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';writing-mode:lr-tb;direction:ltr;fill:#000000;stroke:#000000"
+       x="832.02142"
+       y="389.5864"
+       id="text1"><tspan
+         sodipodi:role="line"
+         id="tspan1"
+         x="832.02142"
+         y="389.5864">SPIN-2</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';writing-mode:lr-tb;direction:ltr;fill:#000000;stroke:#000000"
+       x="287.71051"
+       y="392.58011"
+       id="text2"><tspan
+         sodipodi:role="line"
+         id="tspan2"
+         x="287.71051"
+         y="392.58011">SPIN-1</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';writing-mode:lr-tb;direction:ltr;fill:#000000;stroke:#000000"
+       x="574.57275"
+       y="396.40131"
+       id="text3"><tspan
+         sodipodi:role="line"
+         id="tspan3"
+         x="574.57275"
+         y="396.40131">UP</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';writing-mode:lr-tb;direction:ltr;fill:#000000;stroke:#000000"
+       x="571.80225"
+       y="499.69363"
+       id="text4"><tspan
+         sodipodi:role="line"
+         id="tspan4"
+         x="571.80225"
+         y="499.69363">DN</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';writing-mode:lr-tb;direction:ltr;fill:#000000;stroke:#000000"
+       x="521.54675"
+       y="447.82458"
+       id="text5"><tspan
+         sodipodi:role="line"
+         id="tspan5"
+         x="521.54675"
+         y="447.82458">LT</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';writing-mode:lr-tb;direction:ltr;fill:#000000;stroke:#000000"
+       x="629.92889"
+       y="447.82458"
+       id="text6"><tspan
+         sodipodi:role="line"
+         id="tspan6"
+         x="629.92889"
+         y="447.82458">RT</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';writing-mode:lr-tb;direction:ltr;fill:#000000;stroke:#000000"
+       x="44.072418"
+       y="365.79761"
+       id="text7"><tspan
+         sodipodi:role="line"
+         id="tspan7"
+         x="44.072418"
+         y="365.79761">START-1</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';writing-mode:lr-tb;direction:ltr;fill:#000000;stroke:#000000"
+       x="138.99403"
+       y="365.83737"
+       id="text8"><tspan
+         sodipodi:role="line"
+         id="tspan8"
+         x="138.99403"
+         y="365.83737">START-2</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';writing-mode:lr-tb;direction:ltr;fill:#000000;stroke:#000000"
+       x="94.34597"
+       y="482.86871"
+       id="text9"><tspan
+         sodipodi:role="line"
+         id="tspan9"
+         x="94.34597"
+         y="482.86871">COIN</tspan></text>
   </g>
 </svg>
