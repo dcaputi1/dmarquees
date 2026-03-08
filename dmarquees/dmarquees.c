@@ -43,6 +43,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -65,6 +66,12 @@
 #define PREFERRED_H 1080
 #define FIFO_RETRY_DELAY_MSEC 250
 #define CRTC_RESET_HOLD_SEC   10
+#define DCPANEL_TEMPLATE PROGRAM_DIR "/images/dcpanel-1-labels.svg"
+#define MCPANEL_TEMPLATE PROGRAM_DIR "/images/mcpanel-1-labels.svg"
+#define PANEL_TMP_DC_SVG "/tmp/dmarquees_dcpanel.svg"
+#define PANEL_TMP_DC_PNG "/tmp/dmarquees_dcpanel.png"
+#define PANEL_TMP_MC_SVG "/tmp/dmarquees_mcpanel.svg"
+#define PANEL_TMP_MC_PNG "/tmp/dmarquees_mcpanel.png"
 
 static volatile bool running = true;
 static int drm_fd = -1;
@@ -434,6 +441,307 @@ static bool show_game_marquee(const char* cmd_str)
     return true;
 }
 
+static char *read_text_file(const char *path)
+{
+    FILE *fp = fopen(path, "rb");
+    if (!fp)
+        return NULL;
+
+    if (fseek(fp, 0, SEEK_END) != 0)
+    {
+        fclose(fp);
+        return NULL;
+    }
+
+    long size = ftell(fp);
+    if (size < 0)
+    {
+        fclose(fp);
+        return NULL;
+    }
+
+    if (fseek(fp, 0, SEEK_SET) != 0)
+    {
+        fclose(fp);
+        return NULL;
+    }
+
+    char *buf = (char *)malloc((size_t)size + 1);
+    if (!buf)
+    {
+        fclose(fp);
+        return NULL;
+    }
+
+    size_t nread = fread(buf, 1, (size_t)size, fp);
+    fclose(fp);
+    if (nread != (size_t)size)
+    {
+        free(buf);
+        return NULL;
+    }
+
+    buf[nread] = '\0';
+    return buf;
+}
+
+static bool write_text_file(const char *path, const char *content)
+{
+    FILE *fp = fopen(path, "wb");
+    if (!fp)
+        return false;
+
+    size_t len = strlen(content);
+    bool ok = fwrite(content, 1, len, fp) == len;
+    fclose(fp);
+    return ok;
+}
+
+static char *xml_escape_text(const char *src)
+{
+    if (!src)
+        return NULL;
+
+    size_t extra = 0;
+    for (const char *p = src; *p; ++p)
+    {
+        switch (*p)
+        {
+        case '&': extra += 4; break; // &amp;
+        case '<':
+        case '>': extra += 3; break; // &lt; / &gt;
+        case '"':
+        case '\'': extra += 5; break; // &quot; / &apos;
+        default: break;
+        }
+    }
+
+    size_t len = strlen(src);
+    char *out = (char *)malloc(len + extra + 1);
+    if (!out)
+        return NULL;
+
+    char *d = out;
+    for (const char *p = src; *p; ++p)
+    {
+        switch (*p)
+        {
+        case '&': memcpy(d, "&amp;", 5); d += 5; break;
+        case '<': memcpy(d, "&lt;", 4); d += 4; break;
+        case '>': memcpy(d, "&gt;", 4); d += 4; break;
+        case '"': memcpy(d, "&quot;", 6); d += 6; break;
+        case '\'': memcpy(d, "&apos;", 6); d += 6; break;
+        default: *d++ = *p; break;
+        }
+    }
+    *d = '\0';
+    return out;
+}
+
+static bool replace_label_text(char **svg_buf, const char *label_id, const char *new_text)
+{
+    if (!svg_buf || !*svg_buf || !label_id || !new_text)
+        return false;
+
+    char id_key[256];
+    snprintf(id_key, sizeof(id_key), "id=\"%s\"", label_id);
+
+    char *svg = *svg_buf;
+    char *id_pos = strstr(svg, id_key);
+    if (!id_pos)
+        return false;
+
+    char *text_start = id_pos;
+    while (text_start > svg && strncmp(text_start, "<text", 5) != 0)
+        --text_start;
+    if (strncmp(text_start, "<text", 5) != 0)
+        return false;
+
+    char *text_tag_end = strchr(text_start, '>');
+    char *text_close = strstr(text_start, "</text>");
+    if (!text_tag_end || !text_close || text_tag_end >= text_close)
+        return false;
+
+    char *content_start = text_tag_end + 1;
+    char *content_end = text_close;
+
+    char *tspan = strstr(content_start, "<tspan");
+    if (tspan && tspan < text_close)
+    {
+        char *tspan_end_tag = strstr(tspan, "</tspan>");
+        char *tspan_open_end = strchr(tspan, '>');
+        if (tspan_end_tag && tspan_open_end && tspan_open_end < tspan_end_tag)
+        {
+            content_start = tspan_open_end + 1;
+            content_end = tspan_end_tag;
+        }
+    }
+
+    size_t old_len = strlen(svg);
+    size_t prefix_len = (size_t)(content_start - svg);
+    size_t suffix_len = old_len - (size_t)(content_end - svg);
+    size_t repl_len = strlen(new_text);
+
+    char *updated = (char *)malloc(prefix_len + repl_len + suffix_len + 1);
+    if (!updated)
+        return false;
+
+    memcpy(updated, svg, prefix_len);
+    memcpy(updated + prefix_len, new_text, repl_len);
+    memcpy(updated + prefix_len + repl_len, content_end, suffix_len);
+    updated[prefix_len + repl_len + suffix_len] = '\0';
+
+    free(*svg_buf);
+    *svg_buf = updated;
+    return true;
+}
+
+static int apply_substitutions_from_csv(char **svg_buf, const char *csv_path)
+{
+    FILE *fp = fopen(csv_path, "r");
+    if (!fp)
+        return -1;
+
+    int applied = 0;
+    char line[1024];
+    while (fgets(line, sizeof(line), fp))
+    {
+        char *line_trimmed = trim(line, strlen(line));
+        if (!line_trimmed || line_trimmed[0] == '#')
+            continue;
+
+        char *comma = strchr(line_trimmed, ',');
+        if (!comma)
+            continue;
+
+        *comma = '\0';
+        char *id = trim(line_trimmed, strlen(line_trimmed));
+        char *text = trim(comma + 1, strlen(comma + 1));
+        if (!id || !text)
+            continue;
+
+        char *escaped = xml_escape_text(text);
+        if (!escaped)
+            continue;
+
+        if (replace_label_text(svg_buf, id, escaped))
+            applied++;
+
+        free(escaped);
+    }
+
+    fclose(fp);
+    return applied;
+}
+
+static bool find_panel_csv(const char *shortname, bool dc_panel, char *out_path, size_t out_size)
+{
+    const char *dirs[] = { IMAGE_DIR, IMAGE_DIR_ALT, DEF_MARQUEE_DIR };
+    const char *dc_patterns[] = { "%s-dcpanel.csv", "%s-dc.panel.csv" };
+    const char *mc_patterns[] = { "%s-mcpanel.csv" };
+    const char **patterns = dc_panel ? dc_patterns : mc_patterns;
+    int pattern_count = dc_panel ? 2 : 1;
+
+    struct stat st;
+    for (size_t d = 0; d < sizeof(dirs) / sizeof(dirs[0]); ++d)
+    {
+        for (int p = 0; p < pattern_count; ++p)
+        {
+            char file_name[256];
+            snprintf(file_name, sizeof(file_name), patterns[p], shortname);
+            snprintf(out_path, out_size, "%s/%s", dirs[d], file_name);
+            if (stat(out_path, &st) == 0)
+                return true;
+        }
+    }
+
+    return false;
+}
+
+static bool convert_svg_to_png(const char *svg_path, const char *png_path)
+{
+    char cmd[PATH_MAX * 2 + 128];
+
+    // Prefer rsvg-convert if available
+    snprintf(cmd, sizeof(cmd), "rsvg-convert -o \"%s\" \"%s\" >/dev/null 2>&1", png_path, svg_path);
+    if (system(cmd) == 0)
+        return true;
+
+    // Fallback: ImageMagick convert
+    snprintf(cmd, sizeof(cmd), "convert \"%s\" \"%s\" >/dev/null 2>&1", svg_path, png_path);
+    return system(cmd) == 0;
+}
+
+static bool show_panel_marquee(const char *shortname, bool dc_panel)
+{
+    const char *template_path = dc_panel ? DCPANEL_TEMPLATE : MCPANEL_TEMPLATE;
+    const char *tmp_svg = dc_panel ? PANEL_TMP_DC_SVG : PANEL_TMP_MC_SVG;
+    const char *tmp_png = dc_panel ? PANEL_TMP_DC_PNG : PANEL_TMP_MC_PNG;
+
+    char *svg = read_text_file(template_path);
+    if (!svg)
+    {
+        ts_fprintf(stderr, "error: panel template missing: %s\n", template_path);
+        return false;
+    }
+
+    char csv_path[PATH_MAX];
+    int applied = 0;
+    if (find_panel_csv(shortname, dc_panel, csv_path, sizeof(csv_path)))
+    {
+        int n = apply_substitutions_from_csv(&svg, csv_path);
+        if (n >= 0)
+        {
+            applied = n;
+            ts_printf("dmarquees: panel substitutions applied: %d (%s)\n", applied, csv_path);
+        }
+    }
+    else
+    {
+        ts_fprintf(stderr, "warning: panel csv not found for %s (%s panel)\n", shortname, dc_panel ? "dc" : "mc");
+    }
+
+    if (!write_text_file(tmp_svg, svg))
+    {
+        free(svg);
+        ts_fprintf(stderr, "error: failed writing temp svg: %s\n", tmp_svg);
+        return false;
+    }
+    free(svg);
+
+    if (!convert_svg_to_png(tmp_svg, tmp_png))
+    {
+        ts_fprintf(stderr, "error: svg conversion failed (need rsvg-convert or convert)\n");
+        return false;
+    }
+
+    int iw = 0, ih = 0;
+    if (image)
+        free(image);
+    image = load_png_rgba(tmp_png, &iw, &ih);
+    if (!image)
+    {
+        ts_fprintf(stderr, "error: converted panel png load failed: %s\n", tmp_png);
+        return false;
+    }
+
+    if (fb_map)
+    {
+        uint32_t *fbptr = (uint32_t *)fb_map;
+        int fb_w = chosen_mode.hdisplay;
+        int fb_h = chosen_mode.vdisplay;
+        int stride_pixels = stride / 4;
+
+        memset(fb_map, 0, bo_size);
+        scale_and_blit_to_xrgb(image, iw, ih, fbptr, fb_w, fb_h, stride_pixels, 0);
+        try_reset_crtc();
+        snprintf(last_image_path, sizeof(last_image_path), "%s", tmp_png);
+    }
+
+    ts_printf("dmarquees: showing %s panel for %s (%d substitutions)\n", dc_panel ? "DC" : "MC", shortname, applied);
+    return true;
+}
+
 static void refresh_current_marquee(void)
 {
     if (!fb_map)
@@ -494,6 +802,8 @@ int main(int argc, char **argv)
     CommandType command = CMD_UNKNOWN;
     char buf[128];
     char* cmd_str = NULL;
+    char token[128] = {0};
+    char arg[128] = {0};
     int spam_count = 0;
 
     // main loop: read FIFO lines and act on them
@@ -542,7 +852,13 @@ int main(int argc, char **argv)
 
         ts_printf("dmarquees: command received: '%s'\n", cmd_str);
 
-        command = toCommandType(cmd_str);
+        token[0] = '\0';
+        arg[0] = '\0';
+        int parsed = sscanf(cmd_str, "%127s %127s", token, arg);
+        if (parsed <= 0)
+            continue;
+
+        command = toCommandType(token);
 
         switch (command)
         {
@@ -578,6 +894,26 @@ int main(int argc, char **argv)
 
         case CMD_REFRESH:
             refresh_current_marquee();
+            break;
+
+        case CMD_DCPANEL:
+            if (parsed < 2)
+            {
+                ts_fprintf(stderr, "warning: DCPANEL requires a shortname (e.g. DCPANEL sf2)\n");
+                break;
+            }
+            if (!show_panel_marquee(arg, true))
+                show_default_marquee();
+            break;
+
+        case CMD_MCPANEL:
+            if (parsed < 2)
+            {
+                ts_fprintf(stderr, "warning: MCPANEL requires a shortname (e.g. MCPANEL sf2)\n");
+                break;
+            }
+            if (!show_panel_marquee(arg, false))
+                show_default_marquee();
             break;
 
         case CMD_ROM:

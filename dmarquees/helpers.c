@@ -258,6 +258,10 @@ CommandType toCommandType(const char *s)
         return CMD_RESET;
     if (strcmp(s, "REFRESH") == 0)
         return CMD_REFRESH;
+    if (strcmp(s, "DCPANEL") == 0)
+        return CMD_DCPANEL;
+    if (strcmp(s, "MCPANEL") == 0)
+        return CMD_MCPANEL;
     // If not a known command, treat as ROM
     return CMD_ROM;
 }
@@ -278,6 +282,10 @@ const char *fromCommandType(CommandType c)
         return "RESET";
     case CMD_REFRESH:
         return "REFRESH";
+    case CMD_DCPANEL:
+        return "DCPANEL";
+    case CMD_MCPANEL:
+        return "MCPANEL";
     case CMD_ROM:
     default:
         return "ROM";
