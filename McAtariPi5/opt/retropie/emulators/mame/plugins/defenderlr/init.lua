@@ -10,6 +10,10 @@ exports.description = 'Configure left-right controls for Defender (and Stargate)
 exports.license = 'The BSD 3-Clause License'
 exports.author = { name = 'Aaron Paden' }
 
+-- Ignore this physical joystick number (JOYCODE_<n>_*) for plugin L/R logic.
+local IGNORED_JOYSTICK_NUMBER = 2
+local IGNORED_JOYCODE_PREFIX = "JOYCODE_" .. tostring(IGNORED_JOYSTICK_NUMBER) .. "_"
+
 local reset_subscription = nil
 local stop_subscription = nil
 local frame_subscription = nil
@@ -38,6 +42,60 @@ function defenderlr.startplugin()
 	local ioport = nil
 	local memory = nil
 	local thrust = nil
+
+	local function trim(s)
+		return (s:gsub("^%s+", ""):gsub("%s+$", ""))
+	end
+
+	local function filter_ignored_joystick_from_seq(seq)
+		if seq == nil then
+			return nil
+		end
+
+		local ok_tokens, tokens = pcall(function()
+			return input:seq_to_tokens(seq)
+		end)
+		if (not ok_tokens) or tokens == nil or tokens == "" then
+			return seq
+		end
+
+		local kept_terms = {}
+		local start_pos = 1
+		while true do
+			local sep_start, sep_end = string.find(tokens, " OR ", start_pos, true)
+			local term = nil
+			if sep_start ~= nil then
+				term = string.sub(tokens, start_pos, sep_start - 1)
+				start_pos = sep_end + 1
+			else
+				term = string.sub(tokens, start_pos)
+			end
+
+			term = trim(term)
+			if term ~= "" and not string.find(term, IGNORED_JOYCODE_PREFIX, 1, true) then
+				table.insert(kept_terms, term)
+			end
+
+			if sep_start == nil then
+				break
+			end
+		end
+
+		if #kept_terms == 0 then
+			return emu.input_seq()
+		end
+
+		local filtered_tokens = table.concat(kept_terms, " OR ")
+		local ok_seq, filtered_seq = pcall(function()
+			return input:seq_from_tokens(filtered_tokens)
+		end)
+		if ok_seq and filtered_seq ~= nil then
+			return filtered_seq
+		end
+
+		return seq
+	end
+
 	local function process_frame()
 		if input ~= nil then
 			if input:seq_pressed(button_left) then
@@ -87,6 +145,8 @@ function defenderlr.startplugin()
 				thrust = ioport.ports[':IN0'].fields['Thrust']
 				button_left = ioport:type_seq(IPT_JOYSTICK_LEFT, nil, nil)
 				button_right = ioport:type_seq(IPT_JOYSTICK_RIGHT, nil, nil)
+				button_left = filter_ignored_joystick_from_seq(button_left)
+				button_right = filter_ignored_joystick_from_seq(button_right)
 				frame_subscription = emu.add_machine_frame_notifier(process_frame)
 			else
 				print("ERROR: The 'defenderlr' plugin requires MAME version 0.254 or greater.")			
