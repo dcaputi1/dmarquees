@@ -90,6 +90,7 @@ FrontendMode g_frontend_mode = eNA;
 static time_t g_ra_init_hold = 0;
 static uint8_t* image = NULL;
 static char last_image_path[512] = {0};
+static char current_rom_shortname[128] = {0};
 
 // Try to reset CRTC by becoming master, setting CRTC, then dropping master
 // Returns true if drmModeSetCrtc succeeded
@@ -742,6 +743,21 @@ static bool show_panel_marquee(const char *shortname, bool dc_panel)
     return true;
 }
 
+static bool toggle_panel_display(bool dc_panel, bool panel_on)
+{
+    const char *panel_name = dc_panel ? "DCPANEL" : "MCPANEL";
+    if (current_rom_shortname[0] == '\0')
+    {
+        ts_fprintf(stderr, "warning: %s ignored - no tracked ROM yet\n", panel_name);
+        return false;
+    }
+
+    if (panel_on)
+        return show_panel_marquee(current_rom_shortname, dc_panel);
+
+    return show_game_marquee(current_rom_shortname);
+}
+
 static void refresh_current_marquee(void)
 {
     if (!fb_map)
@@ -897,22 +913,22 @@ int main(int argc, char **argv)
             break;
 
         case CMD_DCPANEL:
-            if (parsed < 2)
+            if (parsed < 2 || (strcmp(arg, "0") != 0 && strcmp(arg, "1") != 0))
             {
-                ts_fprintf(stderr, "warning: DCPANEL requires a shortname (e.g. DCPANEL sf2)\n");
+                ts_fprintf(stderr, "warning: DCPANEL requires 0 or 1 (e.g. DCPANEL 1)\n");
                 break;
             }
-            if (!show_panel_marquee(arg, true))
+            if (!toggle_panel_display(true, strcmp(arg, "1") == 0))
                 show_default_marquee();
             break;
 
         case CMD_MCPANEL:
-            if (parsed < 2)
+            if (parsed < 2 || (strcmp(arg, "0") != 0 && strcmp(arg, "1") != 0))
             {
-                ts_fprintf(stderr, "warning: MCPANEL requires a shortname (e.g. MCPANEL sf2)\n");
+                ts_fprintf(stderr, "warning: MCPANEL requires 0 or 1 (e.g. MCPANEL 1)\n");
                 break;
             }
-            if (!show_panel_marquee(arg, false))
+            if (!toggle_panel_display(false, strcmp(arg, "1") == 0))
                 show_default_marquee();
             break;
 
@@ -938,6 +954,10 @@ int main(int argc, char **argv)
             {
                 // Fallback: show default marquee
                 show_default_marquee();
+            }
+            else
+            {
+                snprintf(current_rom_shortname, sizeof(current_rom_shortname), "%s", cmd_str);
             }
             break;
 
