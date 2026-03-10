@@ -6,7 +6,7 @@
  - Owns /dev/dri/card1 (attempts drmSetMaster) and modesets the chosen connector.
  - Listens on a named FIFO /tmp/dmarquee_cmd for commands written by your plugin.
  - Commands:
-     <shortname>   => load /home/danc/mnt/marquees/<shortname>.png and display it
+     <shortname>   => load $HOME/mnt/marquees/<shortname>.png and display it
      CLEAR         => clear the screen (black)
      EXIT          => exit the daemon
      RA            => set frontend mode to RetroArch
@@ -54,11 +54,7 @@
 
 #define VERSION "1.6.0"
 #define DEVICE_PATH "/dev/dri/card1"
-#define IMAGE_DIR "/home/danc/mnt/marquees"
-#define IMAGE_DIR_ALT "/home/danc/RetroPie/roms/mame/media/marquees"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
-#define PROGRAM_DIR "/home/danc/IvarArcade"
-#define DEF_MARQUEE_DIR PROGRAM_DIR "/images"
 #define DEF_MARQUEE_NAME "RetroPieMarquee"
 #define DEF_RA_MARQUEE_NAME "RetroArch_logo"
 #define DEF_SA_MARQUEE_NAME "MAMELogoR"
@@ -66,8 +62,6 @@
 #define PREFERRED_H 1080
 #define FIFO_RETRY_DELAY_MSEC 250
 #define CRTC_RESET_HOLD_SEC   10
-#define DCPANEL_TEMPLATE PROGRAM_DIR "/images/dcpanel-1-labels.svg"
-#define MCPANEL_TEMPLATE PROGRAM_DIR "/images/mcpanel-1-labels.svg"
 #define PANEL_TMP_DC_SVG "/tmp/dmarquees_dcpanel.svg"
 #define PANEL_TMP_DC_PNG "/tmp/dmarquees_dcpanel.png"
 #define PANEL_TMP_MC_SVG "/tmp/dmarquees_mcpanel.svg"
@@ -91,6 +85,48 @@ static time_t g_ra_init_hold = 0;
 static uint8_t* image = NULL;
 static char last_image_path[512] = {0};
 static char current_rom_shortname[128] = {0};
+static char g_image_dir[PATH_MAX] = {0};
+static char g_image_dir_alt[PATH_MAX] = {0};
+static char g_program_dir[PATH_MAX] = {0};
+static char g_default_marquee_dir[PATH_MAX] = {0};
+static char g_dcpanel_template[PATH_MAX] = {0};
+static char g_mcpanel_template[PATH_MAX] = {0};
+static char g_labels_dir[PATH_MAX] = {0};
+
+static bool build_home_path(char *out, size_t out_size, const char *suffix)
+{
+    const char *home = getenv("HOME");
+    if (!home || !home[0])
+        return false;
+
+    int written = snprintf(out, out_size, "%s%s", home, suffix);
+    return written > 0 && (size_t)written < out_size;
+}
+
+static bool init_runtime_paths(void)
+{
+    if (!build_home_path(g_image_dir, sizeof(g_image_dir), "/mnt/marquees"))
+        return false;
+    if (!build_home_path(g_image_dir_alt, sizeof(g_image_dir_alt), "/RetroPie/roms/mame/media/marquees"))
+        return false;
+    if (!build_home_path(g_program_dir, sizeof(g_program_dir), "/IvarArcade"))
+        return false;
+
+    int n = snprintf(g_default_marquee_dir, sizeof(g_default_marquee_dir), "%s/images", g_program_dir);
+    if (n <= 0 || (size_t)n >= sizeof(g_default_marquee_dir))
+        return false;
+    n = snprintf(g_dcpanel_template, sizeof(g_dcpanel_template), "%s/images/dcpanel-1-labels.svg", g_program_dir);
+    if (n <= 0 || (size_t)n >= sizeof(g_dcpanel_template))
+        return false;
+    n = snprintf(g_mcpanel_template, sizeof(g_mcpanel_template), "%s/images/mcpanel-1-labels.svg", g_program_dir);
+    if (n <= 0 || (size_t)n >= sizeof(g_mcpanel_template))
+        return false;
+    n = snprintf(g_labels_dir, sizeof(g_labels_dir), "%s/labels", g_program_dir);
+    if (n <= 0 || (size_t)n >= sizeof(g_labels_dir))
+        return false;
+
+    return true;
+}
 
 // Try to reset CRTC by becoming master, setting CRTC, then dropping master
 // Returns true if drmModeSetCrtc succeeded
@@ -143,7 +179,7 @@ static void show_default_marquee(void)
 
     const char *name = default_marquee_name_for(g_frontend_mode);
     char imgpath[512];
-    snprintf(imgpath, sizeof(imgpath), "%s/%s.png", DEF_MARQUEE_DIR, name);
+    snprintf(imgpath, sizeof(imgpath), "%s/%s.png", g_default_marquee_dir, name);
 
     int fb_w = chosen_mode.hdisplay;
     int fb_h = chosen_mode.vdisplay;
@@ -391,16 +427,16 @@ static int initialize(void)
 static bool show_game_marquee(const char* cmd_str)
 {
     char imgpath[512];
-    snprintf(imgpath, sizeof(imgpath), "%s/%s.png", IMAGE_DIR, cmd_str);
+    snprintf(imgpath, sizeof(imgpath), "%s/%s.png", g_image_dir, cmd_str);
 
     struct stat st;
     if (stat(imgpath, &st) != 0)
     {
         // Try IMAGE_DIR_ALT as fallback
-        snprintf(imgpath, sizeof(imgpath), "%s/%s.png", IMAGE_DIR_ALT, cmd_str);
+        snprintf(imgpath, sizeof(imgpath), "%s/%s.png", g_image_dir_alt, cmd_str);
         if (stat(imgpath, &st) != 0)
         {
-            ts_fprintf(stderr, "warning: image missing in both directories: %s/%s.png\n", IMAGE_DIR, cmd_str);
+            ts_fprintf(stderr, "warning: image missing in both directories: %s/%s.png\n", g_image_dir, cmd_str);
             return false;
         }
         ts_printf("dmarquees: using alternate image directory: %s\n", imgpath);
@@ -635,26 +671,16 @@ static int apply_substitutions_from_csv(char **svg_buf, const char *csv_path)
     return applied;
 }
 
-static bool find_panel_csv(const char *shortname, bool dc_panel, char *out_path, size_t out_size)
+static bool find_panel_map(const char *shortname, bool dc_panel, char *out_path, size_t out_size)
 {
-    const char *dirs[] = { IMAGE_DIR, IMAGE_DIR_ALT, DEF_MARQUEE_DIR };
-    const char *dc_patterns[] = { "%s-dcpanel.csv", "%s-dc.panel.csv" };
-    const char *mc_patterns[] = { "%s-mcpanel.csv" };
-    const char **patterns = dc_panel ? dc_patterns : mc_patterns;
-    int pattern_count = dc_panel ? 2 : 1;
+    const char *pattern = dc_panel ? "%s.dcp" : "%s.mcp";
 
     struct stat st;
-    for (size_t d = 0; d < sizeof(dirs) / sizeof(dirs[0]); ++d)
-    {
-        for (int p = 0; p < pattern_count; ++p)
-        {
-            char file_name[256];
-            snprintf(file_name, sizeof(file_name), patterns[p], shortname);
-            snprintf(out_path, out_size, "%s/%s", dirs[d], file_name);
-            if (stat(out_path, &st) == 0)
-                return true;
-        }
-    }
+    char file_name[256];
+    snprintf(file_name, sizeof(file_name), pattern, shortname);
+    snprintf(out_path, out_size, "%s/%s", g_labels_dir, file_name);
+    if (stat(out_path, &st) == 0)
+        return true;
 
     return false;
 }
@@ -675,7 +701,7 @@ static bool convert_svg_to_png(const char *svg_path, const char *png_path)
 
 static bool show_panel_marquee(const char *shortname, bool dc_panel)
 {
-    const char *template_path = dc_panel ? DCPANEL_TEMPLATE : MCPANEL_TEMPLATE;
+    const char *template_path = dc_panel ? g_dcpanel_template : g_mcpanel_template;
     const char *tmp_svg = dc_panel ? PANEL_TMP_DC_SVG : PANEL_TMP_MC_SVG;
     const char *tmp_png = dc_panel ? PANEL_TMP_DC_PNG : PANEL_TMP_MC_PNG;
 
@@ -686,20 +712,20 @@ static bool show_panel_marquee(const char *shortname, bool dc_panel)
         return false;
     }
 
-    char csv_path[PATH_MAX];
+    char map_path[PATH_MAX];
     int applied = 0;
-    if (find_panel_csv(shortname, dc_panel, csv_path, sizeof(csv_path)))
+    if (find_panel_map(shortname, dc_panel, map_path, sizeof(map_path)))
     {
-        int n = apply_substitutions_from_csv(&svg, csv_path);
+        int n = apply_substitutions_from_csv(&svg, map_path);
         if (n >= 0)
         {
             applied = n;
-            ts_printf("dmarquees: panel substitutions applied: %d (%s)\n", applied, csv_path);
+            ts_printf("dmarquees: panel substitutions applied: %d (%s)\n", applied, map_path);
         }
     }
     else
     {
-        ts_fprintf(stderr, "warning: panel csv not found for %s (%s panel)\n", shortname, dc_panel ? "dc" : "mc");
+        ts_fprintf(stderr, "warning: panel map not found for %s (%s panel)\n", shortname, dc_panel ? "dc" : "mc");
     }
 
     if (!write_text_file(tmp_svg, svg))
@@ -807,6 +833,12 @@ int main(int argc, char **argv)
         return parse_result;
 
     ts_printf("dmarquees: frontend=%s\n", fromFrontendMode(g_frontend_mode));
+
+    if (!init_runtime_paths())
+    {
+        ts_fprintf(stderr, "error: failed to resolve runtime paths from HOME\n");
+        return 1;
+    }
 
     signal(SIGINT, sigint_handler);
 
