@@ -5,6 +5,20 @@ BASE_PATH="/opt/retropie/emulators/mame"
 CFG_PATH="$BASE_PATH/cfg"
 INI_PATH="$BASE_PATH/ini"
 
+# Resolve the primary non-root account; allow explicit override via ARCADE_USER.
+if [ -z "$ARCADE_USER" ]; then
+    ARCADE_USER="${SUDO_USER:-${LOGNAME:-${USER:-}}}"
+    if [ -z "$ARCADE_USER" ] || [ "$ARCADE_USER" = "root" ]; then
+        ARCADE_USER="$(getent passwd 1000 2>/dev/null | cut -d: -f1)"
+    fi
+    if [ -z "$ARCADE_USER" ] || [ "$ARCADE_USER" = "root" ]; then
+        ARCADE_USER="$(find /home -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | head -n 1)"
+    fi
+    if [ -z "$ARCADE_USER" ] || [ "$ARCADE_USER" = "root" ]; then
+        ARCADE_USER="pi"
+    fi
+fi
+
 # Keep StandAlone and RetroArch config files seperate
 CFG_SA_PATH="$BASE_PATH/cfg_sa"
 CFG_RA_PATH="$BASE_PATH/cfg_ra"
@@ -32,11 +46,12 @@ launch_desktop()
 setup_dmarquees()
 {
     local fe_mode="$1"   # frontend mode: SA (standalone MAME) or RA (RetroArch)
-    local ZIP="/home/danc/MAME_0.256_EXTRAs/marquees.zip"
-    local MNT="/home/danc/mnt/marquees"
+    local HOME_DIR="/home/$ARCADE_USER"
+    local ZIP="$HOME_DIR/MAME_0.256_EXTRAs/marquees.zip"
+    local MNT="$HOME_DIR/mnt/marquees"
     local CMD_FIFO="/tmp/dmarquees_cmd"
-    local DAEMON="/home/danc/marquees/bin/dmarquees"
-    local LOG="/home/danc/marquees/dmarquees.log"
+    local DAEMON="$HOME_DIR/marquees/bin/dmarquees"
+    local LOG="$HOME_DIR/marquees/dmarquees.log"
 
     echo "[autostart] Setting up marquee..."
 
@@ -73,7 +88,7 @@ setup_dmarquees()
     # Launch dmarquee as root if not already running
     if ! pgrep -x dmarquees >/dev/null; then
         echo "[autostart] Starting dmarquees daemon..."
-        sudo stdbuf -oL -eL "$DAEMON" -u danc -f "$fe_mode" >"$LOG" 2>&1 &
+        sudo stdbuf -oL -eL "$DAEMON" -u "$ARCADE_USER" -f "$fe_mode" >"$LOG" 2>&1 &
         sleep 1
     else
         echo "[autostart] dmarquees already running."
@@ -92,9 +107,10 @@ setup_dmarquees()
 
 shutdown_dmarquees()
 {
-    local MNT="/home/danc/mnt/marquees"
+    local HOME_DIR="/home/$ARCADE_USER"
+    local MNT="$HOME_DIR/mnt/marquees"
     local CMD_FIFO="/tmp/dmarquees_cmd"
-    local LOG="/home/danc/marquees/dmarquees.log"
+    local LOG="$HOME_DIR/marquees/dmarquees.log"
 
     echo "[autostart] Shutting down marquees..."
 
@@ -127,9 +143,10 @@ shutdown_dmarquees()
 
 swap_banner_art()
 {
-    local MNT="/home/danc/mnt/marquees"
-    local MARQUEES_ZIP="/home/danc/MAME_0.256_EXTRAs/marquees.zip"
-    local CPANEL_ZIP="/home/danc/MAME_0.256_EXTRAs/cpanel.zip"
+    local HOME_DIR="/home/$ARCADE_USER"
+    local MNT="$HOME_DIR/mnt/marquees"
+    local MARQUEES_ZIP="$HOME_DIR/MAME_0.256_EXTRAs/marquees.zip"
+    local CPANEL_ZIP="$HOME_DIR/MAME_0.256_EXTRAs/cpanel.zip"
     local CMD_FIFO="/tmp/dmarquees_cmd"
 
     # Check what's currently mounted
