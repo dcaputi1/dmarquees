@@ -83,7 +83,7 @@ static void* fb_map = NULL;
 FrontendMode g_frontend_mode = eNA;
 static time_t g_ra_init_hold = 0;
 static uint8_t* image = NULL;
-static char last_image_path[512] = {0};
+static char last_image_path[PATH_MAX] = {0};
 static char current_rom_shortname[128] = {0};
 static char g_image_dir[PATH_MAX] = {0};
 static char g_image_dir_alt[PATH_MAX] = {0};
@@ -125,6 +125,42 @@ static bool init_runtime_paths(void)
     if (n <= 0 || (size_t)n >= sizeof(g_labels_dir))
         return false;
 
+    return true;
+}
+
+static bool join_path(char *out, size_t out_size, const char *dir, const char *file)
+{
+    if (!out || out_size == 0 || !dir || !file)
+        return false;
+
+    size_t dir_len = strlen(dir);
+    size_t file_len = strlen(file);
+    if (dir_len + 1 + file_len + 1 > out_size)
+        return false;
+
+    memcpy(out, dir, dir_len);
+    out[dir_len] = '/';
+    memcpy(out + dir_len + 1, file, file_len);
+    out[dir_len + 1 + file_len] = '\0';
+    return true;
+}
+
+static bool build_png_path(char *out, size_t out_size, const char *dir, const char *name)
+{
+    if (!out || out_size == 0 || !dir || !name)
+        return false;
+
+    size_t dir_len = strlen(dir);
+    size_t name_len = strlen(name);
+    const size_t ext_len = 4; // ".png"
+
+    if (dir_len + 1 + name_len + ext_len + 1 > out_size)
+        return false;
+
+    memcpy(out, dir, dir_len);
+    out[dir_len] = '/';
+    memcpy(out + dir_len + 1, name, name_len);
+    memcpy(out + dir_len + 1 + name_len, ".png", ext_len + 1);
     return true;
 }
 
@@ -178,8 +214,12 @@ static void show_default_marquee(void)
         return;
 
     const char *name = default_marquee_name_for(g_frontend_mode);
-    char imgpath[512];
-    snprintf(imgpath, sizeof(imgpath), "%s/%s.png", g_default_marquee_dir, name);
+    char imgpath[PATH_MAX];
+    if (!build_png_path(imgpath, sizeof(imgpath), g_default_marquee_dir, name))
+    {
+        ts_fprintf(stderr, "error: default marquee path too long: %s/%s.png\n", g_default_marquee_dir, name);
+        return;
+    }
 
     int fb_w = chosen_mode.hdisplay;
     int fb_h = chosen_mode.vdisplay;
@@ -426,14 +466,22 @@ static int initialize(void)
 
 static bool show_game_marquee(const char* cmd_str)
 {
-    char imgpath[512];
-    snprintf(imgpath, sizeof(imgpath), "%s/%s.png", g_image_dir, cmd_str);
+    char imgpath[PATH_MAX];
+    if (!build_png_path(imgpath, sizeof(imgpath), g_image_dir, cmd_str))
+    {
+        ts_fprintf(stderr, "warning: image path too long: %s/%s.png\n", g_image_dir, cmd_str);
+        return false;
+    }
 
     struct stat st;
     if (stat(imgpath, &st) != 0)
     {
         // Try IMAGE_DIR_ALT as fallback
-        snprintf(imgpath, sizeof(imgpath), "%s/%s.png", g_image_dir_alt, cmd_str);
+        if (!build_png_path(imgpath, sizeof(imgpath), g_image_dir_alt, cmd_str))
+        {
+            ts_fprintf(stderr, "warning: alternate image path too long: %s/%s.png\n", g_image_dir_alt, cmd_str);
+            return false;
+        }
         if (stat(imgpath, &st) != 0)
         {
             ts_fprintf(stderr, "warning: image missing in both directories: %s/%s.png\n", g_image_dir, cmd_str);
@@ -673,12 +721,23 @@ static int apply_substitutions_from_csv(char **svg_buf, const char *csv_path)
 
 static bool find_panel_map(const char *shortname, bool dc_panel, char *out_path, size_t out_size)
 {
-    const char *pattern = dc_panel ? "%s.dcp" : "%s.mcp";
+    if (!shortname || !out_path || out_size == 0)
+        return false;
 
     struct stat st;
     char file_name[256];
-    snprintf(file_name, sizeof(file_name), pattern, shortname);
-    snprintf(out_path, out_size, "%s/%s", g_labels_dir, file_name);
+    const char *ext = dc_panel ? ".dcp" : ".mcp";
+    size_t short_len = strlen(shortname);
+    size_t ext_len = strlen(ext);
+    if (short_len + ext_len + 1 > sizeof(file_name))
+        return false;
+
+    memcpy(file_name, shortname, short_len);
+    memcpy(file_name + short_len, ext, ext_len + 1);
+
+    if (!join_path(out_path, out_size, g_labels_dir, file_name))
+        return false;
+
     if (stat(out_path, &st) == 0)
         return true;
 
