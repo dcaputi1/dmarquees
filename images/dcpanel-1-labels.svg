@@ -26,14 +26,14 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:zoom="1.2976515"
-     inkscape:cx="540.20667"
+     inkscape:cx="539.43605"
      inkscape:cy="161.4455"
-     inkscape:window-width="2321"
-     inkscape:window-height="1213"
-     inkscape:window-x="4191"
-     inkscape:window-y="538"
+     inkscape:window-width="1902"
+     inkscape:window-height="1033"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
      inkscape:window-maximized="0"
-     inkscape:current-layer="g1"
+     inkscape:current-layer="layer1"
      inkscape:document-units="in"
      inkscape:clip-to-page="true" />
   <g
@@ -64,7 +64,7 @@
      inkscape:groupmode="layer"
      id="layer1"
      inkscape:label="vector"
-     style="display:inline"
+     style="display:none"
      transform="translate(-11.224327,-294.90092)">
     <ellipse
        style="display:inline;fill:none;stroke:#00ff00;stroke-width:0.984801;stroke-opacity:1"
