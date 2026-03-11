@@ -44,6 +44,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include <pwd.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -92,19 +93,66 @@ static char g_default_marquee_dir[PATH_MAX] = {0};
 static char g_dcpanel_template[PATH_MAX] = {0};
 static char g_mcpanel_template[PATH_MAX] = {0};
 static char g_labels_dir[PATH_MAX] = {0};
+char g_runtime_user[64] = {0};
+static char g_runtime_home[PATH_MAX] = {0};
+
+static bool resolve_user_home(char *out, size_t out_size, const char *user)
+{
+    if (!out || out_size == 0 || !user || !user[0])
+        return false;
+
+    struct passwd *pw = getpwnam(user);
+    if (pw && pw->pw_dir && pw->pw_dir[0])
+    {
+        int written = snprintf(out, out_size, "%s", pw->pw_dir);
+        return written > 0 && (size_t)written < out_size;
+    }
+
+    // Fallback for systems where passwd lookup is unavailable.
+    int written = snprintf(out, out_size, "/home/%s", user);
+    return written > 0 && (size_t)written < out_size;
+}
+
+static bool resolve_runtime_home(char *out, size_t out_size)
+{
+    if (!out || out_size == 0)
+        return false;
+
+    if (g_runtime_user[0] && resolve_user_home(out, out_size, g_runtime_user))
+        return true;
+
+    const char *env_user = getenv("DMARQUEES_USER");
+    if (env_user && env_user[0] && resolve_user_home(out, out_size, env_user))
+        return true;
+
+    const char *sudo_user = getenv("SUDO_USER");
+    if (sudo_user && sudo_user[0] && resolve_user_home(out, out_size, sudo_user))
+        return true;
+
+    const char *home = getenv("HOME");
+    if (home && home[0])
+    {
+        int written = snprintf(out, out_size, "%s", home);
+        return written > 0 && (size_t)written < out_size;
+    }
+
+    return false;
+}
 
 static bool build_home_path(char *out, size_t out_size, const char *suffix)
 {
-    const char *home = getenv("HOME");
-    if (!home || !home[0])
+    if (!suffix || !suffix[0])
         return false;
 
-    int written = snprintf(out, out_size, "%s%s", home, suffix);
+    int written = snprintf(out, out_size, "%s%s", g_runtime_home, suffix);
     return written > 0 && (size_t)written < out_size;
 }
 
 static bool init_runtime_paths(void)
 {
+    if (!resolve_runtime_home(g_runtime_home, sizeof(g_runtime_home)))
+        return false;
+
     if (!build_home_path(g_image_dir, sizeof(g_image_dir), "/mnt/marquees"))
         return false;
     if (!build_home_path(g_image_dir_alt, sizeof(g_image_dir_alt), "/RetroPie/roms/mame/media/marquees"))
@@ -248,7 +296,7 @@ static void show_default_marquee(void)
 
 static void __attribute__((unused)) print_usage(const char *prog)
 {
-    ts_fprintf(stderr, "Usage: %s [-f SA|RA|NA]\n", prog);
+    ts_fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username]\n", prog);
 }
 
 static void sigint_handler(int sig)
@@ -895,9 +943,11 @@ int main(int argc, char **argv)
 
     if (!init_runtime_paths())
     {
-        ts_fprintf(stderr, "error: failed to resolve runtime paths from HOME\n");
+        ts_fprintf(stderr, "error: failed to resolve runtime home (set -u or DMARQUEES_USER)\n");
         return 1;
     }
+
+    ts_printf("dmarquees: runtime home=%s\n", g_runtime_home);
 
     signal(SIGINT, sigint_handler);
 

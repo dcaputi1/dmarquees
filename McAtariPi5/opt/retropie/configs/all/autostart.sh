@@ -73,7 +73,7 @@ setup_dmarquees()
     # Launch dmarquee as root if not already running
     if ! pgrep -x dmarquees >/dev/null; then
         echo "[autostart] Starting dmarquees daemon..."
-        sudo stdbuf -oL -eL "$DAEMON" -f "$fe_mode" >"$LOG" 2>&1 &
+        sudo stdbuf -oL -eL "$DAEMON" -u danc -f "$fe_mode" >"$LOG" 2>&1 &
         sleep 1
     else
         echo "[autostart] dmarquees already running."

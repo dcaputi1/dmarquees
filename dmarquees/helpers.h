@@ -21,8 +21,9 @@ typedef enum
 FrontendMode toFrontendMode(const char *s);
 const char *fromFrontendMode(FrontendMode m);
 
-    // Global frontend mode (defined in dmarquees.c)
-    extern FrontendMode g_frontend_mode;
+// Globals defined in dmarquees.c
+extern FrontendMode g_frontend_mode;
+extern char g_runtime_user[64];
 // Command type enum and conversion helpers
 typedef enum
 {

@@ -215,8 +215,9 @@ const char *fromFrontendMode(FrontendMode m)
 int parseFrontendModeArg(int argc, char **argv)
 {
     extern FrontendMode g_frontend_mode;
+    extern char g_runtime_user[64];
     int opt;
-    while ((opt = getopt(argc, argv, "f:h")) != -1)
+    while ((opt = getopt(argc, argv, "f:u:h")) != -1)
     {
         switch (opt)
         {
@@ -225,15 +226,24 @@ int parseFrontendModeArg(int argc, char **argv)
             if (g_frontend_mode == eNA && strcmp(optarg, "NA") != 0 && strcmp(optarg, "None") != 0)
             {
                 fprintf(stderr, "error: invalid frontend '%s'\n", optarg);
-                fprintf(stderr, "Usage: %s [-f SA|RA|NA]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username]\n", argv[0]);
                 return 2;
             }
             break;
+        case 'u':
+            if (!optarg || optarg[0] == '\0')
+            {
+                fprintf(stderr, "error: missing username for -u\n");
+                fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username]\n", argv[0]);
+                return 2;
+            }
+            snprintf(g_runtime_user, 64, "%s", optarg);
+            break;
         case 'h':
-            fprintf(stderr, "Usage: %s [-f SA|RA|NA]\n", argv[0]);
+            fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username]\n", argv[0]);
             return 0;
         default:
-            fprintf(stderr, "Usage: %s [-f SA|RA|NA]\n", argv[0]);
+            fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username]\n", argv[0]);
             return 2;
         }
     }
