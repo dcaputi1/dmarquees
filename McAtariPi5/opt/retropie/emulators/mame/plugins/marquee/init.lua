@@ -28,6 +28,8 @@ local SWAP_SCRIPT  = "/home/danc/scripts/swap_banner_art.sh"
 
 local reset_subscriber
 local stop_subscriber
+local dc_panel_visible = false
+local mc_panel_visible = false
 
 -----------------------------------------------------------
 -- Helper Functions
@@ -68,14 +70,47 @@ local function on_game_stop()
 end
 
 local function menu_populate()
-    return {{ "Control Panel / Marquee", "SWAP", "" }}
+    return {
+        { "Control Panel / Marquee", "SWAP", "" },
+        { "DC Panel 1", dc_panel_visible and "hide" or "show", "" },
+        { "MC Atari Panel", mc_panel_visible and "hide" or "show", "" }
+    }
 end
 
 local function menu_callback(index, event)
-    if index == 1 and event == "select" then
-        os.execute(SWAP_SCRIPT)
-        print("Marquee plugin: SWAP index " .. tostring(index) .. " event " .. tostring(event)  )
+    if event ~= "select" then
+        return false
     end
+
+    if index == 1 then
+        os.execute(SWAP_SCRIPT)
+        print("Marquee plugin: SWAP index " .. tostring(index) .. " event " .. tostring(event))
+    elseif index == 2 then
+        dc_panel_visible = not dc_panel_visible
+        if dc_panel_visible then
+            send_marquee_command("DCPANEL 1")
+            if mc_panel_visible then
+                mc_panel_visible = false
+                send_marquee_command("MCPANEL 0")
+            end
+        else
+            send_marquee_command("DCPANEL 0")
+        end
+        print("Marquee plugin: DC panel " .. (dc_panel_visible and "shown" or "hidden"))
+    elseif index == 3 then
+        mc_panel_visible = not mc_panel_visible
+        if mc_panel_visible then
+            send_marquee_command("MCPANEL 1")
+            if dc_panel_visible then
+                dc_panel_visible = false
+                send_marquee_command("DCPANEL 0")
+            end
+        else
+            send_marquee_command("MCPANEL 0")
+        end
+        print("Marquee plugin: MC panel " .. (mc_panel_visible and "shown" or "hidden"))
+    end
+
     return false
 end
 
