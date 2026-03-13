@@ -40,7 +40,7 @@
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="0"
-     inkscape:current-layer="layer2"
+     inkscape:current-layer="g1"
      inkscape:document-units="in"
      inkscape:clip-to-page="true" />
   <g
@@ -491,7 +491,7 @@
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;fill:none;stroke:#00ff00"
        x="132.18097"
        y="385.29169"
-       id="text35"><tspan
+       id="txt-player1"><tspan
          sodipodi:role="line"
          id="tspan35"
          x="132.18097"
@@ -501,7 +501,7 @@
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;fill:none;stroke:#00ff00"
        x="737.50427"
        y="385.36786"
-       id="text36"><tspan
+       id="txt-player2"><tspan
          sodipodi:role="line"
          id="tspan37"
          x="737.50427"
