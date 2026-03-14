@@ -46,6 +46,26 @@ local function send_marquee_command(text)
     end
 end
 
+local function current_romname()
+    local gamename = emu.romname()
+    if gamename and gamename ~= "" and gamename ~= "___empty" then
+        return gamename
+    end
+    return nil
+end
+
+local function sync_rom_for_panel()
+    local gamename = current_romname()
+    if not gamename then
+        print("Marquee plugin: No active ROM to sync for panel")
+        return false
+    end
+
+    -- Keep dmarquees' tracked shortname in sync before panel commands.
+    send_marquee_command(gamename)
+    return true
+end
+
 local function cleanup_notifiers()
     if reset_subscriber then emu.remove_notifier(reset_subscriber) end
     if stop_subscriber then emu.remove_notifier(stop_subscriber) end
@@ -57,14 +77,18 @@ end
 -----------------------------------------------------------
 
 local function on_game_start()
-    local gamename = emu.romname()
-    if gamename == "___empty" then return end
+    local gamename = current_romname()
+    if not gamename then return end
 
+    dc_panel_visible = false
+    mc_panel_visible = false
     print("Marquee plugin: " .. gamename .. " started")
     send_marquee_command(gamename)  -- show corresponding marquee
 end
 
 local function on_game_stop()
+    dc_panel_visible = false
+    mc_panel_visible = false
     print("Marquee plugin: Game stopped, reset marquee")
     send_marquee_command("CLEAR")
 end
@@ -85,30 +109,35 @@ local function menu_callback(index, event)
     if index == 1 then
         os.execute(SWAP_SCRIPT)
         print("Marquee plugin: SWAP index " .. tostring(index) .. " event " .. tostring(event))
+        return false
     elseif index == 2 then
         dc_panel_visible = not dc_panel_visible
         if dc_panel_visible then
-            send_marquee_command("DCPANEL 1")
             if mc_panel_visible then
                 mc_panel_visible = false
                 send_marquee_command("MCPANEL 0")
             end
+            sync_rom_for_panel()
+            send_marquee_command("DCPANEL 1")
         else
             send_marquee_command("DCPANEL 0")
         end
         print("Marquee plugin: DC panel " .. (dc_panel_visible and "shown" or "hidden"))
+        return true
     elseif index == 3 then
         mc_panel_visible = not mc_panel_visible
         if mc_panel_visible then
-            send_marquee_command("MCPANEL 1")
             if dc_panel_visible then
                 dc_panel_visible = false
                 send_marquee_command("DCPANEL 0")
             end
+            sync_rom_for_panel()
+            send_marquee_command("MCPANEL 1")
         else
             send_marquee_command("MCPANEL 0")
         end
         print("Marquee plugin: MC panel " .. (mc_panel_visible and "shown" or "hidden"))
+        return true
     end
 
     return false

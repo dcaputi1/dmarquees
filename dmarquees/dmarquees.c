@@ -729,6 +729,37 @@ static bool replace_label_text(char **svg_buf, const char *label_id, const char 
     return true;
 }
 
+// Normalize a CSV field in-place: trim caller-provided whitespace, then
+// strip wrapping double quotes and unescape doubled quotes ("").
+static char *normalize_csv_field(char *field)
+{
+    if (!field)
+        return NULL;
+
+    size_t len = strlen(field);
+    if (len >= 2 && field[0] == '"' && field[len - 1] == '"')
+    {
+        field[len - 1] = '\0';
+        char *src = field + 1;
+        char *dst = field;
+        while (*src)
+        {
+            if (src[0] == '"' && src[1] == '"')
+            {
+                *dst++ = '"';
+                src += 2;
+            }
+            else
+            {
+                *dst++ = *src++;
+            }
+        }
+        *dst = '\0';
+    }
+
+    return field;
+}
+
 static int apply_substitutions_from_csv(char **svg_buf, const char *csv_path)
 {
     FILE *fp = fopen(csv_path, "r");
@@ -750,6 +781,11 @@ static int apply_substitutions_from_csv(char **svg_buf, const char *csv_path)
         *comma = '\0';
         char *id = trim(line_trimmed, strlen(line_trimmed));
         char *text = trim(comma + 1, strlen(comma + 1));
+        if (!id || !text)
+            continue;
+
+        id = normalize_csv_field(id);
+        text = normalize_csv_field(text);
         if (!id || !text)
             continue;
 
@@ -891,6 +927,111 @@ static bool toggle_panel_display(bool dc_panel, bool panel_on)
     return show_game_marquee(current_rom_shortname);
 }
 
+static void refresh_current_marquee(void);
+
+static void handle_fifo_command(char *cmd_str)
+{
+    if (!cmd_str)
+        return;
+
+    char token[128] = {0};
+    char arg[128] = {0};
+    int parsed = sscanf(cmd_str, "%127s %127s", token, arg);
+    if (parsed <= 0)
+        return;
+
+    CommandType command = toCommandType(token);
+
+    switch (command)
+    {
+    case CMD_RA:
+        g_frontend_mode = eRA;
+        ts_printf("dmarquees: frontend mode changed to RA\n");
+        show_default_marquee();
+        break;
+
+    case CMD_SA:
+        g_frontend_mode = eSA;
+        ts_printf("dmarquees: frontend mode changed to SA\n");
+        show_default_marquee();
+        break;
+
+    case CMD_NA:
+        g_frontend_mode = eNA;
+        ts_printf("dmarquees: frontend mode changed to NA\n");
+        show_default_marquee();
+        break;
+
+    case CMD_EXIT:
+        running = false;
+        break;
+
+    case CMD_CLEAR:
+        show_default_marquee();
+        break;
+
+    case CMD_RESET:
+        try_reset_crtc();
+        break;
+
+    case CMD_REFRESH:
+        refresh_current_marquee();
+        break;
+
+    case CMD_DCPANEL:
+        if (parsed < 2 || (strcmp(arg, "0") != 0 && strcmp(arg, "1") != 0))
+        {
+            ts_fprintf(stderr, "warning: DCPANEL requires 0 or 1 (e.g. DCPANEL 1)\n");
+            break;
+        }
+        if (!toggle_panel_display(true, strcmp(arg, "1") == 0))
+            show_default_marquee();
+        break;
+
+    case CMD_MCPANEL:
+        if (parsed < 2 || (strcmp(arg, "0") != 0 && strcmp(arg, "1") != 0))
+        {
+            ts_fprintf(stderr, "warning: MCPANEL requires 0 or 1 (e.g. MCPANEL 1)\n");
+            break;
+        }
+        if (!toggle_panel_display(false, strcmp(arg, "1") == 0))
+            show_default_marquee();
+        break;
+
+    case CMD_ROM:
+        // ignore RA plugin commands unless sent from runcommand
+        if (g_frontend_mode == eRA)
+        {
+            if (!strncmp(cmd_str, "RC:", 3)) // "RC:" run command
+                cmd_str += 3;
+            else
+                break;
+        }
+
+        // If we reach here, it's either eROM or an unknown command - treat as ROM shortname
+        if (game_has_multiple_screens(cmd_str))
+        {
+            ts_printf("dmarquees: Skipping multi-screen game: %s\n", cmd_str);
+            break;
+        }
+
+        // otherwise treat as rom shortname
+        if (!show_game_marquee(cmd_str))
+        {
+            // Fallback: show default marquee
+            show_default_marquee();
+        }
+        else
+        {
+            snprintf(current_rom_shortname, sizeof(current_rom_shortname), "%s", cmd_str);
+        }
+        break;
+
+    default: // never happens
+        break;
+    }
+}
+
 static void refresh_current_marquee(void)
 {
     if (!fb_map)
@@ -956,11 +1097,7 @@ int main(int argc, char **argv)
 
     ts_printf("dmarquees: entering main loop\n");
 
-    CommandType command = CMD_UNKNOWN;
     char buf[128];
-    char* cmd_str = NULL;
-    char token[128] = {0};
-    char arg[128] = {0};
     int spam_count = 0;
 
     // main loop: read FIFO lines and act on them
@@ -985,11 +1122,8 @@ int main(int argc, char **argv)
 
         if (read_len > 0)
         {
-            // Looks like we have a command!
-            cmd_str = trim(buf,read_len);
-
-            if (!cmd_str)
-                continue;   // oops, I guess not!
+            // Looks like we have one or more newline-delimited commands.
+            buf[read_len] = '\0';
         }
         else if (g_ra_init_hold && (time(NULL) > g_ra_init_hold))
         {
@@ -1007,103 +1141,20 @@ int main(int argc, char **argv)
             continue;
         }
 
-        ts_printf("dmarquees: command received: '%s'\n", cmd_str);
-
-        token[0] = '\0';
-        arg[0] = '\0';
-        int parsed = sscanf(cmd_str, "%127s %127s", token, arg);
-        if (parsed <= 0)
-            continue;
-
-        command = toCommandType(token);
-
-        switch (command)
+        for (char *line = buf; line && *line; )
         {
-        case CMD_RA:
-            g_frontend_mode = eRA;
-            ts_printf("dmarquees: frontend mode changed to RA\n");
-            show_default_marquee();
-            break;
+            char *next = strchr(line, '\n');
+            if (next)
+                *next++ = '\0';
 
-        case CMD_SA:
-            g_frontend_mode = eSA;
-            ts_printf("dmarquees: frontend mode changed to SA\n");
-            show_default_marquee();
-            break;
-
-        case CMD_NA:
-            g_frontend_mode = eNA;
-            ts_printf("dmarquees: frontend mode changed to NA\n");
-            show_default_marquee();
-            break;
-
-        case CMD_EXIT:
-            running = false;
-            break;
-
-        case CMD_CLEAR:
-            show_default_marquee();
-            break;
-
-        case CMD_RESET:
-            try_reset_crtc();
-            break;
-
-        case CMD_REFRESH:
-            refresh_current_marquee();
-            break;
-
-        case CMD_DCPANEL:
-            if (parsed < 2 || (strcmp(arg, "0") != 0 && strcmp(arg, "1") != 0))
+            char *cmd_str = trim(line, strlen(line));
+            if (cmd_str)
             {
-                ts_fprintf(stderr, "warning: DCPANEL requires 0 or 1 (e.g. DCPANEL 1)\n");
-                break;
-            }
-            if (!toggle_panel_display(true, strcmp(arg, "1") == 0))
-                show_default_marquee();
-            break;
-
-        case CMD_MCPANEL:
-            if (parsed < 2 || (strcmp(arg, "0") != 0 && strcmp(arg, "1") != 0))
-            {
-                ts_fprintf(stderr, "warning: MCPANEL requires 0 or 1 (e.g. MCPANEL 1)\n");
-                break;
-            }
-            if (!toggle_panel_display(false, strcmp(arg, "1") == 0))
-                show_default_marquee();
-            break;
-
-        case CMD_ROM:
-            // ignore RA plugin commands unless sent from runcommand
-            if (g_frontend_mode == eRA)
-            {
-                if (!strncmp(cmd_str, "RC:", 3))    // "RC:" run command
-                    cmd_str += 3;
-                else
-                    break;
-            } 
-
-            // If we reach here, it's either eROM or an unknown command - treat as ROM shortname
-            if (game_has_multiple_screens(cmd_str))
-            {
-                ts_printf("dmarquees: Skipping multi-screen game: %s\n", cmd_str);
-                break;
+                ts_printf("dmarquees: command received: '%s'\n", cmd_str);
+                handle_fifo_command(cmd_str);
             }
 
-            // otherwise treat as rom shortname
-            if (!show_game_marquee(cmd_str))
-            {
-                // Fallback: show default marquee
-                show_default_marquee();
-            }
-            else
-            {
-                snprintf(current_rom_shortname, sizeof(current_rom_shortname), "%s", cmd_str);
-            }
-            break;
-
-        default:    // never happens
-            break;
+            line = next;
         }
     }
 

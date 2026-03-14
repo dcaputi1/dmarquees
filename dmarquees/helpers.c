@@ -170,7 +170,14 @@ char *trim(char *s, size_t len)
 {
     if (!s)
         return s;
-    s[--len] = '\0'; // ensure null-termination
+
+    if (len == 0)
+        return NULL;
+
+    // Ensure null-termination without dropping the final non-whitespace char.
+    s[len] = '\0';
+
+    len = strlen(s);
     // trim right
     while (len > 0 && isspace(s[len - 1]))
         s[--len] = '\0';
