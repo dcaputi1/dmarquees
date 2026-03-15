@@ -82,6 +82,7 @@ static uint64_t bo_size = 0;
 static void* fb_map = NULL;
 
 FrontendMode g_frontend_mode = eNA;
+char g_drm_device_path[128] = DEVICE_PATH;
 static time_t g_ra_init_hold = 0;
 static uint8_t* image = NULL;
 static char last_image_path[PATH_MAX] = {0};
@@ -296,7 +297,7 @@ static void show_default_marquee(void)
 
 static void __attribute__((unused)) print_usage(const char *prog)
 {
-    ts_fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username]\n", prog);
+    ts_fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username] [-d /dev/dri/cardX]\n", prog);
 }
 
 static void sigint_handler(int sig)
@@ -461,11 +462,12 @@ static int initialize(void)
     }
     chmod(CMD_FIFO, 0666); // allow any user to write commands
 
-    // open DRM device
-    drm_fd = open(DEVICE_PATH, O_RDWR | O_CLOEXEC);
+    // open DRM device (default is /dev/dri/card1, overridable with -d)
+    drm_fd = open(g_drm_device_path, O_RDWR | O_CLOEXEC);
     if (drm_fd < 0)
     {
         ts_perror("open drm");
+        ts_fprintf(stderr, "error: failed to open DRM device: %s\n", g_drm_device_path);
         return 1;
     }
 
@@ -1081,6 +1083,7 @@ int main(int argc, char **argv)
         return parse_result;
 
     ts_printf("dmarquees: frontend=%s\n", fromFrontendMode(g_frontend_mode));
+    ts_printf("dmarquees: drm_device=%s\n", g_drm_device_path);
 
     if (!init_runtime_paths())
     {

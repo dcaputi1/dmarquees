@@ -52,7 +52,7 @@ The executable will be installed to `$HOME/marquees/bin/dmarquees` by default.
 
 Run as root (recommended from system startup):
 ```bash
-sudo ./dmarquees &
+sudo ./dmarquees [-f SA|RA|NA] [-u username] [-d /dev/dri/cardX] &
 ```
 
 Send commands via the FIFO:
