@@ -52,5 +52,9 @@ fi
 
 # Signal daemon to refresh
 if pgrep -x dmarquees >/dev/null; then
-    echo "REFRESH" > "$CMD_FIFO" 2>/dev/null || true
+    if [ -x "$HOME/scripts/dmarquees-send.sh" ]; then
+        "$HOME/scripts/dmarquees-send.sh" "REFRESH" 2>/dev/null || true
+    else
+        echo "REFRESH" > "$CMD_FIFO" 2>/dev/null || true
+    fi
 fi

@@ -4,6 +4,8 @@
 
 echo "runcommand-onlaunch started $date" > /tmp/rc.out
 
+SENDER_SCRIPT="$HOME/scripts/dmarquees-send.sh"
+
 #SYSTEM="$1"
 #EMULATOR="$2"
 ROM="$3"
@@ -45,7 +47,11 @@ if [[ -n "$ROM" ]]; then
     # NOTE: do this last! (race condition)
     # ALSO: we ignore all rom commands from RA unless sent from here with "RC:" prepended
 	echo "input $romzip : sending command $command to marquee daemon" >> /tmp/rc.out
-    echo "RC:$command" > /tmp/dmarquees_cmd
+    if [[ -x "$SENDER_SCRIPT" ]]; then
+        "$SENDER_SCRIPT" "RC:$command"
+    else
+        echo "RC:$command" > /tmp/dmarquees_cmd
+    fi
 fi
 
 echo "runcommand-onlauch exit $date" >> /tmp/rc.out

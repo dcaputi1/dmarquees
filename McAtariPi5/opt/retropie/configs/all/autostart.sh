@@ -26,6 +26,88 @@ CFG_RA_PATH="$BASE_PATH/cfg_ra"
 # Track which zip is currently mounted (marquees or cpanel)
 CURRENT_MOUNT_STATE="/tmp/current_mount_state"
 
+DMARQUEES_TRANSPORT_CFG_NAME=".dmarquees_transport.conf"
+DMARQUEES_DEFAULT_REMOTE_HOST="192.168.50.3"
+DMARQUEES_DEFAULT_REMOTE_PORT="5533"
+DMARQUEES_TRANSPORT="LOCAL"
+DMARQUEES_REMOTE_HOST="$DMARQUEES_DEFAULT_REMOTE_HOST"
+DMARQUEES_REMOTE_PORT="$DMARQUEES_DEFAULT_REMOTE_PORT"
+
+dmarquees_transport_cfg_path()
+{
+    local HOME_DIR="/home/$ARCADE_USER"
+    echo "$HOME_DIR/$DMARQUEES_TRANSPORT_CFG_NAME"
+}
+
+ensure_dmarquees_transport_cfg()
+{
+    local cfg_path
+    cfg_path="$(dmarquees_transport_cfg_path)"
+
+    if [ ! -f "$cfg_path" ]; then
+        cat > "$cfg_path" <<EOF
+DMARQUEES_TRANSPORT="LOCAL"
+DMARQUEES_REMOTE_HOST="$DMARQUEES_DEFAULT_REMOTE_HOST"
+DMARQUEES_REMOTE_PORT="$DMARQUEES_DEFAULT_REMOTE_PORT"
+EOF
+        chown "$ARCADE_USER:$ARCADE_USER" "$cfg_path" 2>/dev/null || true
+    fi
+}
+
+load_dmarquees_transport_cfg()
+{
+    DMARQUEES_TRANSPORT="LOCAL"
+    DMARQUEES_REMOTE_HOST="$DMARQUEES_DEFAULT_REMOTE_HOST"
+    DMARQUEES_REMOTE_PORT="$DMARQUEES_DEFAULT_REMOTE_PORT"
+
+    local cfg_path
+    cfg_path="$(dmarquees_transport_cfg_path)"
+    if [ -f "$cfg_path" ]; then
+        # shellcheck disable=SC1090
+        source "$cfg_path"
+    fi
+
+    case "$DMARQUEES_TRANSPORT" in
+        LOCAL|TCP|UDP)
+            ;;
+        *)
+            DMARQUEES_TRANSPORT="LOCAL"
+            ;;
+    esac
+
+    if ! [[ "$DMARQUEES_REMOTE_PORT" =~ ^[0-9]+$ ]]; then
+        DMARQUEES_REMOTE_PORT="$DMARQUEES_DEFAULT_REMOTE_PORT"
+    fi
+}
+
+save_dmarquees_transport_cfg()
+{
+    local cfg_path
+    cfg_path="$(dmarquees_transport_cfg_path)"
+
+    cat > "$cfg_path" <<EOF
+DMARQUEES_TRANSPORT="$DMARQUEES_TRANSPORT"
+DMARQUEES_REMOTE_HOST="$DMARQUEES_REMOTE_HOST"
+DMARQUEES_REMOTE_PORT="$DMARQUEES_REMOTE_PORT"
+EOF
+    chown "$ARCADE_USER:$ARCADE_USER" "$cfg_path" 2>/dev/null || true
+}
+
+send_dmarquees_cmd()
+{
+    local cmd="$1"
+    local HOME_DIR="/home/$ARCADE_USER"
+    local SENDER="$HOME_DIR/scripts/dmarquees-send.sh"
+    local cfg_path
+    cfg_path="$(dmarquees_transport_cfg_path)"
+
+    if [ -x "$SENDER" ]; then
+        DMARQUEES_TRANSPORT_CFG="$cfg_path" DMARQUEES_CMD_FIFO="/tmp/dmarquees_cmd" "$SENDER" "$cmd"
+    else
+        echo "$cmd" > /tmp/dmarquees_cmd
+    fi
+}
+
 launch_desktop()
 {
     # Legacy Wayfire (if present)
@@ -52,6 +134,28 @@ setup_dmarquees()
     local CMD_FIFO="/tmp/dmarquees_cmd"
     local DAEMON="$HOME_DIR/marquees/bin/dmarquees"
     local LOG="$HOME_DIR/marquees/dmarquees.log"
+
+    ensure_dmarquees_transport_cfg
+    load_dmarquees_transport_cfg
+
+    if [ "$DMARQUEES_TRANSPORT" != "LOCAL" ]; then
+        echo "[autostart] Marquee transport mode: $DMARQUEES_TRANSPORT ($DMARQUEES_REMOTE_HOST:$DMARQUEES_REMOTE_PORT)"
+        echo "[autostart] Skipping local dmarquees startup (network transport enabled)."
+
+        if pgrep -x dmarquees >/dev/null; then
+            echo "EXIT" > "$CMD_FIFO" 2>/dev/null || true
+            sleep 0.5
+            pgrep -x dmarquees >/dev/null && sudo pkill -9 dmarquees
+        fi
+
+        if mountpoint -q "$MNT"; then
+            fusermount -u "$MNT" || sudo umount -f "$MNT"
+            sleep 0.5
+        fi
+
+        [ -p "$CMD_FIFO" ] && rm -f "$CMD_FIFO"
+        return 0
+    fi
 
     echo "[autostart] Setting up marquee..."
 
@@ -112,6 +216,9 @@ shutdown_dmarquees()
     local CMD_FIFO="/tmp/dmarquees_cmd"
     local LOG="$HOME_DIR/marquees/dmarquees.log"
 
+    ensure_dmarquees_transport_cfg
+    load_dmarquees_transport_cfg
+
     echo "[autostart] Shutting down marquees..."
 
     # Signal daemon to exit if running
@@ -134,7 +241,71 @@ shutdown_dmarquees()
     # Remove FIFO
     [ -p "$CMD_FIFO" ] && rm -f "$CMD_FIFO"
 
+    if [ "$DMARQUEES_TRANSPORT" != "LOCAL" ]; then
+        echo "[autostart] Network transport mode active ($DMARQUEES_TRANSPORT $DMARQUEES_REMOTE_HOST:$DMARQUEES_REMOTE_PORT)."
+        echo "[autostart] Remote daemon was left running."
+    fi
+
     echo "[autostart] Marquees stopped and cleaned up."
+}
+
+select_dmarquees_transport()
+{
+    ensure_dmarquees_transport_cfg
+    load_dmarquees_transport_cfg
+
+    local default_item="L"
+    case "$DMARQUEES_TRANSPORT" in
+        TCP) default_item="T" ;;
+        UDP) default_item="U" ;;
+    esac
+
+    local choice
+    choice=$(dialog --title "Marquee Transport" --default-item "$default_item" --menu "Select command transport" 14 68 4 \
+        L "Local FIFO on this Pi5 (current behavior)" \
+        T "TCP to remote Pi3" \
+        U "UDP to remote Pi3" \
+        2>&1 > /dev/tty)
+
+    if [ -z "$choice" ]; then
+        return 0
+    fi
+
+    local host="$DMARQUEES_REMOTE_HOST"
+    local port="$DMARQUEES_REMOTE_PORT"
+    local mode="LOCAL"
+
+    if [ "$choice" = "T" ] || [ "$choice" = "U" ]; then
+        host=$(dialog --title "Remote Host" --inputbox "Remote Pi3 IP/hostname:" 8 60 "$host" 2>&1 > /dev/tty)
+        if [ -z "$host" ]; then
+            return 0
+        fi
+
+        port=$(dialog --title "Remote Port" --inputbox "Remote Pi3 port:" 8 40 "$port" 2>&1 > /dev/tty)
+        if ! [[ "$port" =~ ^[0-9]+$ ]] || [ "$port" -lt 1 ] || [ "$port" -gt 65535 ]; then
+            dialog --msgbox "Invalid port: $port" 6 40
+            return 1
+        fi
+    fi
+
+    if [ "$choice" = "T" ]; then
+        mode="TCP"
+    elif [ "$choice" = "U" ]; then
+        mode="UDP"
+    fi
+
+    DMARQUEES_TRANSPORT="$mode"
+    DMARQUEES_REMOTE_HOST="$host"
+    DMARQUEES_REMOTE_PORT="$port"
+    save_dmarquees_transport_cfg
+
+    if [ "$DMARQUEES_TRANSPORT" = "LOCAL" ]; then
+        setup_dmarquees NA
+    else
+        shutdown_dmarquees
+    fi
+
+    dialog --msgbox "Marquee transport set to $DMARQUEES_TRANSPORT\nTarget: $DMARQUEES_REMOTE_HOST:$DMARQUEES_REMOTE_PORT" 8 64
 }
 
 # ==========================================
@@ -250,6 +421,7 @@ MENU_ITEMS=(
     V "Vertical Arcade  Portrait/Vertical"
     M "MAME Lanscape    Normal/Horizontal"
     P "MAME Portrait    Portrait/Vertical"
+    T "Marquee Transport Local/TCP/UDP"
     B "Banner Art Swap  Marquees/C-Panels"
     C "Command Prompt   Do not launch GUI"
     X "Exit to Desktop  X/Wayland Desktop"
@@ -279,33 +451,37 @@ case $CHOICE in
 E)
    mv $CFG_RA_PATH $CFG_PATH
    echo "ROL_FLAG=\"-norol\"" > $HOME/.rol_flag
-   echo "RA" > /tmp/dmarquees_cmd
+    send_dmarquees_cmd "RA"
    emulationstation #auto
-   echo "NA" > /tmp/dmarquees_cmd
+    send_dmarquees_cmd "NA"
    continue
    ;;
 V)
    mv $CFG_RA_PATH $CFG_PATH
    echo "ROL_FLAG=\"-rol\"" > $HOME/.rol_flag
-   echo "RA" > /tmp/dmarquees_cmd
+    send_dmarquees_cmd "RA"
    emulationstation --screenrotate 3 --screensize 1200 1600 #auto
-   echo "NA" > /tmp/dmarquees_cmd
+    send_dmarquees_cmd "NA"
    continue
    ;;
 M)
-   echo "SA" > /tmp/dmarquees_cmd
+    send_dmarquees_cmd "SA"
    mv $CFG_SA_PATH $CFG_PATH
    mame -norol -inipath "/opt/retropie/emulators/mame/ini" -cfg_directory $CFG_PATH -joystickprovider sdljoy
-   echo "NA" > /tmp/dmarquees_cmd
+    send_dmarquees_cmd "NA"
    continue
    ;;
 P)
-   echo "SA" > /tmp/dmarquees_cmd
+    send_dmarquees_cmd "SA"
    mv $CFG_SA_PATH $CFG_PATH
    mame -rol -inipath "/opt/retropie/emulators/mame/ini;/opt/retropie/emulators/mame/ini_horz_ror" -cfg_directory $CFG_PATH -joystickprovider sdljoy
-   echo "NA" > /tmp/dmarquees_cmd
+    send_dmarquees_cmd "NA"
    continue
    ;;
+T)
+    select_dmarquees_transport
+    continue
+    ;;
 B)
    # B - Banner Art Swap (toggle between marquees and cpanel)
    swap_banner_art

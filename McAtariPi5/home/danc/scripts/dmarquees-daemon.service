@@ -1,0 +1,15 @@
+[Unit]
+Description=dmarquees DRM marquee daemon
+After=local-fs.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+EnvironmentFile=-/etc/default/dmarquees-daemon
+ExecStart=/usr/bin/env bash -lc '/home/${DMARQUEES_USER:-danc}/marquees/bin/dmarquees -u ${DMARQUEES_USER:-danc} -f ${DMARQUEES_FRONTEND:-NA}'
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

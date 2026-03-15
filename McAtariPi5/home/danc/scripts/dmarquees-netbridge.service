@@ -1,0 +1,16 @@
+[Unit]
+Description=dmarquees network bridge (TCP/UDP -> FIFO)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+EnvironmentFile=-/etc/default/dmarquees-netbridge
+ExecStart=/usr/bin/env python3 /usr/local/bin/dmarquees-netbridge.py --protocol ${DMARQUEES_PROTOCOL:-tcp} --host ${DMARQUEES_HOST:-0.0.0.0} --port ${DMARQUEES_PORT:-5533} --fifo ${DMARQUEES_FIFO:-/tmp/dmarquees_cmd}
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target
