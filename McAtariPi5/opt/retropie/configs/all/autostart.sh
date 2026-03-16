@@ -68,7 +68,11 @@ load_dmarquees_transport_cfg()
     fi
 
     case "$DMARQUEES_TRANSPORT" in
-        LOCAL|TCP|UDP)
+        LOCAL|TCP)
+            ;;
+        UDP)
+            # Backward compatibility: migrate legacy UDP mode to TCP.
+            DMARQUEES_TRANSPORT="TCP"
             ;;
         *)
             DMARQUEES_TRANSPORT="LOCAL"
@@ -255,16 +259,20 @@ select_dmarquees_transport()
     load_dmarquees_transport_cfg
 
     local default_item="L"
-    case "$DMARQUEES_TRANSPORT" in
-        TCP) default_item="T" ;;
-        UDP) default_item="U" ;;
-    esac
+    [ "$DMARQUEES_TRANSPORT" = "TCP" ] && default_item="R"
+
+    local remote_label="Pi3 Remote Transport"
+    local local_label="Pi5 Local Daemon"
+    if [ "$DMARQUEES_TRANSPORT" = "LOCAL" ]; then
+        local_label="$local_label [active]"
+    else
+        remote_label="$remote_label [active]"
+    fi
 
     local choice
-    choice=$(dialog --title "Marquee Transport" --default-item "$default_item" --menu "Select command transport" 14 68 4 \
-        L "Local FIFO on this Pi5 (current behavior)" \
-        T "TCP to remote Pi3" \
-        U "UDP to remote Pi3" \
+    choice=$(dialog --title "Marquee Transport" --default-item "$default_item" --menu "Select command transport" 14 68 2 \
+        R "$remote_label" \
+        L "$local_label" \
         2>&1 > /dev/tty)
 
     if [ -z "$choice" ]; then
@@ -275,7 +283,7 @@ select_dmarquees_transport()
     local port="$DMARQUEES_REMOTE_PORT"
     local mode="LOCAL"
 
-    if [ "$choice" = "T" ] || [ "$choice" = "U" ]; then
+    if [ "$choice" = "R" ]; then
         host=$(dialog --title "Remote Host" --inputbox "Remote Pi3 IP/hostname:" 8 60 "$host" 2>&1 > /dev/tty)
         if [ -z "$host" ]; then
             return 0
@@ -286,12 +294,8 @@ select_dmarquees_transport()
             dialog --msgbox "Invalid port: $port" 6 40
             return 1
         fi
-    fi
 
-    if [ "$choice" = "T" ]; then
         mode="TCP"
-    elif [ "$choice" = "U" ]; then
-        mode="UDP"
     fi
 
     DMARQUEES_TRANSPORT="$mode"
@@ -305,7 +309,11 @@ select_dmarquees_transport()
         shutdown_dmarquees
     fi
 
-    dialog --msgbox "Marquee transport set to $DMARQUEES_TRANSPORT\nTarget: $DMARQUEES_REMOTE_HOST:$DMARQUEES_REMOTE_PORT" 8 64
+    if [ "$DMARQUEES_TRANSPORT" = "LOCAL" ]; then
+        dialog --msgbox "Marquee transport set to LOCAL\nTarget: local Pi5 daemon" 8 64
+    else
+        dialog --msgbox "Marquee transport set to TCP\nTarget: $DMARQUEES_REMOTE_HOST:$DMARQUEES_REMOTE_PORT" 8 64
+    fi
 }
 
 # ==========================================
@@ -421,7 +429,7 @@ MENU_ITEMS=(
     V "Vertical Arcade  Portrait/Vertical"
     M "MAME Lanscape    Normal/Horizontal"
     P "MAME Portrait    Portrait/Vertical"
-    T "Marquee Transport Local/TCP/UDP"
+    T "Marquee Pi3/Pi5  Remote/Local Swap"
     B "Banner Art Swap  Marquees/C-Panels"
     C "Command Prompt   Do not launch GUI"
     X "Exit to Desktop  X/Wayland Desktop"
