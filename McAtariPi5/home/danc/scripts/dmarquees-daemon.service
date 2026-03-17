@@ -9,7 +9,7 @@ Type=simple
 User=root
 Group=root
 EnvironmentFile=-/etc/default/dmarquees-daemon
-ExecStart=/usr/bin/env bash -lc '/home/${DMARQUEES_USER:-danc}/marquees/bin/dmarquees -u ${DMARQUEES_USER:-danc} -f ${DMARQUEES_FRONTEND:-NA}'
+ExecStart=/usr/bin/env bash -lc '/home/${DMARQUEES_USER:-danc}/marquees/bin/dmarquees -u ${DMARQUEES_USER:-danc} -f ${DMARQUEES_FRONTEND:-NA} -d ${DMARQUEES_DRM_DEVICE:-/dev/dri/card0}'
 Restart=always
 RestartSec=1
 
