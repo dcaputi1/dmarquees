@@ -118,6 +118,16 @@ problem log:
 Pi3 SETUP GOTCHAS (Light OS)
 ===========================================
 
+Quick baseline path (recommended):
+   ```bash
+   git clone https://github.com/dcaputi1/IvarArcade.git
+   cd IvarArcade
+   sudo make install-pi3
+   ```
+
+This target builds dmarquees, stages required service assets, installs/enables services,
+sets Pi3-safe defaults, and restarts everything.
+
 Use this quick flow after a fresh Pi3 SD baseline.
 
 0) Ensure assets exist on Pi3:

@@ -8,7 +8,7 @@ SHELL := /bin/bash
 .ONESHELL:
 SHELLFLAGS := -eu -o pipefail -c
 
-.PHONY: all dmarquees analyze_games install install-force clean help sync-back
+.PHONY: all dmarquees analyze_games install install-force install-pi3 clean help sync-back
 
 # Install directory
 INSTALL_DIR ?= $(HOME)/marquees
@@ -93,6 +93,55 @@ install-force: all
 	
 	@echo "Force installation complete!"
 
+# Pi3-focused deploy target: installs binaries + service assets and enables services.
+# Usage (on Pi3): sudo make install-pi3
+install-pi3: all
+	@if [ "$$(id -u)" -ne 0 ]; then \
+		echo "Error: install-pi3 must run as root"; \
+		echo "Run: sudo make install-pi3"; \
+		exit 1; \
+	fi
+	@echo "Installing Pi3 marquee stack..."
+	@mkdir -p /home/danc/scripts
+
+	@# Runtime binary + assets under /home/danc/marquees
+	@$(MAKE) install INSTALL_DIR=/home/danc/marquees
+
+	@# Stage Pi3 service scripts and assets
+	@install -m 755 McAtariPi5/home/danc/scripts/dmarquees-netbridge.py /home/danc/scripts/dmarquees-netbridge.py
+	@install -m 755 McAtariPi5/home/danc/scripts/install-dmarquees-mount-service.sh /home/danc/scripts/install-dmarquees-mount-service.sh
+	@install -m 755 McAtariPi5/home/danc/scripts/install-dmarquees-daemon-service.sh /home/danc/scripts/install-dmarquees-daemon-service.sh
+	@install -m 755 McAtariPi5/home/danc/scripts/install-dmarquees-netbridge-service.sh /home/danc/scripts/install-dmarquees-netbridge-service.sh
+	@install -m 644 McAtariPi5/home/danc/scripts/dmarquees-mount.service /home/danc/scripts/dmarquees-mount.service
+	@install -m 644 McAtariPi5/home/danc/scripts/dmarquees-mount.env.example /home/danc/scripts/dmarquees-mount.env.example
+	@install -m 644 McAtariPi5/home/danc/scripts/dmarquees-daemon.service /home/danc/scripts/dmarquees-daemon.service
+	@install -m 644 McAtariPi5/home/danc/scripts/dmarquees-daemon.env.example /home/danc/scripts/dmarquees-daemon.env.example
+	@install -m 644 McAtariPi5/home/danc/scripts/dmarquees-netbridge.service /home/danc/scripts/dmarquees-netbridge.service
+	@install -m 644 McAtariPi5/home/danc/scripts/dmarquees-netbridge.env.example /home/danc/scripts/dmarquees-netbridge.env.example
+	@chown -R danc:danc /home/danc/scripts /home/danc/marquees || true
+
+	@# Install and enable services
+	@/home/danc/scripts/install-dmarquees-mount-service.sh
+	@/home/danc/scripts/install-dmarquees-daemon-service.sh
+	@/home/danc/scripts/install-dmarquees-netbridge-service.sh
+
+	@# Pi3-safe defaults
+	@printf '%s\n' \
+		'DMARQUEES_USER=danc' \
+		'DMARQUEES_ZIP=/home/danc/MAME_0.256_EXTRAs/marquees.zip' \
+		'DMARQUEES_MNT=/home/danc/mnt/marquees' \
+		>/etc/default/dmarquees-mount
+	@printf '%s\n' \
+		'DMARQUEES_USER=danc' \
+		'DMARQUEES_FRONTEND=NA' \
+		'DMARQUEES_DRM_DEVICE=/dev/dri/card0' \
+		>/etc/default/dmarquees-daemon
+
+	@systemctl daemon-reload
+	@systemctl restart dmarquees-mount.service dmarquees-daemon.service dmarquees-netbridge.service
+	@systemctl --no-pager --full status dmarquees-mount.service dmarquees-daemon.service dmarquees-netbridge.service || true
+	@echo "Pi3 install complete."
+
 # Clean all build artifacts
 clean:
 	@echo "Cleaning all build artifacts..."
@@ -121,6 +170,7 @@ help:
 	@echo "  analyze_games - Build only analyze_games executable"
 	@echo "  install       - Build and install all components (skip existing)"
 	@echo "  install-force - Build and install all components (overwrite all)"
+	@echo "  install-pi3   - One-command Pi3 deploy (services + defaults)"
 	@echo "  clean         - Remove all build artifacts"
 	@echo "  uninstall     - Remove installed files (untested)"
 	@echo "  sync-back     - Copies lr-mame/MAME config from /opt/ to ./McAtariPi5"
