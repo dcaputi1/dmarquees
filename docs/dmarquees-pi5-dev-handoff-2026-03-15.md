@@ -41,6 +41,11 @@ Pi3 daemon service assets:
 - `McAtariPi5/home/danc/scripts/dmarquees-daemon.env.example`
 - `McAtariPi5/home/danc/scripts/install-dmarquees-daemon-service.sh`
 
+Pi3 marquee mount service assets:
+- `McAtariPi5/home/danc/scripts/dmarquees-mount.service`
+- `McAtariPi5/home/danc/scripts/dmarquees-mount.env.example`
+- `McAtariPi5/home/danc/scripts/install-dmarquees-mount-service.sh`
+
 Primary documentation:
 - `docs/dmarquees-network.md`
 - `docs/dmarquees-pi5-dev-handoff-2026-03-15.md` (this file)
@@ -61,13 +66,17 @@ Quick migration checklist (Pi3 runtime)
 1. Sync/copy updated repository scripts to Pi3.
 2. Ensure bridge and installers are executable:
    - `chmod +x /home/danc/scripts/dmarquees-netbridge.py`
+   - `chmod +x /home/danc/scripts/install-dmarquees-mount-service.sh`
    - `chmod +x /home/danc/scripts/install-dmarquees-daemon-service.sh`
    - `chmod +x /home/danc/scripts/install-dmarquees-netbridge-service.sh`
-3. Install/enable daemon service:
+3. Install/enable marquee mount service:
+   - `sudo /home/danc/scripts/install-dmarquees-mount-service.sh`
+4. Install/enable daemon service:
    - `sudo /home/danc/scripts/install-dmarquees-daemon-service.sh`
-4. Install/enable netbridge service:
+5. Install/enable netbridge service:
    - `sudo /home/danc/scripts/install-dmarquees-netbridge-service.sh`
-5. Verify:
+6. Verify:
+   - `systemctl status dmarquees-mount.service`
    - `systemctl status dmarquees-daemon.service`
    - `systemctl status dmarquees-netbridge.service`
 
@@ -103,8 +112,10 @@ Pi5:
 - `/home/danc/scripts/dmarquees-healthcheck.sh --ssh danc@<pi3-ip>`
 
 Pi3:
+- `systemctl status dmarquees-mount.service`
 - `systemctl status dmarquees-daemon.service`
 - `systemctl status dmarquees-netbridge.service`
+- `journalctl -u dmarquees-mount.service -f`
 - `journalctl -u dmarquees-daemon.service -f`
 - `journalctl -u dmarquees-netbridge.service -f`
 

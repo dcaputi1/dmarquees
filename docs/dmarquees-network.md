@@ -50,13 +50,21 @@ Files included in this repo:
 - `/home/danc/scripts/dmarquees-daemon.service`
 - `/home/danc/scripts/dmarquees-daemon.env.example`
 - `/home/danc/scripts/install-dmarquees-daemon-service.sh`
+- `/home/danc/scripts/dmarquees-mount.service`
+- `/home/danc/scripts/dmarquees-mount.env.example`
+- `/home/danc/scripts/install-dmarquees-mount-service.sh`
 
 Install on Pi3:
 1. `chmod +x /home/danc/scripts/dmarquees-netbridge.py`
 2. `chmod +x /home/danc/scripts/install-dmarquees-netbridge-service.sh`
 3. `chmod +x /home/danc/scripts/install-dmarquees-daemon-service.sh`
-4. `sudo /home/danc/scripts/install-dmarquees-daemon-service.sh`
-5. `sudo /home/danc/scripts/install-dmarquees-netbridge-service.sh`
+4. `chmod +x /home/danc/scripts/install-dmarquees-mount-service.sh`
+5. `sudo /home/danc/scripts/install-dmarquees-mount-service.sh`
+6. `sudo /home/danc/scripts/install-dmarquees-daemon-service.sh`
+7. `sudo /home/danc/scripts/install-dmarquees-netbridge-service.sh`
+
+Recommended order rationale:
+- Start with `dmarquees-mount.service` so `/home/danc/mnt/marquees` is mounted before daemon startup.
 
 The daemon installer will:
 - install the service to `/etc/systemd/system/dmarquees-daemon.service`
@@ -80,6 +88,8 @@ Switch TCP/UDP mode later:
 3. `sudo systemctl restart dmarquees-netbridge.service`
 
 Check service status/logs:
+- `systemctl status dmarquees-mount.service`
+- `journalctl -u dmarquees-mount.service -f`
 - `systemctl status dmarquees-daemon.service`
 - `journalctl -u dmarquees-daemon.service -f`
 - `systemctl status dmarquees-netbridge.service`
