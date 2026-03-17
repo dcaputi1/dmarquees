@@ -113,3 +113,28 @@ problem log:
             also, exit to desktop prompts for password (note prelim.j above)
 3/3/26  [x] defender 2-way Ultrastik map NFG using L/R as "reverse"
 3/6/26  [x] defender L/R reverse NFG either, using defenderlr plugin
+
+===========================================
+Pi3 SETUP GOTCHAS (Light OS)
+===========================================
+
+SSD Mount (ExtremeSSD with MAME assets):
+  - Light OS (DietPi, Lite, etc) doesn't auto-mount USB drives
+  - Must manually mount SSD after plugging in
+  - Example mount point: /media/danc or /mnt/ssd
+  - Use: sudo mount /dev/sdX1 /media/danc (find /dev/sdX with: lsblk)
+  - Command for copy: cp -vrf /media/danc/Mame/MAME_0.256_EXTRAs/ ~/
+  - Estimate: ~40GB at 15MB/s = ~45min on Pi3 (SD card write is bottleneck)
+
+Key File Paths (Pi3):
+  - MAME extras: ~/MAME_0.256_EXTRAs/marquees.zip, cpanel.zip, etc
+  - Daemon config: ~/.dmarquees_transport.conf
+  - Daemon binary: ~/marquees/bin/dmarquees (must exist)
+  - Listener port: 5533 (TCP)
+
+TCP Remote Transport (Pi5 → Pi3):
+  - Transport mode: TCP (NOT LOCAL)
+  - Remote host: 192.168.50.3 (Pi3 IP)
+  - Remote port: 5533
+  - Config file: ~/.dmarquees_transport.conf
+  - dmarquees-send.sh uses bash /dev/tcp (no netcat dependency)
