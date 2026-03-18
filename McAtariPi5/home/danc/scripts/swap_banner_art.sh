@@ -9,6 +9,25 @@ MARQUEES_ZIP="/home/danc/MAME_0.256_EXTRAs/marquees.zip"
 CPANEL_ZIP="/home/danc/MAME_0.256_EXTRAs/cpanel.zip"
 CMD_FIFO="/tmp/dmarquees_cmd"
 CURRENT_MOUNT_STATE="/tmp/current_mount_state"
+TRANSPORT_CFG="$HOME/.dmarquees_transport.conf"
+SENDER_SCRIPT="$HOME/scripts/dmarquees-send.sh"
+
+# In TCP mode the mount and the daemon both live on Pi3.
+# Send SWAPART over the network; the netbridge handles the actual zip swap
+# and sends REFRESH to the local Pi3 daemon automatically.
+DMARQUEES_TRANSPORT="LOCAL"
+if [ -f "$TRANSPORT_CFG" ]; then
+    # shellcheck disable=SC1090
+    source "$TRANSPORT_CFG"
+fi
+
+if [ "${DMARQUEES_TRANSPORT:-LOCAL}" != "LOCAL" ]; then
+    echo "[swap_banner_art] TCP mode: delegating art swap to Pi3 via SWAPART command"
+    if [ -x "$SENDER_SCRIPT" ]; then
+        "$SENDER_SCRIPT" "SWAPART"
+    fi
+    exit 0
+fi
 
 # Check what's currently mounted
 if [ -f "$CURRENT_MOUNT_STATE" ]; then

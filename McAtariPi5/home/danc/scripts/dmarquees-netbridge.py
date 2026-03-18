@@ -7,7 +7,9 @@ import os
 import signal
 import socket
 import stat
+import subprocess
 import sys
+import time
 from typing import Iterable
 
 running = True
@@ -64,7 +66,81 @@ def iter_lines_from_bytes(chunks: Iterable[bytes], carry: str = ""):
         yield buf.strip()
 
 
-def serve_udp(host: str, port: int, fifo_path: str, verbose: bool) -> None:
+def swap_art(marquees_zip: str, cpanel_zip: str, mnt: str, state_file: str, fifo: str, verbose: bool) -> None:
+    """Toggle the FUSE-mounted art zip between marquees and cpanel, then REFRESH the daemon."""
+    try:
+        with open(state_file) as f:
+            current = f.read().strip()
+    except FileNotFoundError:
+        current = "marquees"
+
+    if current == "marquees":
+        next_zip, next_state = cpanel_zip, "cpanel"
+    else:
+        next_zip, next_state = marquees_zip, "marquees"
+
+    if verbose:
+        print(f"[netbridge] SWAPART: {current} -> {next_state}")
+
+    # Unmount current zip
+    try:
+        subprocess.run(["fusermount", "-u", mnt], check=True, capture_output=True)
+    except subprocess.CalledProcessError as exc:
+        print(f"[netbridge] fusermount failed: {exc.stderr.decode().strip()}", file=sys.stderr)
+        try:
+            subprocess.run(["umount", "-f", mnt], check=True, capture_output=True)
+        except subprocess.CalledProcessError:
+            print("[netbridge] force umount also failed; aborting SWAPART", file=sys.stderr)
+            return
+
+    time.sleep(0.5)
+
+    # Mount the new zip
+    try:
+        subprocess.run(
+            ["fuse-zip", "-r", "-o", "allow_other", next_zip, mnt],
+            check=True, capture_output=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        print(f"[netbridge] fuse-zip mount failed: {exc.stderr.decode().strip()}", file=sys.stderr)
+        # Try to restore the previous zip so the display isn't left unmounted
+        restore_zip = marquees_zip if next_state == "cpanel" else cpanel_zip
+        try:
+            subprocess.run(["fuse-zip", "-r", "-o", "allow_other", restore_zip, mnt], capture_output=True)
+        except Exception:
+            pass
+        return
+
+    # Persist mount state
+    try:
+        with open(state_file, "w") as f:
+            f.write(next_state + "\n")
+    except OSError as exc:
+        print(f"[netbridge] failed to write state file: {exc}", file=sys.stderr)
+
+    # Tell the daemon to re-render whatever it's currently showing
+    write_fifo_nonblocking(fifo, "REFRESH", verbose)
+
+    if verbose:
+        print(f"[netbridge] SWAPART complete: now showing {next_state}")
+
+
+def handle_command(line: str, fifo: str, swap_cfg: dict, verbose: bool) -> None:
+    """Dispatch a single received command: intercept SWAPART, forward everything else."""
+    if line.strip().upper() == "SWAPART":
+        swap_art(
+            swap_cfg["marquees_zip"],
+            swap_cfg["cpanel_zip"],
+            swap_cfg["mnt"],
+            swap_cfg["state_file"],
+            fifo,
+            verbose,
+        )
+    else:
+        write_fifo_nonblocking(fifo, line, verbose)
+
+
+def serve_udp(host: str, port: int, fifo_path: str, swap_cfg: dict, verbose: bool) -> None:
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind((host, port))
@@ -80,10 +156,10 @@ def serve_udp(host: str, port: int, fifo_path: str, verbose: bool) -> None:
         for line in iter_lines_from_bytes([data]):
             if verbose:
                 print(f"[netbridge] recv {addr[0]}:{addr[1]} -> {line}")
-            write_fifo_nonblocking(fifo_path, line, verbose)
+            handle_command(line, fifo_path, swap_cfg, verbose)
 
 
-def serve_tcp(host: str, port: int, fifo_path: str, verbose: bool) -> None:
+def serve_tcp(host: str, port: int, fifo_path: str, swap_cfg: dict, verbose: bool) -> None:
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind((host, port))
@@ -112,7 +188,7 @@ def serve_tcp(host: str, port: int, fifo_path: str, verbose: bool) -> None:
             for line in iter_lines_from_bytes(chunks):
                 if verbose:
                     print(f"[netbridge] recv {addr[0]}:{addr[1]} -> {line}")
-                write_fifo_nonblocking(fifo_path, line, verbose)
+                handle_command(line, fifo_path, swap_cfg, verbose)
 
 
 def parse_args() -> argparse.Namespace:
@@ -121,6 +197,26 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--host", default="0.0.0.0", help="Bind address")
     parser.add_argument("--port", type=int, default=5533)
     parser.add_argument("--fifo", default="/tmp/dmarquees_cmd")
+    parser.add_argument(
+        "--marquees-zip",
+        default=os.environ.get("DMARQUEES_MARQUEES_ZIP", "/home/danc/MAME_0.256_EXTRAs/marquees.zip"),
+        help="Path to marquees.zip on this machine",
+    )
+    parser.add_argument(
+        "--cpanel-zip",
+        default=os.environ.get("DMARQUEES_CPANEL_ZIP", "/home/danc/MAME_0.256_EXTRAs/cpanel.zip"),
+        help="Path to cpanel.zip on this machine",
+    )
+    parser.add_argument(
+        "--marquees-mnt",
+        default=os.environ.get("DMARQUEES_MARQUEES_MNT", "/home/danc/mnt/marquees"),
+        help="FUSE mount point used by dmarquees on this machine",
+    )
+    parser.add_argument(
+        "--mount-state-file",
+        default=os.environ.get("DMARQUEES_MOUNT_STATE", "/tmp/dmarquees_mount_state"),
+        help="File that tracks which zip is currently mounted (marquees or cpanel)",
+    )
     parser.add_argument("--verbose", action="store_true")
     return parser.parse_args()
 
@@ -136,10 +232,17 @@ def main() -> int:
     signal.signal(signal.SIGINT, handle_signal)
     signal.signal(signal.SIGTERM, handle_signal)
 
+    swap_cfg = {
+        "marquees_zip": args.marquees_zip,
+        "cpanel_zip": args.cpanel_zip,
+        "mnt": args.marquees_mnt,
+        "state_file": args.mount_state_file,
+    }
+
     if args.protocol == "udp":
-        serve_udp(args.host, args.port, args.fifo, args.verbose)
+        serve_udp(args.host, args.port, args.fifo, swap_cfg, args.verbose)
     else:
-        serve_tcp(args.host, args.port, args.fifo, args.verbose)
+        serve_tcp(args.host, args.port, args.fifo, swap_cfg, args.verbose)
 
     print("[netbridge] exiting")
     return 0

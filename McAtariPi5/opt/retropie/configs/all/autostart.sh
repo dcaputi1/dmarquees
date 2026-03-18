@@ -328,6 +328,18 @@ swap_banner_art()
     local CPANEL_ZIP="$HOME_DIR/MAME_0.256_EXTRAs/cpanel.zip"
     local CMD_FIFO="/tmp/dmarquees_cmd"
 
+    ensure_dmarquees_transport_cfg
+    load_dmarquees_transport_cfg
+
+    # In TCP mode the mount and the daemon both live on Pi3.
+    # Send SWAPART over the network; the netbridge handles the actual zip swap
+    # and sends REFRESH to the local Pi3 daemon automatically.
+    if [ "$DMARQUEES_TRANSPORT" != "LOCAL" ]; then
+        echo "[autostart] TCP mode: delegating art swap to Pi3 via SWAPART command"
+        send_dmarquees_cmd "SWAPART"
+        return $?
+    fi
+
     # Check what's currently mounted
     if [ -f "$CURRENT_MOUNT_STATE" ]; then
         MOUNTED=$(cat "$CURRENT_MOUNT_STATE")
