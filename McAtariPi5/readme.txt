@@ -115,35 +115,23 @@ problem log:
 3/6/26  [x] defender L/R reverse NFG either, using defenderlr plugin
 
 ===========================================
-Pi3 SETUP GOTCHAS (Light OS)
+Pi3 Light OS baseline setup
 ===========================================
-
-Quick baseline path (recommended):
-   ```bash
+   set locale ALL=EN_US.UTF-8 (no clue)
+   sudo mkdir -p /media/danc/ExtremeSSD
+   sudo mount /dev/sda1 /media/danc/ExtremeSSD
+   mkdir -p ~/MAME_0.256_EXTRAs
+   cp -v /media/danc/ExtremeSSD/Mame/MAME_0.256_EXTRAs/marquees.zip ~/MAME_0.256_EXTRAs/
+   cp -v /media/danc/ExtremeSSD/Mame/MAME_0.256_EXTRAs/cpanel.zip ~/MAME_0.256_EXTRAs/
+   sudo apt update
+   sudo apt install -y git
    git clone https://github.com/dcaputi1/IvarArcade.git
    cd IvarArcade
+   sudo apt install -y build-essential libdrm-dev libpng-dev libtinyxml2-dev fuse-zip
    sudo make install-pi3
-   ```
 
-This target builds dmarquees, stages required service assets, installs/enables services,
-sets Pi3-safe defaults, and restarts everything.
-
-Use this quick flow after a fresh Pi3 SD baseline.
-
-0) Ensure assets exist on Pi3:
-   - /home/danc/MAME_0.256_EXTRAs/marquees.zip
-   - /home/danc/marquees/bin/dmarquees
-
-1) Pull latest repo on Pi3:
-   ```bash
-   cd /home/danc/IvarArcade
-   git fetch --all --prune
-   git checkout main
-   git pull --ff-only
-   ```
-
-2) Copy scripts/services from repo to /home/danc/scripts:
-   ```bash
+2) Copy scripts/services from repo to /home/danc/scripts: (TBD - redundant with make install-pi3?)
+  
    mkdir -p /home/danc/scripts
 
    install -m 755 McAtariPi5/home/danc/scripts/dmarquees-netbridge.py /home/danc/scripts/dmarquees-netbridge.py
@@ -157,17 +145,14 @@ Use this quick flow after a fresh Pi3 SD baseline.
    install -m 644 McAtariPi5/home/danc/scripts/dmarquees-daemon.env.example /home/danc/scripts/dmarquees-daemon.env.example
    install -m 644 McAtariPi5/home/danc/scripts/dmarquees-netbridge.service /home/danc/scripts/dmarquees-netbridge.service
    install -m 644 McAtariPi5/home/danc/scripts/dmarquees-netbridge.env.example /home/danc/scripts/dmarquees-netbridge.env.example
-   ```
 
 3) Install/enable services:
-   ```bash
+
    sudo /home/danc/scripts/install-dmarquees-mount-service.sh
    sudo /home/danc/scripts/install-dmarquees-daemon-service.sh
    sudo /home/danc/scripts/install-dmarquees-netbridge-service.sh
-   ```
 
 4) Enforce Pi3-safe defaults:
-   ```bash
    sudo tee /etc/default/dmarquees-mount >/dev/null <<'EOF'
    DMARQUEES_USER=danc
    DMARQUEES_ZIP=/home/danc/MAME_0.256_EXTRAs/marquees.zip
@@ -179,16 +164,9 @@ Use this quick flow after a fresh Pi3 SD baseline.
    DMARQUEES_FRONTEND=NA
    DMARQUEES_DRM_DEVICE=/dev/dri/card0
    EOF
-   ```
 
 5) Restart + verify:
-   ```bash
    sudo systemctl daemon-reload
    sudo systemctl restart dmarquees-mount.service dmarquees-daemon.service dmarquees-netbridge.service
    systemctl status --no-pager dmarquees-mount.service dmarquees-daemon.service dmarquees-netbridge.service
    ss -tulpen | grep 5533
-   ```
-
-Troubleshooting:
-   - If daemon log shows /dev/dri/card1 failure, set /etc/default/dmarquees-daemon to card0 and restart daemon.
-   - If mount fails, verify /home/danc/MAME_0.256_EXTRAs/marquees.zip exists.
