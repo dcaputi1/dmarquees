@@ -27,11 +27,18 @@ case "$transport" in
         printf '%s\n' "$cmd" > "$CMD_FIFO"
         ;;
     TCP)
-        # Use bash built-in /dev/tcp (no netcat dependency required)
+        # Send to remote Pi3 via TCP
         {
             printf '%s\n' "$cmd"
             sleep 0.1
         } > /dev/tcp/"$remote_host"/"$remote_port" 2>/dev/null
+
+        # Also forward to local Pi5 splash daemon so it can update its display
+        # (e.g. blank on ROM launch, show RA/SA/NA splash on frontend changes).
+        # Skip SWAPART — that command only makes sense on Pi3's FUSE mount.
+        if [ "$cmd" != "SWAPART" ] && [ -p "$CMD_FIFO" ]; then
+            printf '%s\n' "$cmd" > "$CMD_FIFO" 2>/dev/null || true
+        fi
         ;;
     UDP)
         # UDP mode not directly supported via /dev/tcp; recommend TCP instead

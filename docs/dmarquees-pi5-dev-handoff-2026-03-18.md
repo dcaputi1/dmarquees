@@ -3,6 +3,16 @@ dmarquees Pi5 Dev Handoff - 2026-03-18
 
 Previous handoff: `docs/dmarquees-pi5-dev-handoff-2026-03-15.md`
 
+2026-03-19 follow-up addendum
+-----------------------------
+- The Pi3 daemon/netbridge blocker is resolved.
+- Root cause: stale `ExecStart` env expansion in netbridge service plus mismatched wired subnet.
+- Current validated wired addressing:
+  - Pi5 `eth0`: `10.77.77.5`
+  - Pi3 `eth0`: `10.77.77.3`
+- Healthcheck now passes against `danc@10.77.77.3`.
+- `dmarquees-healthcheck.sh` TCP probe no longer depends on `nc`.
+
 Session summary
 ---------------
 - Analyzed all marquee functions for Pi5 -> Pi3 dual-machine compatibility.
@@ -50,7 +60,7 @@ The dmarquees daemon on Pi3 is not starting.  Nothing works until this is resolv
 
 Pi3 is headless. All commands below are run via SSH from Pi5:
 ```bash
-ssh danc@192.168.50.3
+ssh danc@10.77.77.3
 ```
 
 Debug on Pi3 (via SSH):
@@ -101,8 +111,8 @@ works fine; only the assets are missing.
 
 Test sequence once daemon is running
 -------------------------------------
-1. From Pi5, use menu T -> confirm TCP mode set to 192.168.50.3:5533
-2. Run health check: `/home/danc/scripts/dmarquees-healthcheck.sh --ssh danc@192.168.50.3`
+1. From Pi5, use menu T -> confirm TCP mode set to 10.77.77.3:5533
+2. Run health check: `/home/danc/scripts/dmarquees-healthcheck.sh --ssh danc@10.77.77.3`
 3. Launch a game -> confirm marquee updates on Pi3 display
 4. Exit game -> confirm RA/frontend marquee returns
 5. Press B (art swap) -> confirm cpanel zip swaps on Pi3 display

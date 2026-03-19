@@ -1,5 +1,11 @@
 # TCP Remote Marquee Pi3→Pi5 Setup - Session 2026-03-16
 
+## 2026-03-19 Follow-up (Current State)
+- This session note is historical; current wired link addressing is `10.77.77.x`.
+- Active transport target is Pi3 `10.77.77.3:5533` from Pi5.
+- Netbridge and daemon are both active; end-to-end healthcheck now passes.
+- Healthcheck no longer requires netcat for TCP probing.
+
 ## Objective
 Enable Pi5 to send marquee display commands to Pi3 over wired TCP link (port 5533).
 
@@ -8,13 +14,13 @@ Enable Pi5 to send marquee display commands to Pi3 over wired TCP link (port 553
 - TCP transport config created: `~/.dmarquees_transport.conf`
 - Script updated to use bash `/dev/tcp` instead of netcat (no dependency)
 - `make install` completed on Pi5
-- **BLOCKER**: dmarquees daemon on Pi3 not starting / not listening on port 5533
+- **BLOCKER (resolved 2026-03-19)**: netbridge service startup and wired addressing mismatch
 
 ## What's Done
 1. ✅ Mounted ExtremeSSD on Pi3 light OS
 2. ✅ Copied MAME_0.256_EXTRAs from SSD to `/home/danc/` (40GB)
 3. ✅ Updated dmarquees-send.sh to use `/dev/tcp` (no netcat required)
-4. ✅ TCP config on Pi5: `192.168.50.3:5533`
+4. ✅ TCP config on Pi5 (current): `10.77.77.3:5533`
 
 ## Current Blocker
 **Test command sent from Pi5:**
@@ -43,9 +49,9 @@ DMARQUEES_TRANSPORT_CFG=~/.dmarquees_transport.conf DMARQUEES_CMD_FIFO="/tmp/dma
 6. Once working: implement into autostart.sh flow
 
 ## Network Config Reference
-- **Pi3 IP**: 192.168.50.3
+- **Pi3 IP**: 10.77.77.3 (wired `eth0`)
 - **Pi3 Port**: 5533 (dmarquees remote listener)
-- **Pi5 IP**: 192.168.50.5 (source of commands)
+- **Pi5 IP**: 10.77.77.5 (wired `eth0`, source of commands)
 - **Transport Config Location**: `~/.dmarquees_transport.conf`
 - **Config Mode**: TCP (vs LOCAL/UDP)
 

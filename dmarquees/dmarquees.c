@@ -53,7 +53,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.6.0"
+#define VERSION "1.7.0"
 #define DEVICE_PATH "/dev/dri/card1"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
 #define DEF_MARQUEE_NAME "RetroPieMarquee"
@@ -82,6 +82,7 @@ static uint64_t bo_size = 0;
 static void* fb_map = NULL;
 
 FrontendMode g_frontend_mode = eNA;
+bool g_splash_mode = false;
 char g_drm_device_path[128] = DEVICE_PATH;
 static time_t g_ra_init_hold = 0;
 static uint8_t* image = NULL;
@@ -288,7 +289,7 @@ static void show_default_marquee(void)
 
     ts_printf("dmarquees: showing default marquee: %s\n", imgpath);
 
-    scale_and_blit_to_xrgb(image, iw, ih, (uint32_t*)fb_map, fb_w, fb_h, stride / 4, 0);
+    scale_and_blit_to_xrgb(image, iw, ih, (uint32_t*)fb_map, fb_w, fb_h, stride / 4, 0, g_splash_mode);
     try_reset_crtc();
     
     // Save the current image path for REFRESH command
@@ -297,7 +298,8 @@ static void show_default_marquee(void)
 
 static void __attribute__((unused)) print_usage(const char *prog)
 {
-    ts_fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username] [-d /dev/dri/cardX]\n", prog);
+    ts_fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username] [-d /dev/dri/cardX] [-s]\n", prog);
+    ts_fprintf(stderr, "  -s  Splash screen mode: center NA/RA/SA art, blank display during games.\n");
 }
 
 static void sigint_handler(int sig)
@@ -567,7 +569,7 @@ static bool show_game_marquee(const char* cmd_str)
         // Clear screen before blit (to avoid remnants)
         memset(fb_map, 0, bo_size);
 
-        scale_and_blit_to_xrgb(image, iw, ih, fbptr, fb_w, fb_h, stride_pixels, dest_x);
+        scale_and_blit_to_xrgb(image, iw, ih, fbptr, fb_w, fb_h, stride_pixels, dest_x, false);
         try_reset_crtc();
         
         // Save the current image path for REFRESH command
@@ -905,7 +907,7 @@ static bool show_panel_marquee(const char *shortname, bool dc_panel)
         int stride_pixels = stride / 4;
 
         memset(fb_map, 0, bo_size);
-        scale_and_blit_to_xrgb(image, iw, ih, fbptr, fb_w, fb_h, stride_pixels, 0);
+        scale_and_blit_to_xrgb(image, iw, ih, fbptr, fb_w, fb_h, stride_pixels, 0, false);
         try_reset_crtc();
         snprintf(last_image_path, sizeof(last_image_path), "%s", tmp_png);
     }
@@ -981,6 +983,11 @@ static void handle_fifo_command(char *cmd_str)
         break;
 
     case CMD_DCPANEL:
+        if (g_splash_mode)
+        {
+            ts_printf("dmarquees: splash mode - DCPANEL ignored\n");
+            break;
+        }
         if (parsed < 2 || (strcmp(arg, "0") != 0 && strcmp(arg, "1") != 0))
         {
             ts_fprintf(stderr, "warning: DCPANEL requires 0 or 1 (e.g. DCPANEL 1)\n");
@@ -991,6 +998,11 @@ static void handle_fifo_command(char *cmd_str)
         break;
 
     case CMD_MCPANEL:
+        if (g_splash_mode)
+        {
+            ts_printf("dmarquees: splash mode - MCPANEL ignored\n");
+            break;
+        }
         if (parsed < 2 || (strcmp(arg, "0") != 0 && strcmp(arg, "1") != 0))
         {
             ts_fprintf(stderr, "warning: MCPANEL requires 0 or 1 (e.g. MCPANEL 1)\n");
@@ -1001,6 +1013,18 @@ static void handle_fifo_command(char *cmd_str)
         break;
 
     case CMD_ROM:
+        // In splash screen mode: blank the display so dual-screen games (e.g. Punch-Out)
+        // can use the secondary monitor.  No game marquee art is shown.
+        if (g_splash_mode)
+        {
+            ts_printf("dmarquees: splash mode - blanking screen for game\n");
+            if (fb_map)
+            {
+                memset(fb_map, 0x00, bo_size);
+                try_reset_crtc();
+            }
+            break;
+        }
         // ignore RA plugin commands unless sent from runcommand
         if (g_frontend_mode == eRA)
         {
@@ -1067,7 +1091,7 @@ static void refresh_current_marquee(void)
     int stride_pixels = stride / 4;
     
     memset(fb_map, 0, bo_size);
-    scale_and_blit_to_xrgb(image, iw, ih, fbptr, fb_w, fb_h, stride_pixels, 0);
+    scale_and_blit_to_xrgb(image, iw, ih, fbptr, fb_w, fb_h, stride_pixels, 0, g_splash_mode);
     try_reset_crtc();
     
     ts_printf("dmarquees: REFRESH complete\n");

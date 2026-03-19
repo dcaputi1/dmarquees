@@ -130,6 +130,33 @@ Pi3 Light OS baseline setup
    sudo apt install -y build-essential libdrm-dev libpng-dev libtinyxml2-dev fuse-zip
    sudo make install-pi3
 
+1b) Configure direct wired link static IPs (NetworkManager):
+
+   # Pi3 side (run on Pi3)
+   sudo nmcli con add type ethernet ifname eth0 con-name eth0-static ip4 10.77.77.3/24
+   sudo nmcli con up eth0-static
+
+   # Pi5 side (run on Pi5 once per baseline; keep wired link subnet in sync)
+   sudo nmcli con add type ethernet ifname eth0 con-name eth0-static ip4 10.77.77.5/24
+   sudo nmcli con up eth0-static
+
+   # Verify from Pi5
+   ping -c2 10.77.77.3
+
+   # Set marquee transport on Pi5 to wired Pi3 endpoint
+   cat > ~/.dmarquees_transport.conf <<'EOF'
+   DMARQUEES_TRANSPORT="TCP"
+   DMARQUEES_REMOTE_HOST="10.77.77.3"
+   DMARQUEES_REMOTE_PORT="5533"
+   EOF
+
+   # Optional (recommended for full healthcheck SSH checks)
+   ssh-keygen -t ed25519
+   ssh-copy-id danc@10.77.77.3
+
+   # Health check (uses bash /dev/tcp; netcat not required)
+   /home/danc/scripts/dmarquees-healthcheck.sh --ssh danc@10.77.77.3
+
 2) Copy scripts/services from repo to /home/danc/scripts: (TBD - redundant with make install-pi3?)
   
    mkdir -p /home/danc/scripts

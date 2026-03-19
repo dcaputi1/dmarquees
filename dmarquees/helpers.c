@@ -120,9 +120,10 @@ bool game_has_multiple_screens(const char *romname)
     return multi;
 }
 
-/* Nearest-neighbor scale/blit RGBA -> XRGB8888 framebuffer (dest is uint32_t array) */
+/* Nearest-neighbor scale/blit RGBA -> XRGB8888 framebuffer (dest is uint32_t array)
+ * center: if true, vertically center the image; if false, bottom-align (normal marquee). */
 void scale_and_blit_to_xrgb(const uint8_t *src_rgba, int src_w, int src_h, uint32_t *dst, int dst_w, int dst_h,
-                            int dst_stride, int dest_x)
+                            int dst_stride, int dest_x, bool center)
 {
     if (!src_rgba || !dst)
         return;
@@ -138,9 +139,9 @@ void scale_and_blit_to_xrgb(const uint8_t *src_rgba, int src_w, int src_h, uint3
     int scaled_w = region_w;  // Always fill the width
     int scaled_h = (int)(src_h * scale);
 
-    // Position image at bottom of the screen
+    // Position image: centered vertically in splash mode, bottom-aligned otherwise
     int offset_x = dst_x0;
-    int offset_y = dst_h - scaled_h;
+    int offset_y = center ? (dst_h - scaled_h) / 2 : dst_h - scaled_h;
 
     for (int y = 0; y < scaled_h; ++y)
     {
@@ -224,8 +225,9 @@ int parseFrontendModeArg(int argc, char **argv)
     extern FrontendMode g_frontend_mode;
     extern char g_runtime_user[64];
     extern char g_drm_device_path[128];
+    extern bool g_splash_mode;
     int opt;
-    while ((opt = getopt(argc, argv, "f:u:d:h")) != -1)
+    while ((opt = getopt(argc, argv, "f:u:d:sh")) != -1)
     {
         switch (opt)
         {
@@ -234,7 +236,7 @@ int parseFrontendModeArg(int argc, char **argv)
             if (g_frontend_mode == eNA && strcmp(optarg, "NA") != 0 && strcmp(optarg, "None") != 0)
             {
                 fprintf(stderr, "error: invalid frontend '%s'\n", optarg);
-                fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username] [-d /dev/dri/cardX]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username] [-d /dev/dri/cardX] [-s]\n", argv[0]);
                 return 2;
             }
             break;
@@ -242,7 +244,7 @@ int parseFrontendModeArg(int argc, char **argv)
             if (!optarg || optarg[0] == '\0')
             {
                 fprintf(stderr, "error: missing username for -u\n");
-                fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username] [-d /dev/dri/cardX]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username] [-d /dev/dri/cardX] [-s]\n", argv[0]);
                 return 2;
             }
             snprintf(g_runtime_user, 64, "%s", optarg);
@@ -251,16 +253,19 @@ int parseFrontendModeArg(int argc, char **argv)
             if (!optarg || optarg[0] == '\0')
             {
                 fprintf(stderr, "error: missing DRM device path for -d\n");
-                fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username] [-d /dev/dri/cardX]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username] [-d /dev/dri/cardX] [-s]\n", argv[0]);
                 return 2;
             }
             snprintf(g_drm_device_path, 128, "%s", optarg);
             break;
+        case 's':
+            g_splash_mode = true;
+            break;
         case 'h':
-            fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username] [-d /dev/dri/cardX]\n", argv[0]);
+            fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username] [-d /dev/dri/cardX] [-s]\n", argv[0]);
             return 0;
         default:
-            fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username] [-d /dev/dri/cardX]\n", argv[0]);
+            fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username] [-d /dev/dri/cardX] [-s]\n", argv[0]);
             return 2;
         }
     }

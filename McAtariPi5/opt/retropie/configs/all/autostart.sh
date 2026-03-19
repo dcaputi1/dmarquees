@@ -216,30 +216,21 @@ setup_dmarquees()
 shutdown_dmarquees()
 {
     local HOME_DIR="/home/$ARCADE_USER"
-    local MNT="$HOME_DIR/mnt/marquees"
     local CMD_FIFO="/tmp/dmarquees_cmd"
-    local LOG="$HOME_DIR/marquees/dmarquees.log"
 
     ensure_dmarquees_transport_cfg
     load_dmarquees_transport_cfg
 
     echo "[autostart] Shutting down marquees..."
 
-    # Signal daemon to exit if running
+    # Signal the local splash daemon to exit
     if pgrep -x dmarquees >/dev/null; then
-        echo "EXIT" > "$CMD_FIFO" 2>/dev/null
+        echo "EXIT" > "$CMD_FIFO" 2>/dev/null || true
         sleep 0.5
-        # If still alive, force kill
+        # Force-kill if still alive
         if pgrep -x dmarquees >/dev/null; then
             sudo pkill -9 dmarquees
         fi
-    fi
-
-    # Unmount marquees FUSE mount
-    if mountpoint -q "$MNT"; then
-        echo "[autostart] Unmounting $MNT..."
-        fusermount -u "$MNT" || sudo umount -f "$MNT"
-        sleep 0.5
     fi
 
     # Remove FIFO
@@ -247,7 +238,7 @@ shutdown_dmarquees()
 
     if [ "$DMARQUEES_TRANSPORT" != "LOCAL" ]; then
         echo "[autostart] Network transport mode active ($DMARQUEES_TRANSPORT $DMARQUEES_REMOTE_HOST:$DMARQUEES_REMOTE_PORT)."
-        echo "[autostart] Remote daemon was left running."
+        echo "[autostart] Remote daemon on Pi3 was left running."
     fi
 
     echo "[autostart] Marquees stopped and cleaned up."
@@ -261,8 +252,8 @@ select_dmarquees_transport()
     local default_item="L"
     [ "$DMARQUEES_TRANSPORT" = "TCP" ] && default_item="R"
 
-    local remote_label="Pi3 Remote Transport"
-    local local_label="Pi5 Local Daemon"
+    local remote_label="Pi3 Game Marquees  (Pi5 splash + Pi3 art)"
+    local local_label="Pi5 Splash Only    (no Pi3 game art)"
     if [ "$DMARQUEES_TRANSPORT" = "LOCAL" ]; then
         local_label="$local_label [active]"
     else
@@ -303,16 +294,14 @@ select_dmarquees_transport()
     DMARQUEES_REMOTE_PORT="$port"
     save_dmarquees_transport_cfg
 
-    if [ "$DMARQUEES_TRANSPORT" = "LOCAL" ]; then
-        setup_dmarquees NA
-    else
-        shutdown_dmarquees
-    fi
+    # The Pi5 splash daemon always runs locally regardless of transport mode.
+    # Just (re)start it so it picks up the new frontend mode.
+    setup_dmarquees NA
 
     if [ "$DMARQUEES_TRANSPORT" = "LOCAL" ]; then
-        dialog --msgbox "Marquee transport set to LOCAL\nTarget: local Pi5 daemon" 8 64
+        dialog --msgbox "Marquee transport set to LOCAL\nGame marquees: Pi5 splash only (no Pi3)" 8 64
     else
-        dialog --msgbox "Marquee transport set to TCP\nTarget: $DMARQUEES_REMOTE_HOST:$DMARQUEES_REMOTE_PORT" 8 64
+        dialog --msgbox "Marquee transport set to TCP\nGame marquees: Pi3 at $DMARQUEES_REMOTE_HOST:$DMARQUEES_REMOTE_PORT\nSplash daemon: Pi5 card1 (always active)" 9 68
     fi
 }
 

@@ -2,7 +2,12 @@ dmarquees Pi5 -> Pi3 network transport
 =====================================
 
 For current migration status and next integration steps, see:
-- `docs/dmarquees-pi5-dev-handoff-2026-03-15.md`
+- `docs/dmarquees-pi5-dev-handoff-2026-03-18.md`
+
+Validated wired-link addressing (2026-03-19):
+- Pi5 `eth0`: `10.77.77.5/24`
+- Pi3 `eth0`: `10.77.77.3/24`
+- Netbridge listen port: `5533`
 
 Goal
 ----
@@ -21,14 +26,17 @@ What changed
 
 Pi5 setup
 ---------
-1. Ensure netcat is installed:
-   - `sudo apt-get install -y netcat-openbsd`
-2. Make scripts executable:
+1. Make scripts executable:
    - `chmod +x /home/danc/scripts/dmarquees-send.sh`
-3. Boot and open the Arcade Menu.
-4. Choose `T Marquee Transport Local/TCP/UDP`.
-5. Select LOCAL, TCP, or UDP.
-6. If TCP/UDP is selected, enter Pi3 host/IP and port (default `5533`).
+2. Boot and open the Arcade Menu.
+3. Choose `T Marquee Transport Local/TCP/UDP`.
+4. Select LOCAL, TCP, or UDP.
+5. If TCP/UDP is selected, set Pi3 host/IP and port.
+   - Current wired target: `10.77.77.3:5533`
+
+Notes:
+- `dmarquees-send.sh` uses bash `/dev/tcp`; no netcat dependency is required.
+- In TCP mode, Pi5 still runs local splash-screen dmarquees while Pi3 handles remote marquee art.
 
 Pi3 setup (remote dmarquees host)
 ---------------------------------
@@ -105,7 +113,13 @@ Usage:
 2. Local/transport check + probe send:
    - `/home/danc/scripts/dmarquees-healthcheck.sh`
 3. End-to-end check with remote Pi3 service and journal validation:
-   - `/home/danc/scripts/dmarquees-healthcheck.sh --ssh danc@192.168.50.3`
+   - `/home/danc/scripts/dmarquees-healthcheck.sh --ssh danc@10.77.77.3`
+
+Important:
+- SSH checks are run in batch mode and require key-based auth.
+- If needed, configure once on Pi5:
+  - `ssh-keygen -t ed25519`
+  - `ssh-copy-id danc@10.77.77.3`
 
 The health check validates:
 - active transport mode from `/home/danc/.dmarquees_transport.conf`
@@ -116,6 +130,6 @@ The health check validates:
 
 Notes
 -----
-- In TCP/UDP mode, Pi5 autostart will skip starting local dmarquees.
+- In TCP/UDP mode, Pi5 keeps its local splash daemon active; commands are also forwarded to Pi3.
 - In TCP/UDP mode, Pi5 shutdown will not stop remote Pi3 dmarquees.
-- `Banner Art Swap` manipulates local mounts; use it only when running LOCAL mode.
+- `Banner Art Swap` in TCP mode sends `SWAPART` to Pi3 (remote mount swap).

@@ -56,8 +56,7 @@ Quick migration checklist (Pi5 dev environment)
 2. Ensure scripts are executable on Pi5:
    - `chmod +x /home/danc/scripts/dmarquees-send.sh`
    - `chmod +x /home/danc/scripts/dmarquees-healthcheck.sh`
-3. Install netcat on Pi5 (required for TCP/UDP send):
-   - `sudo apt-get install -y netcat-openbsd`
+3. Netcat is not required for TCP send (sender uses bash `/dev/tcp`).
 4. Reboot or restart flow that uses `autostart.sh`.
 5. Use menu option `T` to select LOCAL/TCP/UDP and set Pi3 host/port.
 

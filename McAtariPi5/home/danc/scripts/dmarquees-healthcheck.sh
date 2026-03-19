@@ -59,6 +59,14 @@ info() { echo "[INFO] $*"; }
 ng()   { echo "[FAIL] $*"; fail=$((fail + 1)); }
 wn()   { echo "[WARN] $*"; warn=$((warn + 1)); }
 
+tcp_reachable()
+{
+    local host="$1"
+    local port="$2"
+
+    timeout 2 bash -c 'exec 3<>/dev/tcp/"$1"/"$2"' _ "$host" "$port" >/dev/null 2>&1
+}
+
 transport="LOCAL"
 remote_host="192.168.50.3"
 remote_port="5533"
@@ -103,24 +111,14 @@ if [ "$transport" = "LOCAL" ]; then
         wn "Local dmarquees process is not running"
     fi
 else
-    if ! command -v nc >/dev/null 2>&1; then
-        ng "nc not found. Install netcat-openbsd on Pi5"
-        exit 1
-    fi
-
     if [ "$transport" = "TCP" ]; then
-        if nc -z -w 1 "$remote_host" "$remote_port" >/dev/null 2>&1; then
+        if tcp_reachable "$remote_host" "$remote_port"; then
             ok "TCP endpoint reachable: $remote_host:$remote_port"
         else
             ng "TCP endpoint unreachable: $remote_host:$remote_port"
         fi
     else
-        wn "UDP reachability cannot be proved without app-level ack"
-        if nc -u -w 1 "$remote_host" "$remote_port" </dev/null >/dev/null 2>&1; then
-            ok "UDP probe packet sent to $remote_host:$remote_port"
-        else
-            wn "UDP probe send returned non-zero for $remote_host:$remote_port"
-        fi
+        wn "UDP reachability probe skipped: healthcheck uses bash /dev/tcp and does not require netcat"
     fi
 fi
 
