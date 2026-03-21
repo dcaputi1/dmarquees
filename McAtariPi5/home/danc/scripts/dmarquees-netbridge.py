@@ -179,16 +179,9 @@ def set_tty_console_boot(enable: bool, verbose: bool) -> None:
     with open(cmdline_path, "w", encoding="utf-8") as f:
         f.write(" ".join(tokens) + "\n")
 
-    if enable:
-        subprocess.run(["systemctl", "unmask", "getty@tty1.service"], check=False, capture_output=True)
-        subprocess.run(["systemctl", "enable", "getty@tty1.service"], check=False, capture_output=True)
-    else:
-        subprocess.run(["systemctl", "disable", "getty@tty1.service"], check=False, capture_output=True)
-        subprocess.run(["systemctl", "mask", "getty@tty1.service"], check=False, capture_output=True)
-
     if verbose:
         state = "ENABLED" if enable else "DISABLED"
-        print(f"[netbridge] PI3_TTY_TOGGLE applied: tty console boot {state} ({cmdline_path})")
+        print(f"[netbridge] PI3_TTY_TOGGLE applied: cmdline console=tty1 {state} ({cmdline_path})")
 
 
 def toggle_tty_console_boot(verbose: bool) -> None:

@@ -62,7 +62,7 @@ toggle_tty_console_boot()
         return 0
     fi
 
-    if ! dialog --title "Pi3 tty1 Console Boot" --yesno "Send remote toggle command to Pi3?\n\nTarget: $host:$port\nCommand: PI3_TTY_TOGGLE\n\nThis flips Pi3 tty1 console boot state and requires a Pi3 reboot." 11 72; then
+    if ! dialog --title "Pi3 tty1 Console Boot" --yesno "Send remote toggle command to Pi3?\n\nTarget: $host:$port\nCommand: PI3_TTY_TOGGLE\n\nThis only flips the cmdline.txt console=tty1 token and requires a Pi3 reboot." 11 72; then
         return 0
     fi
 
@@ -72,6 +72,19 @@ toggle_tty_console_boot()
         dialog --msgbox "Failed to send PI3_TTY_TOGGLE to $host:$port.\nCheck network reachability and Pi3 netbridge service." 7 72
         return 1
     fi
+}
+
+persist_frontend_choice()
+{
+    # Persist only frontend launch choices so utility actions (T/Y/B/S) do not
+    # become the default selection on the next boot.
+    case "$1" in
+        E|V|M|P|C|X)
+            echo "DEF_KEY=\"$1\"" > "$HOME/.def_key"
+            echo "DEF_KEY=\"$1\"" > "$HOME/.opt_key"
+            echo "OPT_KEY=\"$1\"" >> "$HOME/.opt_key"
+            ;;
+    esac
 }
 
 dmarquees_transport_cfg_path()
@@ -253,7 +266,6 @@ setup_dmarquees()
 # ==========================================
 #  Marquee shutdown: cleanly stop daemon + unmount
 # ==========================================
-
 shutdown_dmarquees()
 {
     local HOME_DIR="/home/$ARCADE_USER"
@@ -447,12 +459,26 @@ fi
 python3 $HOME/scripts/xinmo-swapcheck.py
 status=$?
 
-# Read the last key ~/.def_key to use as the default choice
-if [[ -f $HOME/.def_key ]]; then
+# Read the last key (~/.opt_key preferred for compatibility) to use as default.
+if [[ -f $HOME/.opt_key ]]; then
+    source $HOME/.opt_key
+elif [[ -f $HOME/.def_key ]]; then
     source $HOME/.def_key
 else
     DEF_KEY="X"
 fi
+
+if [[ -z "$DEF_KEY" && -n "$OPT_KEY" ]]; then
+    DEF_KEY="$OPT_KEY"
+fi
+
+case "$DEF_KEY" in
+    E|V|M|P|C|X)
+        ;;
+    *)
+        DEF_KEY="X"
+        ;;
+esac
 
 ###########################################
 # Front-End Chooser Menu loop
@@ -495,7 +521,7 @@ if [[ "$CHOICE" == "" ]]; then
    CHOICE=$DEF_KEY
 fi
 
-echo "DEF_KEY=\"$CHOICE\"" > $HOME/.def_key
+persist_frontend_choice "$CHOICE"
 
 # Launch the selected frontend with the appropriate parameters...
 case $CHOICE in
