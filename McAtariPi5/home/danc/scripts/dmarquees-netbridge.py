@@ -184,6 +184,29 @@ def set_tty_console_boot(enable: bool, verbose: bool) -> None:
         print(f"[netbridge] PI3_TTY_TOGGLE applied: cmdline console=tty1 {state} ({cmdline_path})")
 
 
+def run_systemctl(args: list[str], verbose: bool) -> None:
+    cmd = ["systemctl", *args]
+    proc = subprocess.run(cmd, check=False, capture_output=True, text=True)
+    if proc.returncode != 0:
+        stderr = (proc.stderr or "").strip()
+        stdout = (proc.stdout or "").strip()
+        detail = stderr or stdout or f"exit code {proc.returncode}"
+        raise RuntimeError(f"{' '.join(cmd)} failed: {detail}")
+    if verbose:
+        print(f"[netbridge] ran: {' '.join(cmd)}")
+
+
+def set_tty_getty(enable: bool, verbose: bool) -> None:
+    service = "getty@tty1.service"
+    if enable:
+        run_systemctl(["unmask", service], verbose)
+        run_systemctl(["enable", service], verbose)
+    else:
+        # Stop first so the login prompt clears right away on the current boot.
+        run_systemctl(["disable", "--now", service], verbose)
+        run_systemctl(["mask", service], verbose)
+
+
 def toggle_tty_console_boot(verbose: bool) -> None:
     cmdline_path = get_boot_cmdline_path()
     if not cmdline_path:
@@ -193,6 +216,10 @@ def toggle_tty_console_boot(verbose: bool) -> None:
     current = tty_console_boot_enabled(cmdline_path)
     try:
         set_tty_console_boot(not current, verbose)
+        set_tty_getty(not current, verbose)
+        if verbose:
+            state = "ENABLED" if not current else "DISABLED"
+            print(f"[netbridge] PI3_TTY_TOGGLE complete: tty console boot {state}")
     except Exception as exc:
         print(f"[netbridge] PI3_TTY_TOGGLE failed: {exc}", file=sys.stderr)
 

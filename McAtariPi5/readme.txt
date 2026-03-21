@@ -124,7 +124,8 @@ problem log:
 ===========================================
 Pi3 Light OS baseline setup
 ===========================================
-   set locale ALL=EN_US.UTF-8 (no clue)
+
+   sudo dpkg-reconfigure locales (change GB to US)
    sudo mkdir -p /media/danc/ExtremeSSD
    sudo mount /dev/sda1 /media/danc/ExtremeSSD
    mkdir -p ~/MAME_0.256_EXTRAs
@@ -137,7 +138,7 @@ Pi3 Light OS baseline setup
    sudo apt install -y build-essential libdrm-dev libpng-dev libtinyxml2-dev fuse-zip
    sudo make install-pi3
 
-1b) Configure direct wired link static IPs (NetworkManager):
+1) Configure direct wired link static IPs (NetworkManager):
 
    # Pi3 side (run on Pi3)
    sudo nmcli con add type ethernet ifname eth0 con-name eth0-static ip4 10.77.77.3/24
@@ -152,16 +153,12 @@ Pi3 Light OS baseline setup
 
    # Set marquee transport on Pi5 to wired Pi3 endpoint
    cat > ~/.dmarquees_transport.conf <<'EOF'
-   DMARQUEES_TRANSPORT="TCP"
-   DMARQUEES_REMOTE_HOST="10.77.77.3"
-   DMARQUEES_REMOTE_PORT="5533"
-   EOF
+DMARQUEES_TRANSPORT="TCP"
+DMARQUEES_REMOTE_HOST="10.77.77.3"
+DMARQUEES_REMOTE_PORT="5533"
+EOF
 
-   # Optional (recommended for full healthcheck SSH checks)
-   ssh-keygen -t ed25519
-   ssh-copy-id danc@10.77.77.3
-
-   # Health check (uses bash /dev/tcp; netcat not required)
+   # Health check
    /home/danc/scripts/dmarquees-healthcheck.sh --ssh danc@10.77.77.3
 
 2) Copy scripts/services from repo to /home/danc/scripts: (TBD - redundant with make install-pi3?)
@@ -213,7 +210,7 @@ Pi3 Light OS baseline setup
    the Pi3 listener toggles `console=tty1` in active `cmdline.txt` and enables/disables `getty@tty1`
    reboot Pi3 after changing it
 
-   Option B - manual commands:
+   Option B - manual commands on the pi3:
    sudo systemctl disable getty@tty1.service
    sudo systemctl mask getty@tty1.service
    if [ -f /boot/firmware/cmdline.txt ]; then
@@ -226,89 +223,6 @@ Pi3 Light OS baseline setup
    To re-enable tty console boot later, add `console=tty1` back to the same file,
    then `sudo systemctl unmask getty@tty1.service && sudo systemctl enable getty@tty1.service`
 
-   Why `cmdline.txt` sometimes appears in two places:
-   current Raspberry Pi OS releases typically boot from `/boot/firmware/cmdline.txt`
-   older layouts use `/boot/cmdline.txt`
-   sometimes one path is just a symlink or alternate mount view of the same file
-   do not blindly edit both if they are distinct files; update the active boot path for that OS
-
-6) Set hostname clearly (avoid Pi3/Pi5 prompt confusion):
-   sudo hostnamectl set-hostname BkWmLt32-Pi3
-   sudo sh -c "grep -q '^127\.0\.1\.1' /etc/hosts && sed -i 's/^127\.0\.1\.1.*/127.0.1.1\tBkWmLt32-Pi3/' /etc/hosts || echo '127.0.1.1\tBkWmLt32-Pi3' >> /etc/hosts"
-   exec bash -l
-
-7) After any git pull/update on Pi3, redeploy runtime binaries + services with one command:
-   cd /home/danc/IvarArcade
-   sudo make install-pi3
-
-   NOTE: service install scripts use enable --now, which does not restart an already-running unit.
-   Always run explicit restarts after updates if testing immediately:
-   sudo systemctl restart dmarquees-daemon.service dmarquees-netbridge.service
-
-8) Confirm daemon version actually running (do not trust build output alone):
-   sudo journalctl -u dmarquees-daemon.service -n 30 --no-pager | grep -i "starting"
-   # Expect: dmarquees: v1.7.0 starting...
-
-9) SWAPART troubleshooting quick checks:
-   # A) Verify active netbridge script (service runs /usr/local/bin copy)
-   grep -n SWAPART /usr/local/bin/dmarquees-netbridge.py
-
-   # B) If marquee mount is empty/unmounted, remount manually once
-   sudo fusermount -u /home/danc/mnt/marquees 2>/dev/null || true
-   sudo fuse-zip -r -o allow_other /home/danc/MAME_0.256_EXTRAs/marquees.zip /home/danc/mnt/marquees
-   ls -la /home/danc/mnt/marquees | head -40
-
-   # C) Set daemon state before testing SWAPART from Pi5
-   # (unknown commands are treated as ROM names and can fall back to default marquee)
-   /home/danc/scripts/dmarquees-send.sh SA
-   sleep 0.5
-   /home/danc/scripts/dmarquees-send.sh dkong
-   sleep 0.5
-   /home/danc/scripts/dmarquees-send.sh SWAPART
-
-
-===========================================
-Pi3 quick reinstall checklist (copy/paste)
-===========================================
-
-Run on Pi3 after fresh OS install:
-
-sudo apt update
-sudo apt install -y git build-essential libdrm-dev libpng-dev libtinyxml2-dev fuse-zip
-git clone https://github.com/dcaputi1/IvarArcade.git
-cd /home/danc/IvarArcade
-sudo make install-pi3
-
-Set hostname + hosts entry (avoid Pi5/Pi3 prompt confusion):
-
-sudo hostnamectl set-hostname BkWmLt32-Pi3
-sudo sh -c "grep -q '^127\.0\.1\.1' /etc/hosts && sed -i 's/^127\.0\.1\.1.*/127.0.1.1\tBkWmLt32-Pi3/' /etc/hosts || echo '127.0.1.1\tBkWmLt32-Pi3' >> /etc/hosts"
-
-Verify services + netbridge port:
-
-systemctl status --no-pager dmarquees-mount.service dmarquees-daemon.service dmarquees-netbridge.service
-ss -tulpen | grep 5533
-
-Verify daemon version from active service:
-
-sudo journalctl -u dmarquees-daemon.service -n 30 --no-pager | grep -i "starting"
-
-If Pi3 was updated via git pull later, redeploy with:
-
-cd /home/danc/IvarArcade
-sudo make install-pi3
-sudo systemctl restart dmarquees-daemon.service dmarquees-netbridge.service
-
-If SWAPART seems broken, first ensure marquee mount is populated:
-
-ls -la /home/danc/mnt/marquees | head -40
+TBD 3/26/2026 - are these needed?
 sudo fusermount -u /home/danc/mnt/marquees 2>/dev/null || true
 sudo fuse-zip -r -o allow_other /home/danc/MAME_0.256_EXTRAs/marquees.zip /home/danc/mnt/marquees
-
-Pi5-side stateful SWAPART test sequence:
-
-/home/danc/scripts/dmarquees-send.sh SA
-sleep 0.5
-/home/danc/scripts/dmarquees-send.sh dkong
-sleep 0.5
-/home/danc/scripts/dmarquees-send.sh SWAPART
