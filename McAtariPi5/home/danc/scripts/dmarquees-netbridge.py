@@ -66,6 +66,15 @@ def iter_lines_from_bytes(chunks: Iterable[bytes], carry: str = ""):
         yield buf.strip()
 
 
+def mount_is_active(path: str) -> bool:
+    """Return True when path currently has a mounted filesystem."""
+    try:
+        rc = subprocess.run(["mountpoint", "-q", path], check=False).returncode
+        return rc == 0
+    except Exception:
+        return os.path.ismount(path)
+
+
 def swap_art(marquees_zip: str, cpanel_zip: str, mnt: str, state_file: str, fifo: str, verbose: bool) -> None:
     """Toggle the FUSE-mounted art zip between marquees and cpanel, then REFRESH the daemon."""
     try:
@@ -82,16 +91,29 @@ def swap_art(marquees_zip: str, cpanel_zip: str, mnt: str, state_file: str, fifo
     if verbose:
         print(f"[netbridge] SWAPART: {current} -> {next_state}")
 
-    # Unmount current zip
-    try:
-        subprocess.run(["fusermount", "-u", mnt], check=True, capture_output=True)
-    except subprocess.CalledProcessError as exc:
-        print(f"[netbridge] fusermount failed: {exc.stderr.decode().strip()}", file=sys.stderr)
+    # Unmount current zip only when something is actually mounted.
+    # Fresh boot/state can legitimately have no mount yet.
+    if mount_is_active(mnt):
         try:
-            subprocess.run(["umount", "-f", mnt], check=True, capture_output=True)
-        except subprocess.CalledProcessError:
-            print("[netbridge] force umount also failed; aborting SWAPART", file=sys.stderr)
-            return
+            subprocess.run(["fusermount", "-u", mnt], check=True, capture_output=True)
+        except subprocess.CalledProcessError as exc:
+            err = exc.stderr.decode().strip()
+            print(f"[netbridge] fusermount failed: {err}", file=sys.stderr)
+            try:
+                subprocess.run(["umount", "-f", mnt], check=True, capture_output=True)
+            except subprocess.CalledProcessError:
+                # Last resort for stale/busy mount states.
+                try:
+                    subprocess.run(["umount", "-l", mnt], check=True, capture_output=True)
+                except subprocess.CalledProcessError:
+                    # If nothing is mounted anymore, continue to mount target zip.
+                    if mount_is_active(mnt):
+                        print("[netbridge] force/lazy umount failed; aborting SWAPART", file=sys.stderr)
+                        return
+                    if verbose:
+                        print(f"[netbridge] {mnt} no longer mounted after unmount attempts; continuing")
+    elif verbose:
+        print(f"[netbridge] SWAPART: {mnt} not mounted; proceeding to mount target zip")
 
     time.sleep(0.5)
 

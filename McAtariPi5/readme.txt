@@ -52,6 +52,13 @@ steps:
 8. run ~/IvarArcade/McAtariPi5/ra_final.sh (formerly cp_opt.sh)
 9. run ~/IvarArcade/analyze_games/analyze_games (not sudo!)
 10.sudo ~/scripts/set_asound.sh (for Trixie sound problem - not needed for Bookworm Debian base OS)
+11.if using Pi3 as remote marquee node, configure transport + verify from Pi5:
+   cat > ~/.dmarquees_transport.conf <<'EOF'
+   DMARQUEES_TRANSPORT="TCP"
+   DMARQUEES_REMOTE_HOST="10.77.77.3"
+   DMARQUEES_REMOTE_PORT="5533"
+   EOF
+   /home/danc/scripts/dmarquees-healthcheck.sh --ssh danc@10.77.77.3
 
 optional:
 A. sudo apt install meld
@@ -197,3 +204,84 @@ Pi3 Light OS baseline setup
    sudo systemctl restart dmarquees-mount.service dmarquees-daemon.service dmarquees-netbridge.service
    systemctl status --no-pager dmarquees-mount.service dmarquees-daemon.service dmarquees-netbridge.service
    ss -tulpen | grep 5533
+
+6) Set hostname clearly (avoid Pi3/Pi5 prompt confusion):
+   sudo hostnamectl set-hostname BkWmLt32-Pi3
+   sudo sh -c "grep -q '^127\.0\.1\.1' /etc/hosts && sed -i 's/^127\.0\.1\.1.*/127.0.1.1\tBkWmLt32-Pi3/' /etc/hosts || echo '127.0.1.1\tBkWmLt32-Pi3' >> /etc/hosts"
+   exec bash -l
+
+7) After any git pull/update on Pi3, redeploy runtime binaries + services with one command:
+   cd /home/danc/IvarArcade
+   sudo make install-pi3
+
+   NOTE: service install scripts use enable --now, which does not restart an already-running unit.
+   Always run explicit restarts after updates if testing immediately:
+   sudo systemctl restart dmarquees-daemon.service dmarquees-netbridge.service
+
+8) Confirm daemon version actually running (do not trust build output alone):
+   sudo journalctl -u dmarquees-daemon.service -n 30 --no-pager | grep -i "starting"
+   # Expect: dmarquees: v1.7.0 starting...
+
+9) SWAPART troubleshooting quick checks:
+   # A) Verify active netbridge script (service runs /usr/local/bin copy)
+   grep -n SWAPART /usr/local/bin/dmarquees-netbridge.py
+
+   # B) If marquee mount is empty/unmounted, remount manually once
+   sudo fusermount -u /home/danc/mnt/marquees 2>/dev/null || true
+   sudo fuse-zip -r -o allow_other /home/danc/MAME_0.256_EXTRAs/marquees.zip /home/danc/mnt/marquees
+   ls -la /home/danc/mnt/marquees | head -40
+
+   # C) Set daemon state before testing SWAPART from Pi5
+   # (unknown commands are treated as ROM names and can fall back to default marquee)
+   /home/danc/scripts/dmarquees-send.sh SA
+   sleep 0.5
+   /home/danc/scripts/dmarquees-send.sh dkong
+   sleep 0.5
+   /home/danc/scripts/dmarquees-send.sh SWAPART
+
+
+===========================================
+Pi3 quick reinstall checklist (copy/paste)
+===========================================
+
+Run on Pi3 after fresh OS install:
+
+sudo apt update
+sudo apt install -y git build-essential libdrm-dev libpng-dev libtinyxml2-dev fuse-zip
+git clone https://github.com/dcaputi1/IvarArcade.git
+cd /home/danc/IvarArcade
+sudo make install-pi3
+
+Set hostname + hosts entry (avoid Pi5/Pi3 prompt confusion):
+
+sudo hostnamectl set-hostname BkWmLt32-Pi3
+sudo sh -c "grep -q '^127\.0\.1\.1' /etc/hosts && sed -i 's/^127\.0\.1\.1.*/127.0.1.1\tBkWmLt32-Pi3/' /etc/hosts || echo '127.0.1.1\tBkWmLt32-Pi3' >> /etc/hosts"
+
+Verify services + netbridge port:
+
+systemctl status --no-pager dmarquees-mount.service dmarquees-daemon.service dmarquees-netbridge.service
+ss -tulpen | grep 5533
+
+Verify daemon version from active service:
+
+sudo journalctl -u dmarquees-daemon.service -n 30 --no-pager | grep -i "starting"
+
+If Pi3 was updated via git pull later, redeploy with:
+
+cd /home/danc/IvarArcade
+sudo make install-pi3
+sudo systemctl restart dmarquees-daemon.service dmarquees-netbridge.service
+
+If SWAPART seems broken, first ensure marquee mount is populated:
+
+ls -la /home/danc/mnt/marquees | head -40
+sudo fusermount -u /home/danc/mnt/marquees 2>/dev/null || true
+sudo fuse-zip -r -o allow_other /home/danc/MAME_0.256_EXTRAs/marquees.zip /home/danc/mnt/marquees
+
+Pi5-side stateful SWAPART test sequence:
+
+/home/danc/scripts/dmarquees-send.sh SA
+sleep 0.5
+/home/danc/scripts/dmarquees-send.sh dkong
+sleep 0.5
+/home/danc/scripts/dmarquees-send.sh SWAPART
