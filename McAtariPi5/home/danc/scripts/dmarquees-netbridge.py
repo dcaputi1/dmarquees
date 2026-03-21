@@ -13,6 +13,7 @@ import time
 from typing import Iterable
 
 running = True
+TTY_CONSOLE_TOKEN = "console=tty1"
 
 
 def handle_signal(_signum, _frame):
@@ -147,9 +148,66 @@ def swap_art(marquees_zip: str, cpanel_zip: str, mnt: str, state_file: str, fifo
         print(f"[netbridge] SWAPART complete: now showing {next_state}")
 
 
+def get_boot_cmdline_path() -> str | None:
+    for path in ("/boot/firmware/cmdline.txt", "/boot/cmdline.txt"):
+        if os.path.isfile(path):
+            return path
+    return None
+
+
+def tty_console_boot_enabled(cmdline_path: str) -> bool:
+    try:
+        with open(cmdline_path, "r", encoding="utf-8", errors="replace") as f:
+            tokens = f.read().strip().split()
+    except OSError:
+        return False
+    return TTY_CONSOLE_TOKEN in tokens
+
+
+def set_tty_console_boot(enable: bool, verbose: bool) -> None:
+    cmdline_path = get_boot_cmdline_path()
+    if not cmdline_path:
+        raise RuntimeError("Could not find cmdline.txt under /boot/firmware or /boot")
+
+    with open(cmdline_path, "r", encoding="utf-8", errors="replace") as f:
+        tokens = f.read().strip().split()
+
+    tokens = [t for t in tokens if t != TTY_CONSOLE_TOKEN]
+    if enable:
+        tokens.append(TTY_CONSOLE_TOKEN)
+
+    with open(cmdline_path, "w", encoding="utf-8") as f:
+        f.write(" ".join(tokens) + "\n")
+
+    if enable:
+        subprocess.run(["systemctl", "unmask", "getty@tty1.service"], check=False, capture_output=True)
+        subprocess.run(["systemctl", "enable", "getty@tty1.service"], check=False, capture_output=True)
+    else:
+        subprocess.run(["systemctl", "disable", "getty@tty1.service"], check=False, capture_output=True)
+        subprocess.run(["systemctl", "mask", "getty@tty1.service"], check=False, capture_output=True)
+
+    if verbose:
+        state = "ENABLED" if enable else "DISABLED"
+        print(f"[netbridge] PI3_TTY_TOGGLE applied: tty console boot {state} ({cmdline_path})")
+
+
+def toggle_tty_console_boot(verbose: bool) -> None:
+    cmdline_path = get_boot_cmdline_path()
+    if not cmdline_path:
+        print("[netbridge] PI3_TTY_TOGGLE failed: cmdline.txt not found", file=sys.stderr)
+        return
+
+    current = tty_console_boot_enabled(cmdline_path)
+    try:
+        set_tty_console_boot(not current, verbose)
+    except Exception as exc:
+        print(f"[netbridge] PI3_TTY_TOGGLE failed: {exc}", file=sys.stderr)
+
+
 def handle_command(line: str, fifo: str, swap_cfg: dict, verbose: bool) -> None:
     """Dispatch a single received command: intercept SWAPART, forward everything else."""
-    if line.strip().upper() == "SWAPART":
+    cmd = line.strip().upper()
+    if cmd == "SWAPART":
         swap_art(
             swap_cfg["marquees_zip"],
             swap_cfg["cpanel_zip"],
@@ -158,6 +216,8 @@ def handle_command(line: str, fifo: str, swap_cfg: dict, verbose: bool) -> None:
             fifo,
             verbose,
         )
+    elif cmd == "PI3_TTY_TOGGLE":
+        toggle_tty_console_boot(verbose)
     else:
         write_fifo_nonblocking(fifo, line, verbose)
 

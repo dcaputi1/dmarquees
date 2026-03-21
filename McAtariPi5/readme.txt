@@ -205,6 +205,33 @@ Pi3 Light OS baseline setup
    systemctl status --no-pager dmarquees-mount.service dmarquees-daemon.service dmarquees-netbridge.service
    ss -tulpen | grep 5533
 
+   If the Pi3 boots to a tty login prompt instead of the NA marquee, disable tty1 console boot:
+
+   Option A - from the Pi5 Arcade Menu / custom autostart.sh:
+   use menu item `Y  Pi3 tty Console  Remote Toggle`
+   this sends `PI3_TTY_TOGGLE` to the Pi3 netbridge listener on port 5533
+   the Pi3 listener toggles `console=tty1` in active `cmdline.txt` and enables/disables `getty@tty1`
+   reboot Pi3 after changing it
+
+   Option B - manual commands:
+   sudo systemctl disable getty@tty1.service
+   sudo systemctl mask getty@tty1.service
+   if [ -f /boot/firmware/cmdline.txt ]; then
+       sudo sed -i 's/ console=tty1//g' /boot/firmware/cmdline.txt
+   else
+       sudo sed -i 's/ console=tty1//g' /boot/cmdline.txt
+   fi
+   sudo reboot
+
+   To re-enable tty console boot later, add `console=tty1` back to the same file,
+   then `sudo systemctl unmask getty@tty1.service && sudo systemctl enable getty@tty1.service`
+
+   Why `cmdline.txt` sometimes appears in two places:
+   current Raspberry Pi OS releases typically boot from `/boot/firmware/cmdline.txt`
+   older layouts use `/boot/cmdline.txt`
+   sometimes one path is just a symlink or alternate mount view of the same file
+   do not blindly edit both if they are distinct files; update the active boot path for that OS
+
 6) Set hostname clearly (avoid Pi3/Pi5 prompt confusion):
    sudo hostnamectl set-hostname BkWmLt32-Pi3
    sudo sh -c "grep -q '^127\.0\.1\.1' /etc/hosts && sed -i 's/^127\.0\.1\.1.*/127.0.1.1\tBkWmLt32-Pi3/' /etc/hosts || echo '127.0.1.1\tBkWmLt32-Pi3' >> /etc/hosts"

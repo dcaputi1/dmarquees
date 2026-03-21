@@ -33,6 +33,47 @@ DMARQUEES_TRANSPORT="LOCAL"
 DMARQUEES_REMOTE_HOST="$DMARQUEES_DEFAULT_REMOTE_HOST"
 DMARQUEES_REMOTE_PORT="$DMARQUEES_DEFAULT_REMOTE_PORT"
 
+TTY_CONSOLE_TOKEN="console=tty1"
+
+send_remote_netbridge_cmd()
+{
+    local host="$1"
+    local port="$2"
+    local cmd="$3"
+
+    {
+        printf '%s\n' "$cmd"
+        sleep 0.1
+    } > /dev/tcp/"$host"/"$port" 2>/dev/null
+}
+
+toggle_tty_console_boot()
+{
+    local host port
+
+    ensure_dmarquees_transport_cfg
+    load_dmarquees_transport_cfg
+
+    host="$DMARQUEES_REMOTE_HOST"
+    port="$DMARQUEES_REMOTE_PORT"
+
+    if [ -z "$host" ] || ! [[ "$port" =~ ^[0-9]+$ ]]; then
+        dialog --msgbox "Remote Pi3 host/port is not configured." 6 52
+        return 0
+    fi
+
+    if ! dialog --title "Pi3 tty1 Console Boot" --yesno "Send remote toggle command to Pi3?\n\nTarget: $host:$port\nCommand: PI3_TTY_TOGGLE\n\nThis flips Pi3 tty1 console boot state and requires a Pi3 reboot." 11 72; then
+        return 0
+    fi
+
+    if send_remote_netbridge_cmd "$host" "$port" "PI3_TTY_TOGGLE"; then
+        dialog --msgbox "Remote Pi3 toggle request sent to $host:$port.\n\nReboot Pi3 after a few seconds to apply." 8 70
+    else
+        dialog --msgbox "Failed to send PI3_TTY_TOGGLE to $host:$port.\nCheck network reachability and Pi3 netbridge service." 7 72
+        return 1
+    fi
+}
+
 dmarquees_transport_cfg_path()
 {
     local HOME_DIR="/home/$ARCADE_USER"
@@ -431,6 +472,7 @@ MENU_ITEMS=(
     M "MAME Lanscape    Normal/Horizontal"
     P "MAME Portrait    Portrait/Vertical"
     T "Marquee Pi3/Pi5  Remote/Local Swap"
+    Y "Pi3 tty Console  Remote Toggle"
     B "Banner Art Swap  Marquees/C-Panels"
     C "Command Prompt   Do not launch GUI"
     X "Exit to Desktop  X/Wayland Desktop"
@@ -489,6 +531,10 @@ P)
    ;;
 T)
     select_dmarquees_transport
+    continue
+    ;;
+Y)
+    toggle_tty_console_boot
     continue
     ;;
 B)
