@@ -108,16 +108,7 @@ install-pi3: all
 	@$(MAKE) install INSTALL_DIR=/home/danc/marquees
 
 	@# Stage Pi3 service scripts and assets
-	@install -m 755 McAtariPi5/home/danc/scripts/dmarquees-netbridge.py /home/danc/scripts/dmarquees-netbridge.py
-	@install -m 755 McAtariPi5/home/danc/scripts/install-dmarquees-mount-service.sh /home/danc/scripts/install-dmarquees-mount-service.sh
-	@install -m 755 McAtariPi5/home/danc/scripts/install-dmarquees-daemon-service.sh /home/danc/scripts/install-dmarquees-daemon-service.sh
-	@install -m 755 McAtariPi5/home/danc/scripts/install-dmarquees-netbridge-service.sh /home/danc/scripts/install-dmarquees-netbridge-service.sh
-	@install -m 644 McAtariPi5/home/danc/scripts/dmarquees-mount.service /home/danc/scripts/dmarquees-mount.service
-	@install -m 644 McAtariPi5/home/danc/scripts/dmarquees-mount.env.example /home/danc/scripts/dmarquees-mount.env.example
-	@install -m 644 McAtariPi5/home/danc/scripts/dmarquees-daemon.service /home/danc/scripts/dmarquees-daemon.service
-	@install -m 644 McAtariPi5/home/danc/scripts/dmarquees-daemon.env.example /home/danc/scripts/dmarquees-daemon.env.example
-	@install -m 644 McAtariPi5/home/danc/scripts/dmarquees-netbridge.service /home/danc/scripts/dmarquees-netbridge.service
-	@install -m 644 McAtariPi5/home/danc/scripts/dmarquees-netbridge.env.example /home/danc/scripts/dmarquees-netbridge.env.example
+	@rsync -a --exclude '__pycache__/' McAtariPi5/home/danc/scripts/ /home/danc/scripts/
 	@chown -R danc:danc /home/danc/scripts /home/danc/marquees || true
 
 	@# Install and enable services

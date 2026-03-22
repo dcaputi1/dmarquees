@@ -160,43 +160,30 @@ EOF
 
    # Health check
    /home/danc/scripts/dmarquees-healthcheck.sh --ssh danc@10.77.77.3
+   # Note: --ssh uses batch-mode SSH and requires key-based auth from Pi5 to Pi3.
+   # If this is a fresh Pi3 baseline, run once on the Pi5:
+   ssh-copy-id danc@10.77.77.3
 
-2) Copy scripts/services from repo to /home/danc/scripts: (TBD - redundant with make install-pi3?)
-  
-   mkdir -p /home/danc/scripts
-
-   install -m 755 McAtariPi5/home/danc/scripts/dmarquees-netbridge.py /home/danc/scripts/dmarquees-netbridge.py
-   install -m 755 McAtariPi5/home/danc/scripts/install-dmarquees-mount-service.sh /home/danc/scripts/install-dmarquees-mount-service.sh
-   install -m 755 McAtariPi5/home/danc/scripts/install-dmarquees-daemon-service.sh /home/danc/scripts/install-dmarquees-daemon-service.sh
-   install -m 755 McAtariPi5/home/danc/scripts/install-dmarquees-netbridge-service.sh /home/danc/scripts/install-dmarquees-netbridge-service.sh
-
-   install -m 644 McAtariPi5/home/danc/scripts/dmarquees-mount.service /home/danc/scripts/dmarquees-mount.service
-   install -m 644 McAtariPi5/home/danc/scripts/dmarquees-mount.env.example /home/danc/scripts/dmarquees-mount.env.example
-   install -m 644 McAtariPi5/home/danc/scripts/dmarquees-daemon.service /home/danc/scripts/dmarquees-daemon.service
-   install -m 644 McAtariPi5/home/danc/scripts/dmarquees-daemon.env.example /home/danc/scripts/dmarquees-daemon.env.example
-   install -m 644 McAtariPi5/home/danc/scripts/dmarquees-netbridge.service /home/danc/scripts/dmarquees-netbridge.service
-   install -m 644 McAtariPi5/home/danc/scripts/dmarquees-netbridge.env.example /home/danc/scripts/dmarquees-netbridge.env.example
-
-3) Install/enable services:
+2) Install/enable services: (already staged by sudo make install-pi3)
 
    sudo /home/danc/scripts/install-dmarquees-mount-service.sh
    sudo /home/danc/scripts/install-dmarquees-daemon-service.sh
    sudo /home/danc/scripts/install-dmarquees-netbridge-service.sh
 
-4) Enforce Pi3-safe defaults:
+3) Enforce Pi3-safe defaults:
    sudo tee /etc/default/dmarquees-mount >/dev/null <<'EOF'
-   DMARQUEES_USER=danc
-   DMARQUEES_ZIP=/home/danc/MAME_0.256_EXTRAs/marquees.zip
-   DMARQUEES_MNT=/home/danc/mnt/marquees
-   EOF
+DMARQUEES_USER=danc
+DMARQUEES_ZIP=/home/danc/MAME_0.256_EXTRAs/marquees.zip
+DMARQUEES_MNT=/home/danc/mnt/marquees
+EOF
 
    sudo tee /etc/default/dmarquees-daemon >/dev/null <<'EOF'
-   DMARQUEES_USER=danc
-   DMARQUEES_FRONTEND=NA
-   DMARQUEES_DRM_DEVICE=/dev/dri/card0
-   EOF
+DMARQUEES_USER=danc
+DMARQUEES_FRONTEND=NA
+DMARQUEES_DRM_DEVICE=/dev/dri/card0
+EOF
 
-5) Restart + verify:
+4) Restart + verify:
    sudo systemctl daemon-reload
    sudo systemctl restart dmarquees-mount.service dmarquees-daemon.service dmarquees-netbridge.service
    systemctl status --no-pager dmarquees-mount.service dmarquees-daemon.service dmarquees-netbridge.service

@@ -5,6 +5,8 @@ CFG_PATH="${DMARQUEES_TRANSPORT_CFG:-$HOME/.dmarquees_transport.conf}"
 SENDER_SCRIPT="${DMARQUEES_SENDER_SCRIPT:-$HOME/scripts/dmarquees-send.sh}"
 CMD_FIFO="${DMARQUEES_CMD_FIFO:-/tmp/dmarquees_cmd}"
 PROBE_CMD="${DMARQUEES_PROBE_CMD:-REFRESH}"
+EXPECTED_HOST="${DMARQUEES_EXPECT_HOST:-McAtariPi5}"
+STRICT_HOST_CHECK="${DMARQUEES_STRICT_HOST_CHECK:-0}"
 
 SSH_TARGET=""
 REMOTE_LOG_LINES=25
@@ -15,6 +17,7 @@ usage()
 Usage: $0 [--ssh user@pi3] [--probe-command CMD]
 
 Checks:
+    0) Execution context (expected sender host)
   1) Local transport config and sender script
   2) Local FIFO/daemon status (LOCAL mode)
   3) Remote host/port reachability (TCP/UDP mode)
@@ -25,6 +28,10 @@ Options:
   --ssh user@host      Also validate remote systemd services and recent logs
   --probe-command CMD  Command to send as probe (default: REFRESH)
   -h, --help           Show help
+
+Environment overrides:
+    DMARQUEES_EXPECT_HOST        Expected local hostname (default: McAtariPi5)
+    DMARQUEES_STRICT_HOST_CHECK  1 to fail when host != expected (default: 0)
 EOF
 }
 
@@ -59,6 +66,11 @@ info() { echo "[INFO] $*"; }
 ng()   { echo "[FAIL] $*"; fail=$((fail + 1)); }
 wn()   { echo "[WARN] $*"; warn=$((warn + 1)); }
 
+to_lower()
+{
+    echo "$1" | tr '[:upper:]' '[:lower:]'
+}
+
 tcp_reachable()
 {
     local host="$1"
@@ -70,6 +82,23 @@ tcp_reachable()
 transport="LOCAL"
 remote_host="192.168.50.3"
 remote_port="5533"
+
+local_host="$(hostname -s 2>/dev/null || hostname)"
+if [ -n "$EXPECTED_HOST" ]; then
+    if [ "$(to_lower "$local_host")" = "$(to_lower "$EXPECTED_HOST")" ]; then
+        ok "Execution host check: running on expected host '$EXPECTED_HOST'"
+    else
+        if [ "$STRICT_HOST_CHECK" = "1" ]; then
+            ng "Execution host mismatch: expected '$EXPECTED_HOST', current '$local_host'"
+            echo
+            echo "Summary: pass=$pass warn=$warn fail=$fail"
+            exit 1
+        fi
+
+        wn "Execution host mismatch: expected '$EXPECTED_HOST', current '$local_host'"
+        wn "This healthcheck is intended for the sender node; run it on '$EXPECTED_HOST' for authoritative local transport status"
+    fi
+fi
 
 if [ -f "$CFG_PATH" ]; then
     # shellcheck disable=SC1090
