@@ -14,6 +14,8 @@ from typing import Iterable
 
 running = True
 TTY_CONSOLE_TOKEN = "console=tty1"
+FIFO_WRITE_RETRIES = 12
+FIFO_RETRY_DELAY_SEC = 0.05
 
 
 def handle_signal(_signum, _frame):
@@ -33,23 +35,29 @@ def ensure_fifo(path: str) -> None:
 
 def write_fifo_nonblocking(path: str, command: str, verbose: bool) -> bool:
     payload = (command.rstrip("\n") + "\n").encode("utf-8", errors="replace")
-    try:
-        fd = os.open(path, os.O_WRONLY | os.O_NONBLOCK)
-    except OSError as exc:
-        if exc.errno == errno.ENXIO:
-            if verbose:
-                print(f"[netbridge] no FIFO reader yet, dropping: {command}", file=sys.stderr)
-            return False
-        raise
+    for attempt in range(FIFO_WRITE_RETRIES):
+        try:
+            fd = os.open(path, os.O_WRONLY | os.O_NONBLOCK)
+        except OSError as exc:
+            if exc.errno == errno.ENXIO:
+                if attempt < FIFO_WRITE_RETRIES - 1:
+                    time.sleep(FIFO_RETRY_DELAY_SEC)
+                    continue
+                if verbose:
+                    print(f"[netbridge] no FIFO reader after retries, dropping: {command}", file=sys.stderr)
+                return False
+            raise
 
-    try:
-        os.write(fd, payload)
-    finally:
-        os.close(fd)
+        try:
+            os.write(fd, payload)
+        finally:
+            os.close(fd)
 
-    if verbose:
-        print(f"[netbridge] forwarded: {command}")
-    return True
+        if verbose:
+            print(f"[netbridge] forwarded: {command}")
+        return True
+
+    return False
 
 
 def iter_lines_from_bytes(chunks: Iterable[bytes], carry: str = ""):
