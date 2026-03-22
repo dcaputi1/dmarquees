@@ -218,7 +218,7 @@ setup_dmarquees()
 
         if ! pgrep -x dmarquees >/dev/null; then
             echo "[autostart] Starting dmarquees splash daemon (-s)..."
-            sudo stdbuf -oL -eL "$DAEMON" -u "$ARCADE_USER" -f "$fe_mode" -s >"$LOG" 2>&1 &
+            sudo stdbuf -oL -eL "$DAEMON" -u "$ARCADE_USER" -f "$fe_mode" -d /dev/dri/card1 -o HDMI-A-2 -s >"$LOG" 2>&1 &
             sleep 1
         fi
 
@@ -272,7 +272,7 @@ setup_dmarquees()
 
     if ! pgrep -x dmarquees >/dev/null; then
         echo "[autostart] Starting dmarquees daemon..."
-        sudo stdbuf -oL -eL "$DAEMON" -u "$ARCADE_USER" -f "$fe_mode" >"$LOG" 2>&1 &
+        sudo stdbuf -oL -eL "$DAEMON" -u "$ARCADE_USER" -f "$fe_mode" -d /dev/dri/card1 -o HDMI-A-2 >"$LOG" 2>&1 &
         sleep 1
     fi
 

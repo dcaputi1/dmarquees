@@ -84,6 +84,7 @@ static void* fb_map = NULL;
 FrontendMode g_frontend_mode = eNA;
 bool g_splash_mode = false;
 char g_drm_device_path[128] = DEVICE_PATH;
+char g_drm_connector_name[32] = "";
 static time_t g_ra_init_hold = 0;
 static uint8_t* image = NULL;
 static char last_image_path[PATH_MAX] = {0};
@@ -298,8 +299,47 @@ static void show_default_marquee(void)
 
 static void __attribute__((unused)) print_usage(const char *prog)
 {
-    ts_fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username] [-d /dev/dri/cardX] [-s]\n", prog);
+    ts_fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username] [-d /dev/dri/cardX] [-o HDMI-A-2] [-s]\n", prog);
     ts_fprintf(stderr, "  -s  Splash screen mode: center NA/RA/SA art, blank display during games.\n");
+}
+
+static const char *connector_type_name(uint32_t type)
+{
+    switch (type)
+    {
+    case DRM_MODE_CONNECTOR_Unknown: return "Unknown";
+    case DRM_MODE_CONNECTOR_VGA: return "VGA";
+    case DRM_MODE_CONNECTOR_DVII: return "DVI-I";
+    case DRM_MODE_CONNECTOR_DVID: return "DVI-D";
+    case DRM_MODE_CONNECTOR_DVIA: return "DVI-A";
+    case DRM_MODE_CONNECTOR_Composite: return "Composite";
+    case DRM_MODE_CONNECTOR_SVIDEO: return "SVIDEO";
+    case DRM_MODE_CONNECTOR_LVDS: return "LVDS";
+    case DRM_MODE_CONNECTOR_Component: return "Component";
+    case DRM_MODE_CONNECTOR_9PinDIN: return "DIN";
+    case DRM_MODE_CONNECTOR_DisplayPort: return "DP";
+    case DRM_MODE_CONNECTOR_HDMIA: return "HDMI-A";
+    case DRM_MODE_CONNECTOR_HDMIB: return "HDMI-B";
+    case DRM_MODE_CONNECTOR_TV: return "TV";
+    case DRM_MODE_CONNECTOR_eDP: return "eDP";
+    case DRM_MODE_CONNECTOR_VIRTUAL: return "Virtual";
+    case DRM_MODE_CONNECTOR_DSI: return "DSI";
+    case DRM_MODE_CONNECTOR_DPI: return "DPI";
+    case DRM_MODE_CONNECTOR_WRITEBACK: return "Writeback";
+    case DRM_MODE_CONNECTOR_SPI: return "SPI";
+    case DRM_MODE_CONNECTOR_USB: return "USB";
+    default: return "Unknown";
+    }
+}
+
+static bool connector_name_matches(const drmModeConnector *conn, const char *name)
+{
+    if (!conn || !name || !name[0])
+        return false;
+
+    char connector_name[32];
+    snprintf(connector_name, sizeof(connector_name), "%s-%u", connector_type_name(conn->connector_type), conn->connector_type_id);
+    return strcmp(connector_name, name) == 0;
 }
 
 static void sigint_handler(int sig)
@@ -314,6 +354,56 @@ static int find_connector_mode(int fd, uint32_t *out_conn, uint32_t *out_crtc, d
     drmModeRes *res = drmModeGetResources(fd);
     if (!res)
         return -1;
+
+    if (g_drm_connector_name[0] != '\0')
+    {
+        for (int i = 0; i < res->count_connectors; ++i)
+        {
+            drmModeConnector *conn = drmModeGetConnector(fd, res->connectors[i]);
+            if (!conn)
+                continue;
+            if (!connector_name_matches(conn, g_drm_connector_name) || conn->connection != DRM_MODE_CONNECTED || conn->count_modes == 0)
+            {
+                drmModeFreeConnector(conn);
+                continue;
+            }
+
+            uint32_t chosen_crtc = 0;
+            if (conn->encoder_id)
+            {
+                drmModeEncoder *enc = drmModeGetEncoder(fd, conn->encoder_id);
+                if (enc)
+                {
+                    chosen_crtc = enc->crtc_id;
+                    drmModeFreeEncoder(enc);
+                }
+            }
+            if (!chosen_crtc && res->count_crtcs > 0)
+                chosen_crtc = res->crtcs[0];
+
+            *out_conn = conn->connector_id;
+            *out_crtc = chosen_crtc;
+
+            int picked_mode = -1;
+            for (int m = 0; m < conn->count_modes; ++m)
+            {
+                if ((int)conn->modes[m].hdisplay == PREFERRED_W && (int)conn->modes[m].vdisplay == PREFERRED_H)
+                {
+                    picked_mode = m;
+                    break;
+                }
+            }
+            if (picked_mode < 0)
+                picked_mode = 0;
+            *out_mode = conn->modes[picked_mode];
+
+            drmModeFreeConnector(conn);
+            drmModeFreeResources(res);
+            return 0;
+        }
+
+        ts_fprintf(stderr, "warning: connector '%s' not found/connected, falling back to automatic selection\n", g_drm_connector_name);
+    }
     // preferred
     for (int i = 0; i < res->count_connectors; ++i)
     {
@@ -1108,6 +1198,8 @@ int main(int argc, char **argv)
 
     ts_printf("dmarquees: frontend=%s\n", fromFrontendMode(g_frontend_mode));
     ts_printf("dmarquees: drm_device=%s\n", g_drm_device_path);
+    if (g_drm_connector_name[0] != '\0')
+        ts_printf("dmarquees: drm_connector=%s\n", g_drm_connector_name);
 
     if (!init_runtime_paths())
     {
