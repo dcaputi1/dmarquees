@@ -1,6 +1,21 @@
 dmarquees Pi5 Dev Handoff - 2026-03-15
 =====================================
 
+Final Mods Checklist (Maintained 2026-03-22)
+--------------------------------------------
+- [x] Fix command travel path for EmulationStation/runcommand launches: Pi5 runcommand sends `RC:<shortname>` through `dmarquees-send.sh`.
+- [x] Fix command travel path for standalone MAME launches: the MAME marquee plugin now sends commands through `dmarquees-send.sh` instead of writing only to the local FIFO.
+- [x] Keep one command routing model for game shortnames, panel commands, and frontend commands: sender script handles local FIFO and TCP forwarding.
+- [x] Keep local Pi5 splash daemon running in TCP/remote mode (simultaneous Pi3+Pi5 daemon behavior).
+- [x] Keep old Pi5-only configuration available via transport menu `T` set to LOCAL.
+- [ ] Validate Pi5 splash daemon startup in remote mode on target hardware after reboot.
+- [ ] Validate NA/RA/SA centered splash behavior on Pi5 while game art is remote on Pi3.
+- [ ] Validate dual-screen game behavior (e.g. Punch-Out) with Pi3 game marquee active and Pi5 gameplay monitor free.
+- [ ] Verify autostart menu `T` (transport mode) remains distinct from `B` (banner art swap) and `Y` (Pi3 tty console toggle).
+- [ ] Confirm Pi3 services survive reboot in remote mode: `dmarquees-mount`, `dmarquees-daemon`, `dmarquees-netbridge`.
+- [ ] Validate DCPANEL/MCPANEL assets exist on Pi3 (`images` + `labels`) and render correctly in remote mode.
+- [ ] Record final accepted wiring/IP defaults and healthcheck output for release handoff.
+
 Purpose
 -------
 This handoff captures current implementation context and the next integration/testing steps for moving from this workspace to the Pi5 dev environment.

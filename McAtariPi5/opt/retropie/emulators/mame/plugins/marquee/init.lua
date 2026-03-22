@@ -20,6 +20,7 @@ local input = nil
 -----------------------------------------------------------
 
 local MARQUEE_FIFO = "/tmp/dmarquees_cmd"
+local SENDER_SCRIPT = "/home/danc/scripts/dmarquees-send.sh"
 local SWAP_SCRIPT  = "/home/danc/scripts/swap_banner_art.sh"
 
 -----------------------------------------------------------
@@ -35,14 +36,29 @@ local mc_panel_visible = false
 -- Helper Functions
 -----------------------------------------------------------
 
+local function shell_quote(text)
+    return "'" .. tostring(text):gsub("'", "'\\''") .. "'"
+end
+
 local function send_marquee_command(text)
-    local f = io.open(MARQUEE_FIFO, "w")
-    if f then
-        f:write(text .. "\n")
-        f:close()
-        print(string.format("Marquee plugin: Sent marquee command: '%s'", text))
+    local sender = io.open(SENDER_SCRIPT, "r")
+    if sender then
+        sender:close()
+        local status = os.execute(string.format("%s %s >/dev/null 2>&1", SENDER_SCRIPT, shell_quote(text)))
+        if status == true or status == 0 then
+            print(string.format("Marquee plugin: Routed marquee command via sender: '%s'", text))
+            return
+        end
+        print(string.format("Marquee plugin: Sender failed, falling back to FIFO for '%s'", text))
+    end
+
+    local fifo = io.open(MARQUEE_FIFO, "w")
+    if fifo then
+        fifo:write(text .. "\n")
+        fifo:close()
+        print(string.format("Marquee plugin: Sent marquee command to FIFO: '%s'", text))
     else
-        print(string.format("Marquee plugin: Failed to open FIFO %s", MARQUEE_FIFO))
+        print(string.format("Marquee plugin: Failed to route command '%s' via sender or FIFO %s", text, MARQUEE_FIFO))
     end
 end
 

@@ -198,7 +198,7 @@ setup_dmarquees()
 
     if [ "$DMARQUEES_TRANSPORT" != "LOCAL" ]; then
         echo "[autostart] Marquee transport mode: $DMARQUEES_TRANSPORT ($DMARQUEES_REMOTE_HOST:$DMARQUEES_REMOTE_PORT)"
-        echo "[autostart] Skipping local dmarquees startup (network transport enabled)."
+        echo "[autostart] Starting local Pi5 splash daemon while game art is driven remotely."
 
         if pgrep -x dmarquees >/dev/null; then
             echo "EXIT" > "$CMD_FIFO" 2>/dev/null || true
@@ -211,7 +211,23 @@ setup_dmarquees()
             sleep 0.5
         fi
 
-        [ -p "$CMD_FIFO" ] && rm -f "$CMD_FIFO"
+        if [ ! -p "$CMD_FIFO" ]; then
+            mkfifo "$CMD_FIFO"
+            chmod 666 "$CMD_FIFO"
+        fi
+
+        if ! pgrep -x dmarquees >/dev/null; then
+            echo "[autostart] Starting dmarquees splash daemon (-s)..."
+            sudo stdbuf -oL -eL "$DAEMON" -u "$ARCADE_USER" -f "$fe_mode" -s >"$LOG" 2>&1 &
+            sleep 1
+        fi
+
+        if pgrep -x dmarquees >/dev/null; then
+            echo "[autostart] Pi5 splash daemon running."
+        else
+            echo "[autostart] ERROR: Pi5 splash daemon failed to start. Check $LOG file."
+        fi
+
         return 0
     fi
 
@@ -247,13 +263,17 @@ setup_dmarquees()
         chmod 666 "$CMD_FIFO"
     fi
 
-    # Launch dmarquee as root if not already running
+    # Restart daemon in LOCAL mode so splash-mode settings from remote mode do not persist.
+    if pgrep -x dmarquees >/dev/null; then
+        echo "EXIT" > "$CMD_FIFO" 2>/dev/null || true
+        sleep 0.5
+        pgrep -x dmarquees >/dev/null && sudo pkill -9 dmarquees
+    fi
+
     if ! pgrep -x dmarquees >/dev/null; then
         echo "[autostart] Starting dmarquees daemon..."
         sudo stdbuf -oL -eL "$DAEMON" -u "$ARCADE_USER" -f "$fe_mode" >"$LOG" 2>&1 &
         sleep 1
-    else
-        echo "[autostart] dmarquees already running."
     fi
 
     if pgrep -x dmarquees >/dev/null; then
