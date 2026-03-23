@@ -1,7 +1,9 @@
 #!/bin/bash
 
 CMD_FIFO="${DMARQUEES_CMD_FIFO:-/tmp/dmarquees_cmd}"
-CFG_PATH_DEFAULT="$HOME/.dmarquees_transport.conf"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ARCADE_HOME_DEFAULT="$(cd "$SCRIPT_DIR/.." && pwd)"
+CFG_PATH_DEFAULT="$ARCADE_HOME_DEFAULT/.dmarquees_transport.conf"
 CFG_PATH="${DMARQUEES_TRANSPORT_CFG:-$CFG_PATH_DEFAULT}"
 
 if [ $# -lt 1 ]; then

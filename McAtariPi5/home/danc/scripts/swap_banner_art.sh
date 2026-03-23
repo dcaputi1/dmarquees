@@ -9,8 +9,10 @@ MARQUEES_ZIP="/home/danc/MAME_0.256_EXTRAs/marquees.zip"
 CPANEL_ZIP="/home/danc/MAME_0.256_EXTRAs/cpanel.zip"
 CMD_FIFO="/tmp/dmarquees_cmd"
 CURRENT_MOUNT_STATE="/tmp/current_mount_state"
-TRANSPORT_CFG="$HOME/.dmarquees_transport.conf"
-SENDER_SCRIPT="$HOME/scripts/dmarquees-send.sh"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ARCADE_HOME_DEFAULT="$(cd "$SCRIPT_DIR/.." && pwd)"
+TRANSPORT_CFG="${DMARQUEES_TRANSPORT_CFG:-$ARCADE_HOME_DEFAULT/.dmarquees_transport.conf}"
+SENDER_SCRIPT="${DMARQUEES_SENDER_SCRIPT:-$ARCADE_HOME_DEFAULT/scripts/dmarquees-send.sh}"
 
 # In TCP mode the mount and the daemon both live on Pi3.
 # Send SWAPART over the network; the netbridge handles the actual zip swap
@@ -24,7 +26,7 @@ fi
 if [ "${DMARQUEES_TRANSPORT:-LOCAL}" != "LOCAL" ]; then
     echo "[swap_banner_art] TCP mode: delegating art swap to Pi3 via SWAPART command"
     if [ -x "$SENDER_SCRIPT" ]; then
-        "$SENDER_SCRIPT" "SWAPART"
+        DMARQUEES_TRANSPORT_CFG="$TRANSPORT_CFG" DMARQUEES_CMD_FIFO="$CMD_FIFO" "$SENDER_SCRIPT" "SWAPART"
     fi
     exit 0
 fi
@@ -71,8 +73,8 @@ fi
 
 # Signal daemon to refresh
 if pgrep -x dmarquees >/dev/null; then
-    if [ -x "$HOME/scripts/dmarquees-send.sh" ]; then
-        "$HOME/scripts/dmarquees-send.sh" "REFRESH" 2>/dev/null || true
+    if [ -x "$SENDER_SCRIPT" ]; then
+        DMARQUEES_TRANSPORT_CFG="$TRANSPORT_CFG" DMARQUEES_CMD_FIFO="$CMD_FIFO" "$SENDER_SCRIPT" "REFRESH" 2>/dev/null || true
     else
         echo "REFRESH" > "$CMD_FIFO" 2>/dev/null || true
     fi

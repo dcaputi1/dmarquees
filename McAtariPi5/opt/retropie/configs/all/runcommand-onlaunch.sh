@@ -4,7 +4,9 @@
 
 echo "runcommand-onlaunch started $date" > /tmp/rc.out
 
-SENDER_SCRIPT="$HOME/scripts/dmarquees-send.sh"
+ARCADE_HOME="${ARCADE_HOME:-/home/danc}"
+SENDER_SCRIPT="${DMARQUEES_SENDER_SCRIPT:-$ARCADE_HOME/scripts/dmarquees-send.sh}"
+TRANSPORT_CFG="${DMARQUEES_TRANSPORT_CFG:-$ARCADE_HOME/.dmarquees_transport.conf}"
 
 #SYSTEM="$1"
 #EMULATOR="$2"
@@ -48,7 +50,7 @@ if [[ -n "$ROM" ]]; then
     # ALSO: we ignore all rom commands from RA unless sent from here with "RC:" prepended
 	echo "input $romzip : sending command $command to marquee daemon" >> /tmp/rc.out
     if [[ -x "$SENDER_SCRIPT" ]]; then
-        "$SENDER_SCRIPT" "RC:$command"
+        DMARQUEES_TRANSPORT_CFG="$TRANSPORT_CFG" DMARQUEES_CMD_FIFO="/tmp/dmarquees_cmd" "$SENDER_SCRIPT" "RC:$command"
     else
         echo "RC:$command" > /tmp/dmarquees_cmd
     fi
