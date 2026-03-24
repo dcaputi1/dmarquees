@@ -10,8 +10,8 @@ SHELLFLAGS := -eu -o pipefail -c
 
 .PHONY: all dmarquees analyze_games install install-force install-pi3 clean help sync-back
 
-# Install directory
-INSTALL_DIR ?= $(HOME)/marquees
+# Install directory (fixed to arcade user path so sudo/non-sudo behave the same)
+INSTALL_DIR ?= /home/danc/marquees
 
 all: dmarquees analyze_games
 
