@@ -45,6 +45,15 @@ install: all
 			echo "Skipped: $(INSTALL_DIR)/images (already exists)"; \
 		fi; \
 	fi
+
+	@# Install panel label mappings
+	@if [ -d labels ]; then \
+		if [ ! -d $(INSTALL_DIR)/labels ]; then \
+			cp -a labels $(INSTALL_DIR)/ && echo "Updated: $(INSTALL_DIR)/labels"; \
+		else \
+			echo "Skipped: $(INSTALL_DIR)/labels (already exists)"; \
+		fi; \
+	fi
 	
 	@# Install plugins to local directory
 	@if [ -d plugins ]; then \
@@ -79,6 +88,11 @@ install-force: all
 	@# Force install runtime resources (images directory)
 	@if [ -d images ]; then \
 		cp -af images $(INSTALL_DIR)/ && echo "Installed: $(INSTALL_DIR)/images"; \
+	fi
+
+	@# Force install panel label mappings
+	@if [ -d labels ]; then \
+		cp -af labels $(INSTALL_DIR)/ && echo "Installed: $(INSTALL_DIR)/labels"; \
 	fi
 	
 	@# Force sync McAtariPi5 contents to system (overwrite all files)

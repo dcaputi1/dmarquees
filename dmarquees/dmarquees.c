@@ -53,7 +53,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.7.1"
+#define VERSION "1.7.2"
 #define DEVICE_PATH "/dev/dri/card1"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
 #define DEF_MARQUEE_NAME "RetroPieMarquee"
@@ -151,6 +151,15 @@ static bool build_home_path(char *out, size_t out_size, const char *suffix)
     return written > 0 && (size_t)written < out_size;
 }
 
+static bool dir_exists(const char *path)
+{
+    if (!path || !path[0])
+        return false;
+
+    struct stat st;
+    return stat(path, &st) == 0 && S_ISDIR(st.st_mode);
+}
+
 static bool init_runtime_paths(void)
 {
     if (!resolve_runtime_home(g_runtime_home, sizeof(g_runtime_home)))
@@ -160,8 +169,26 @@ static bool init_runtime_paths(void)
         return false;
     if (!build_home_path(g_image_dir_alt, sizeof(g_image_dir_alt), "/RetroPie/roms/mame/media/marquees"))
         return false;
-    if (!build_home_path(g_program_dir, sizeof(g_program_dir), "/IvarArcade"))
+    char install_dir[PATH_MAX] = {0};
+    char repo_dir[PATH_MAX] = {0};
+    if (!build_home_path(install_dir, sizeof(install_dir), "/marquees"))
         return false;
+    if (!build_home_path(repo_dir, sizeof(repo_dir), "/IvarArcade"))
+        return false;
+
+    // Prefer installed runtime assets (/home/<user>/marquees), fallback to repo.
+    if (dir_exists(install_dir))
+    {
+        int written = snprintf(g_program_dir, sizeof(g_program_dir), "%s", install_dir);
+        if (written <= 0 || (size_t)written >= sizeof(g_program_dir))
+            return false;
+    }
+    else
+    {
+        int written = snprintf(g_program_dir, sizeof(g_program_dir), "%s", repo_dir);
+        if (written <= 0 || (size_t)written >= sizeof(g_program_dir))
+            return false;
+    }
 
     int n = snprintf(g_default_marquee_dir, sizeof(g_default_marquee_dir), "%s/images", g_program_dir);
     if (n <= 0 || (size_t)n >= sizeof(g_default_marquee_dir))
@@ -175,6 +202,8 @@ static bool init_runtime_paths(void)
     n = snprintf(g_labels_dir, sizeof(g_labels_dir), "%s/labels", g_program_dir);
     if (n <= 0 || (size_t)n >= sizeof(g_labels_dir))
         return false;
+
+    ts_printf("dmarquees: asset root=%s\n", g_program_dir);
 
     return true;
 }
