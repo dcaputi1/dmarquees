@@ -2,7 +2,7 @@
 -- Marquee Plugin - Sends FIFO commands to dmarquees daemon
 -----------------------------------------------------------
 
-local VERSION = "1.3.2"
+local VERSION = "1.3.3"
 
 local exports = {
     name = "marquee",
@@ -77,8 +77,9 @@ local function sync_rom_for_panel()
         return false
     end
 
-    -- Keep dmarquees' tracked shortname in sync before panel commands.
-    send_marquee_command(gamename)
+    -- Use RC: prefix so the daemon accepts this sync in all frontend modes
+    -- (plain romname is ignored by the daemon when in RA mode).
+    send_marquee_command("RC:" .. gamename)
     return true
 end
 
@@ -99,7 +100,7 @@ local function on_game_start()
     dc_panel_visible = false
     mc_panel_visible = false
     print("Marquee plugin: " .. gamename .. " started")
-    send_marquee_command(gamename)  -- show corresponding marquee
+    send_marquee_command("RC:" .. gamename)  -- RC: prefix accepted in all daemon frontend modes
 end
 
 local function on_game_stop()

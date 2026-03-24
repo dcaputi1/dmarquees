@@ -53,7 +53,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.7.0"
+#define VERSION "1.7.1"
 #define DEVICE_PATH "/dev/dri/card1"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
 #define DEF_MARQUEE_NAME "RetroPieMarquee"
@@ -1115,14 +1115,14 @@ static void handle_fifo_command(char *cmd_str)
             }
             break;
         }
-        // ignore RA plugin commands unless sent from runcommand
-        if (g_frontend_mode == eRA)
-        {
-            if (!strncmp(cmd_str, "RC:", 3)) // "RC:" run command
-                cmd_str += 3;
-            else
-                break;
-        }
+        // Strip optional RC: prefix (marks command from trusted runcommand source).
+        // Accept RC: in all frontend modes so the MAME plugin can reliably sync
+        // the current ROM shortname regardless of which mode the daemon is in.
+        if (!strncmp(cmd_str, "RC:", 3))
+            cmd_str += 3;
+        // In RA mode: reject plain ROM names (could be spurious RA plugin signals).
+        else if (g_frontend_mode == eRA)
+            break;
 
         // If we reach here, it's either eROM or an unknown command - treat as ROM shortname
         if (game_has_multiple_screens(cmd_str))
