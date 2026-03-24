@@ -48,11 +48,8 @@ install: all
 
 	@# Install panel label mappings
 	@if [ -d labels ]; then \
-		if [ ! -d $(INSTALL_DIR)/labels ]; then \
-			cp -a labels $(INSTALL_DIR)/ && echo "Updated: $(INSTALL_DIR)/labels"; \
-		else \
-			echo "Skipped: $(INSTALL_DIR)/labels (already exists)"; \
-		fi; \
+		mkdir -p $(INSTALL_DIR)/labels; \
+		rsync -a --update labels/ $(INSTALL_DIR)/labels/ && echo "Updated: $(INSTALL_DIR)/labels"; \
 	fi
 	
 	@# Install plugins to local directory
