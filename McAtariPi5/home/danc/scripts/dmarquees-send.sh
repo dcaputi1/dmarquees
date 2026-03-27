@@ -13,7 +13,7 @@ fi
 
 cmd="$*"
 transport="LOCAL"
-remote_host="192.168.50.3"
+remote_host="10.77.77.3"
 remote_port="5533"
 
 if [ -f "$CFG_PATH" ]; then
@@ -29,18 +29,41 @@ case "$transport" in
         printf '%s\n' "$cmd" > "$CMD_FIFO"
         ;;
     TCP)
-        # Send to remote Pi3 via TCP
-        {
-            printf '%s\n' "$cmd"
-            sleep 0.1
-        } > /dev/tcp/"$remote_host"/"$remote_port" 2>/dev/null
+        send_remote() {
+            {
+                printf '%s\n' "$cmd"
+                sleep 0.1
+            } > /dev/tcp/"$remote_host"/"$remote_port" 2>/dev/null
+        }
 
-        # Also forward to local Pi5 splash daemon so it can update its display
-        # (e.g. blank on ROM launch, show RA/SA/NA splash on frontend changes).
-        # Skip SWAPART — that command only makes sense on Pi3's FUSE mount.
-        if [ "$cmd" != "SWAPART" ] && [ -p "$CMD_FIFO" ]; then
-            printf '%s\n' "$cmd" > "$CMD_FIFO" 2>/dev/null || true
-        fi
+        send_local() {
+            if [ -p "$CMD_FIFO" ]; then
+                printf '%s\n' "$cmd" > "$CMD_FIFO" 2>/dev/null || true
+            fi
+        }
+
+        case "$cmd" in
+            DCPANEL\ *|MCPANEL\ *|SWAPART|REFRESH)
+                # Pi3 is the art host in dual-Pi mode.
+                send_remote
+                ;;
+            RA|SA|NA|CLEAR|RC:*)
+                # These update both the remote art host and the local Pi5 splash host.
+                send_remote
+                send_local
+                ;;
+            RESET)
+                send_remote
+                send_local
+                ;;
+            EXIT)
+                send_remote
+                ;;
+            *)
+                # Default to remote-only in TCP mode.
+                send_remote
+                ;;
+        esac
         ;;
     UDP)
         # UDP mode not directly supported via /dev/tcp; recommend TCP instead

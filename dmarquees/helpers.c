@@ -223,12 +223,11 @@ const char *fromFrontendMode(FrontendMode m)
 int parseFrontendModeArg(int argc, char **argv)
 {
     extern FrontendMode g_frontend_mode;
-    extern char g_runtime_user[64];
     extern char g_drm_device_path[128];
     extern char g_drm_connector_name[32];
     extern bool g_splash_mode;
     int opt;
-    while ((opt = getopt(argc, argv, "f:u:d:o:sh")) != -1)
+    while ((opt = getopt(argc, argv, "f:d:o:sh")) != -1)
     {
         switch (opt)
         {
@@ -237,24 +236,15 @@ int parseFrontendModeArg(int argc, char **argv)
             if (g_frontend_mode == eNA && strcmp(optarg, "NA") != 0 && strcmp(optarg, "None") != 0)
             {
                 fprintf(stderr, "error: invalid frontend '%s'\n", optarg);
-                fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username] [-d /dev/dri/cardX] [-o HDMI-A-2] [-s]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-d /dev/dri/cardX] [-o HDMI-A-2] [-s]\n", argv[0]);
                 return 2;
             }
-            break;
-        case 'u':
-            if (!optarg || optarg[0] == '\0')
-            {
-                fprintf(stderr, "error: missing username for -u\n");
-                fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username] [-d /dev/dri/cardX] [-o HDMI-A-2] [-s]\n", argv[0]);
-                return 2;
-            }
-            snprintf(g_runtime_user, 64, "%s", optarg);
             break;
         case 'd':
             if (!optarg || optarg[0] == '\0')
             {
                 fprintf(stderr, "error: missing DRM device path for -d\n");
-                fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username] [-d /dev/dri/cardX] [-o HDMI-A-2] [-s]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-d /dev/dri/cardX] [-o HDMI-A-2] [-s]\n", argv[0]);
                 return 2;
             }
             snprintf(g_drm_device_path, 128, "%s", optarg);
@@ -263,7 +253,7 @@ int parseFrontendModeArg(int argc, char **argv)
             if (!optarg || optarg[0] == '\0')
             {
                 fprintf(stderr, "error: missing connector name for -o\n");
-                fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username] [-d /dev/dri/cardX] [-o HDMI-A-2] [-s]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-d /dev/dri/cardX] [-o HDMI-A-2] [-s]\n", argv[0]);
                 return 2;
             }
             snprintf(g_drm_connector_name, 32, "%s", optarg);
@@ -272,10 +262,10 @@ int parseFrontendModeArg(int argc, char **argv)
             g_splash_mode = true;
             break;
         case 'h':
-            fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username] [-d /dev/dri/cardX] [-o HDMI-A-2] [-s]\n", argv[0]);
+            fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-d /dev/dri/cardX] [-o HDMI-A-2] [-s]\n", argv[0]);
             return 0;
         default:
-            fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username] [-d /dev/dri/cardX] [-o HDMI-A-2] [-s]\n", argv[0]);
+            fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-d /dev/dri/cardX] [-o HDMI-A-2] [-s]\n", argv[0]);
             return 2;
         }
     }

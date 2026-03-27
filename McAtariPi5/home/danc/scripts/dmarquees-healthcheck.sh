@@ -80,7 +80,7 @@ tcp_reachable()
 }
 
 transport="LOCAL"
-remote_host="192.168.50.3"
+remote_host="10.77.77.3"
 remote_port="5533"
 
 local_host="$(hostname -s 2>/dev/null || hostname)"

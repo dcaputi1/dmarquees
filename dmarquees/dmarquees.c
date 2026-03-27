@@ -44,7 +44,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
-#include <pwd.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -67,6 +66,7 @@
 #define PANEL_TMP_DC_PNG "/tmp/dmarquees_dcpanel.png"
 #define PANEL_TMP_MC_SVG "/tmp/dmarquees_mcpanel.svg"
 #define PANEL_TMP_MC_PNG "/tmp/dmarquees_mcpanel.png"
+#define HOME_PATH "/home/danc"
 
 static volatile bool running = true;
 static int drm_fd = -1;
@@ -96,109 +96,36 @@ static char g_default_marquee_dir[PATH_MAX] = {0};
 static char g_dcpanel_template[PATH_MAX] = {0};
 static char g_mcpanel_template[PATH_MAX] = {0};
 static char g_labels_dir[PATH_MAX] = {0};
-char g_runtime_user[64] = {0};
-static char g_runtime_home[PATH_MAX] = {0};
 
-static bool resolve_user_home(char *out, size_t out_size, const char *user)
-{
-    if (!out || out_size == 0 || !user || !user[0])
-        return false;
 
-    struct passwd *pw = getpwnam(user);
-    if (pw && pw->pw_dir && pw->pw_dir[0])
-    {
-        int written = snprintf(out, out_size, "%s", pw->pw_dir);
-        return written > 0 && (size_t)written < out_size;
-    }
-
-    // Fallback for systems where passwd lookup is unavailable.
-    int written = snprintf(out, out_size, "/home/%s", user);
-    return written > 0 && (size_t)written < out_size;
-}
-
-static bool resolve_runtime_home(char *out, size_t out_size)
-{
-    if (!out || out_size == 0)
-        return false;
-
-    if (g_runtime_user[0] && resolve_user_home(out, out_size, g_runtime_user))
-        return true;
-
-    const char *env_user = getenv("DMARQUEES_USER");
-    if (env_user && env_user[0] && resolve_user_home(out, out_size, env_user))
-        return true;
-
-    const char *sudo_user = getenv("SUDO_USER");
-    if (sudo_user && sudo_user[0] && resolve_user_home(out, out_size, sudo_user))
-        return true;
-
-    const char *home = getenv("HOME");
-    if (home && home[0])
-    {
-        int written = snprintf(out, out_size, "%s", home);
-        return written > 0 && (size_t)written < out_size;
-    }
-
-    return false;
-}
-
-static bool build_home_path(char *out, size_t out_size, const char *suffix)
-{
-    if (!suffix || !suffix[0])
-        return false;
-
-    int written = snprintf(out, out_size, "%s%s", g_runtime_home, suffix);
-    return written > 0 && (size_t)written < out_size;
-}
-
-static bool dir_exists(const char *path)
-{
-    if (!path || !path[0])
-        return false;
-
-    struct stat st;
-    return stat(path, &st) == 0 && S_ISDIR(st.st_mode);
-}
 
 static bool init_runtime_paths(void)
 {
-    if (!resolve_runtime_home(g_runtime_home, sizeof(g_runtime_home)))
+    // Build all paths relative to HOME_PATH constant
+    int n = snprintf(g_image_dir, sizeof(g_image_dir), HOME_PATH "/mnt/marquees");
+    if (n <= 0 || (size_t)n >= sizeof(g_image_dir))
         return false;
 
-    if (!build_home_path(g_image_dir, sizeof(g_image_dir), "/mnt/marquees"))
-        return false;
-    if (!build_home_path(g_image_dir_alt, sizeof(g_image_dir_alt), "/RetroPie/roms/mame/media/marquees"))
-        return false;
-    char install_dir[PATH_MAX] = {0};
-    char repo_dir[PATH_MAX] = {0};
-    if (!build_home_path(install_dir, sizeof(install_dir), "/marquees"))
-        return false;
-    if (!build_home_path(repo_dir, sizeof(repo_dir), "/IvarArcade"))
+    n = snprintf(g_image_dir_alt, sizeof(g_image_dir_alt), HOME_PATH "/RetroPie/roms/mame/media/marquees");
+    if (n <= 0 || (size_t)n >= sizeof(g_image_dir_alt))
         return false;
 
-    // Prefer installed runtime assets (/home/<user>/marquees), fallback to repo.
-    if (dir_exists(install_dir))
-    {
-        int written = snprintf(g_program_dir, sizeof(g_program_dir), "%s", install_dir);
-        if (written <= 0 || (size_t)written >= sizeof(g_program_dir))
-            return false;
-    }
-    else
-    {
-        int written = snprintf(g_program_dir, sizeof(g_program_dir), "%s", repo_dir);
-        if (written <= 0 || (size_t)written >= sizeof(g_program_dir))
-            return false;
-    }
+    n = snprintf(g_program_dir, sizeof(g_program_dir), HOME_PATH "/IvarArcade");
+    if (n <= 0 || (size_t)n >= sizeof(g_program_dir))
+        return false;
 
-    int n = snprintf(g_default_marquee_dir, sizeof(g_default_marquee_dir), "%s/images", g_program_dir);
+    n = snprintf(g_default_marquee_dir, sizeof(g_default_marquee_dir), "%s/images", g_program_dir);
     if (n <= 0 || (size_t)n >= sizeof(g_default_marquee_dir))
         return false;
+
     n = snprintf(g_dcpanel_template, sizeof(g_dcpanel_template), "%s/images/dcpanel-1-labels.svg", g_program_dir);
     if (n <= 0 || (size_t)n >= sizeof(g_dcpanel_template))
         return false;
+
     n = snprintf(g_mcpanel_template, sizeof(g_mcpanel_template), "%s/images/mcpanel-1-labels.svg", g_program_dir);
     if (n <= 0 || (size_t)n >= sizeof(g_mcpanel_template))
         return false;
+
     n = snprintf(g_labels_dir, sizeof(g_labels_dir), "%s/labels", g_program_dir);
     if (n <= 0 || (size_t)n >= sizeof(g_labels_dir))
         return false;
@@ -328,7 +255,7 @@ static void show_default_marquee(void)
 
 static void __attribute__((unused)) print_usage(const char *prog)
 {
-    ts_fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-u username] [-d /dev/dri/cardX] [-o HDMI-A-2] [-s]\n", prog);
+    ts_fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-d /dev/dri/cardX] [-o HDMI-A-2] [-s]\n", prog);
     ts_fprintf(stderr, "  -s  Splash screen mode: center NA/RA/SA art, blank display during games.\n");
 }
 
@@ -1232,11 +1159,9 @@ int main(int argc, char **argv)
 
     if (!init_runtime_paths())
     {
-        ts_fprintf(stderr, "error: failed to resolve runtime home (set -u or DMARQUEES_USER)\n");
+        ts_fprintf(stderr, "error: failed to initialize runtime paths\n");
         return 1;
     }
-
-    ts_printf("dmarquees: runtime home=%s\n", g_runtime_home);
 
     signal(SIGINT, sigint_handler);
 

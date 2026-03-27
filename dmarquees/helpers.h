@@ -23,7 +23,6 @@ const char *fromFrontendMode(FrontendMode m);
 
 // Globals defined in dmarquees.c
 extern FrontendMode g_frontend_mode;
-extern char g_runtime_user[64];
 extern char g_drm_device_path[128];
 extern char g_drm_connector_name[32];
 extern bool g_splash_mode;
