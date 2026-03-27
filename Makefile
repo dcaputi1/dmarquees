@@ -115,11 +115,15 @@ install-pi3: all
 	@echo "Installing Pi3 marquee stack..."
 	@mkdir -p /home/danc/scripts
 
+	@# Stop running services before replacing binaries to avoid "Text file busy"
+	@systemctl stop dmarquees-daemon.service dmarquees-netbridge.service dmarquees-mount.service 2>/dev/null || true
+
 	@# Runtime binary + assets under /home/danc/marquees
 	@$(MAKE) install INSTALL_DIR=/home/danc/marquees
 
 	@# Stage Pi3 service scripts and assets
 	@rsync -a --exclude '__pycache__/' McAtariPi5/home/danc/scripts/ /home/danc/scripts/
+	@chmod 0755 /home/danc/scripts/install-dmarquees-mount-service.sh /home/danc/scripts/install-dmarquees-daemon-service.sh /home/danc/scripts/install-dmarquees-netbridge-service.sh /home/danc/scripts/dmarquees-send.sh || true
 	@chown -R danc:danc /home/danc/scripts /home/danc/marquees || true
 
 	@# Install and enable services

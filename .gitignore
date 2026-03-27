@@ -1,7 +1,11 @@
 *.log
 *.o
 *.bak
+*.py[cod]
 compile_commands.json
+
+# Python cache
+__pycache__/
 
 # Executables
 dmarquees/dmarquees

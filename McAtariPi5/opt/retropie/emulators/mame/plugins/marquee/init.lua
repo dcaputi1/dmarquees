@@ -77,9 +77,7 @@ local function sync_rom_for_panel()
         return false
     end
 
-    -- Use RC: prefix so the daemon accepts this sync in all frontend modes
-    -- (plain romname is ignored by the daemon when in RA mode).
-    send_marquee_command("RC:" .. gamename)
+    send_marquee_command(gamename)
     return true
 end
 
@@ -100,7 +98,7 @@ local function on_game_start()
     dc_panel_visible = false
     mc_panel_visible = false
     print("Marquee plugin: " .. gamename .. " started")
-    send_marquee_command("RC:" .. gamename)  -- RC: prefix accepted in all daemon frontend modes
+    send_marquee_command(gamename)
 end
 
 local function on_game_stop()
