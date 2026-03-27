@@ -14,11 +14,10 @@ Goal
 Run dmarquees on a remote Pi3 and choose where commands are sent from the Pi5:
 - LOCAL: existing FIFO on Pi5 (`/tmp/dmarquees_cmd`)
 - TCP: send commands to Pi3 over Ethernet
-- UDP: send commands to Pi3 over Ethernet
 
 What changed
 ------------
-- New menu item in `autostart.sh`: `T  Marquee Transport Local/TCP/UDP`
+- New menu item in `autostart.sh`: `T  Marquee Transport Local/TCP`
 - New sender script on Pi5: `/home/danc/scripts/dmarquees-send.sh`
 - Pi5 runcommand scripts now send through the sender script.
 - New Pi3 receiver script: `/home/danc/scripts/dmarquees-netbridge.py`
@@ -29,9 +28,9 @@ Pi5 setup
 1. Make scripts executable:
    - `chmod +x /home/danc/scripts/dmarquees-send.sh`
 2. Boot and open the Arcade Menu.
-3. Choose `T Marquee Transport Local/TCP/UDP`.
-4. Select LOCAL, TCP, or UDP.
-5. If TCP/UDP is selected, set Pi3 host/IP and port.
+3. Choose `T Marquee Transport Local/TCP`.
+4. Select LOCAL or TCP.
+5. If TCP is selected, set Pi3 host/IP and port.
    - Current wired target: `10.77.77.3:5533`
 
 Notes:
@@ -43,9 +42,8 @@ Pi3 setup (remote dmarquees host)
 1. Run dmarquees on the Pi3 as usual (it still reads `/tmp/dmarquees_cmd`).
 2. Copy and enable the receiver script:
    - `chmod +x /home/danc/scripts/dmarquees-netbridge.py`
-3. Start receiver (choose one protocol):
-   - TCP: `python3 /home/danc/scripts/dmarquees-netbridge.py --protocol tcp --host 0.0.0.0 --port 5533`
-   - UDP: `python3 /home/danc/scripts/dmarquees-netbridge.py --protocol udp --host 0.0.0.0 --port 5533`
+3. Start receiver:
+   - `python3 /home/danc/scripts/dmarquees-netbridge.py --protocol tcp --host 0.0.0.0 --port 5533`
 4. Keep receiver running in background or as a systemd service.
 
 Pi3 systemd service (recommended)
@@ -90,9 +88,9 @@ Switch daemon startup mode/user later:
 2. Set `DMARQUEES_USER` and `DMARQUEES_FRONTEND`
 3. `sudo systemctl restart dmarquees-daemon.service`
 
-Switch TCP/UDP mode later:
+Update netbridge protocol setting later:
 1. Edit `/etc/default/dmarquees-netbridge`
-2. Set `DMARQUEES_PROTOCOL=tcp` or `DMARQUEES_PROTOCOL=udp`
+2. Set `DMARQUEES_PROTOCOL=tcp`
 3. `sudo systemctl restart dmarquees-netbridge.service`
 
 Check service status/logs:
@@ -124,12 +122,12 @@ Important:
 The health check validates:
 - active transport mode from `/home/danc/.dmarquees_transport.conf`
 - sender script presence
-- LOCAL mode FIFO/process checks, or TCP/UDP endpoint checks
+- LOCAL mode FIFO/process checks, or TCP endpoint checks
 - probe command send (default: `REFRESH`)
 - optional remote service status and recent `dmarquees-netbridge` journal markers
 
 Notes
 -----
-- In TCP/UDP mode, Pi5 keeps its local splash daemon active; commands are also forwarded to Pi3.
-- In TCP/UDP mode, Pi5 shutdown will not stop remote Pi3 dmarquees.
+- In TCP mode, Pi5 keeps its local splash daemon active; commands are also forwarded to Pi3.
+- In TCP mode, Pi5 shutdown will not stop remote Pi3 dmarquees.
 - `Banner Art Swap` in TCP mode sends `SWAPART` to Pi3 (remote mount swap).

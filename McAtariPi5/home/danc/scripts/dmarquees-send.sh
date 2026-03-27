@@ -65,14 +65,6 @@ case "$transport" in
                 ;;
         esac
         ;;
-    UDP)
-        # UDP mode not directly supported via /dev/tcp; recommend TCP instead
-        echo "Warning: UDP mode not supported without netcat. Using TCP fallback to $remote_host:$remote_port" >&2
-        {
-            printf '%s\n' "$cmd"
-            sleep 0.1
-        } > /dev/tcp/"$remote_host"/"$remote_port" 2>/dev/null
-        ;;
     *)
         echo "Unknown dmarquees transport mode: $transport" >&2
         exit 2

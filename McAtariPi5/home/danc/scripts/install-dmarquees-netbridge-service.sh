@@ -31,7 +31,7 @@ systemctl daemon-reload
 systemctl enable --now dmarquees-netbridge.service
 
 echo "Installed and started dmarquees-netbridge.service"
-echo "Edit $ENV_DST to switch between TCP and UDP, then:"
+echo "Edit $ENV_DST for TCP host/port settings, then:"
 echo "  sudo systemctl restart dmarquees-netbridge.service"
 echo "Check status/logs:"
 echo "  systemctl status dmarquees-netbridge.service"

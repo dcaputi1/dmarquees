@@ -25,12 +25,11 @@ Current architecture status
 - Pi5 can now send marquee commands using a selectable transport mode:
   - LOCAL (existing FIFO behavior)
   - TCP (send to remote Pi3)
-  - UDP (send to remote Pi3)
 - Pi5 transport mode is selectable from the autostart menu via key `T`.
 - Pi5 transport settings persist in `/home/danc/.dmarquees_transport.conf`.
 - Pi3 side has two systemd services available:
   - `dmarquees-daemon.service` (runs dmarquees)
-  - `dmarquees-netbridge.service` (TCP/UDP -> local FIFO bridge)
+   - `dmarquees-netbridge.service` (TCP -> local FIFO bridge)
 - Pi5 has a one-command health check script to validate send path and optional remote service/journal status.
 
 Files changed/added for this feature set
@@ -73,7 +72,7 @@ Quick migration checklist (Pi5 dev environment)
    - `chmod +x /home/danc/scripts/dmarquees-healthcheck.sh`
 3. Netcat is not required for TCP send (sender uses bash `/dev/tcp`).
 4. Reboot or restart flow that uses `autostart.sh`.
-5. Use menu option `T` to select LOCAL/TCP/UDP and set Pi3 host/port.
+5. Use menu option `T` to select LOCAL/TCP and set Pi3 host/port.
 
 Quick migration checklist (Pi3 runtime)
 ---------------------------------------
@@ -103,18 +102,14 @@ Integration test plan (recommended order)
    - Set Pi5 mode to TCP with Pi3 IP/port.
    - Run on Pi5: `/home/danc/scripts/dmarquees-healthcheck.sh --ssh danc@<pi3-ip>`
    - Launch frontend/game and confirm remote marquee updates.
-3. UDP remote path test:
-   - Set Pi5 mode to UDP with Pi3 IP/port.
-   - Run same healthcheck (note: UDP has no ACK guarantee).
-   - Launch frontend/game and validate behavior under normal play.
-4. Reboot persistence checks:
+3. Reboot persistence checks:
    - Reboot Pi5 and Pi3.
    - Confirm Pi3 services auto-start and Pi5 preserves transport selection.
 
 Known behavior notes
 --------------------
-- In TCP/UDP mode, Pi5 intentionally skips starting local `dmarquees`.
-- In TCP/UDP mode, Pi5 shutdown does not stop remote Pi3 daemon/services.
+- In TCP mode, Pi5 intentionally skips starting local `dmarquees`.
+- In TCP mode, Pi5 shutdown does not stop remote Pi3 daemon/services.
 - `swap_banner_art.sh` now sends `REFRESH` through transport-aware sender script if available.
 - Banner art mount operations are local to Pi5 and primarily relevant in LOCAL mode.
 
@@ -136,6 +131,5 @@ Pi3:
 Next actions after integration test
 -----------------------------------
 - If TCP is stable and preferred, set `DMARQUEES_PROTOCOL=tcp` in `/etc/default/dmarquees-netbridge` and keep Pi5 in TCP mode.
-- If UDP is preferred for latency, keep UDP mode but validate acceptable packet-loss behavior during long sessions.
 - Optionally add autostart menu entry to run `dmarquees-healthcheck.sh` and save timestamped test logs.
 - Optionally harden networking with firewall rules to limit accepted source IPs on Pi3.

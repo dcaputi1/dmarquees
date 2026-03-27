@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Receive marquee commands over TCP/UDP and forward them to the local dmarquees FIFO."""
+"""Receive marquee commands over TCP and forward them to the local dmarquees FIFO."""
 
 import argparse
 import errno
@@ -250,25 +250,6 @@ def handle_command(line: str, fifo: str, swap_cfg: dict, verbose: bool) -> None:
         write_fifo_nonblocking(fifo, line, verbose)
 
 
-def serve_udp(host: str, port: int, fifo_path: str, swap_cfg: dict, verbose: bool) -> None:
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    sock.bind((host, port))
-    sock.settimeout(1.0)
-
-    print(f"[netbridge] UDP listening on {host}:{port}, fifo={fifo_path}")
-    while running:
-        try:
-            data, addr = sock.recvfrom(2048)
-        except socket.timeout:
-            continue
-
-        for line in iter_lines_from_bytes([data]):
-            if verbose:
-                print(f"[netbridge] recv {addr[0]}:{addr[1]} -> {line}")
-            handle_command(line, fifo_path, swap_cfg, verbose)
-
-
 def serve_tcp(host: str, port: int, fifo_path: str, swap_cfg: dict, verbose: bool) -> None:
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -303,7 +284,7 @@ def serve_tcp(host: str, port: int, fifo_path: str, swap_cfg: dict, verbose: boo
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="dmarquees network to FIFO bridge")
-    parser.add_argument("--protocol", choices=["tcp", "udp"], default="tcp")
+    parser.add_argument("--protocol", choices=["tcp"], default="tcp")
     parser.add_argument("--host", default="0.0.0.0", help="Bind address")
     parser.add_argument("--port", type=int, default=5533)
     parser.add_argument("--fifo", default="/tmp/dmarquees_cmd")
@@ -349,10 +330,7 @@ def main() -> int:
         "state_file": args.mount_state_file,
     }
 
-    if args.protocol == "udp":
-        serve_udp(args.host, args.port, args.fifo, swap_cfg, args.verbose)
-    else:
-        serve_tcp(args.host, args.port, args.fifo, swap_cfg, args.verbose)
+    serve_tcp(args.host, args.port, args.fifo, swap_cfg, args.verbose)
 
     print("[netbridge] exiting")
     return 0

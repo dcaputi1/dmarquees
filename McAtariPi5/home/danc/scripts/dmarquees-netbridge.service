@@ -1,5 +1,5 @@
 [Unit]
-Description=dmarquees network bridge (TCP/UDP -> FIFO)
+Description=dmarquees network bridge (TCP -> FIFO)
 After=network-online.target
 Wants=network-online.target
 

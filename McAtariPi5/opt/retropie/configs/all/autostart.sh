@@ -124,10 +124,6 @@ load_dmarquees_transport_cfg()
     case "$DMARQUEES_TRANSPORT" in
         LOCAL|TCP)
             ;;
-        UDP)
-            # Backward compatibility: migrate legacy UDP mode to TCP.
-            DMARQUEES_TRANSPORT="TCP"
-            ;;
         *)
             DMARQUEES_TRANSPORT="LOCAL"
             ;;

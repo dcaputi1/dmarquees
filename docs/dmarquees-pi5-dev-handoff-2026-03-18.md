@@ -28,7 +28,7 @@ What was changed this session
   - Added `handle_command()`: intercepts SWAPART, forwards everything else to FIFO.
   - Added CLI args: `--marquees-zip`, `--cpanel-zip`, `--marquees-mnt`,
     `--mount-state-file` (all readable from env file via `os.environ`).
-  - UDP and TCP serve loops now call `handle_command()` instead of
+  - TCP serve loop now calls `handle_command()` instead of
     `write_fifo_nonblocking()` directly.
 
 - `McAtariPi5/opt/retropie/configs/all/autostart.sh` — `swap_banner_art()`

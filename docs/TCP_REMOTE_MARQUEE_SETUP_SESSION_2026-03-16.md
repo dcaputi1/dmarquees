@@ -53,7 +53,7 @@ DMARQUEES_TRANSPORT_CFG=~/.dmarquees_transport.conf DMARQUEES_CMD_FIFO="/tmp/dma
 - **Pi3 Port**: 5533 (dmarquees remote listener)
 - **Pi5 IP**: 10.77.77.5 (wired `eth0`, source of commands)
 - **Transport Config Location**: `~/.dmarquees_transport.conf`
-- **Config Mode**: TCP (vs LOCAL/UDP)
+- **Config Mode**: TCP (vs LOCAL)
 
 ## Files in Project
 - Main script: `/home/danc/IvarArcade/McAtariPi5/home/danc/scripts/dmarquees-send.sh`

@@ -20,7 +20,7 @@ Checks:
     0) Execution context (expected sender host)
   1) Local transport config and sender script
   2) Local FIFO/daemon status (LOCAL mode)
-  3) Remote host/port reachability (TCP/UDP mode)
+    3) Remote host/port reachability (TCP mode)
   4) Sends a probe command through dmarquees-send.sh
   5) Optional remote service and journal check via SSH
 
@@ -118,7 +118,7 @@ fi
 ok "Sender script available: $SENDER_SCRIPT"
 
 case "$transport" in
-    LOCAL|TCP|UDP)
+    LOCAL|TCP)
         ok "Transport mode: $transport"
         ;;
     *)
@@ -140,14 +140,10 @@ if [ "$transport" = "LOCAL" ]; then
         wn "Local dmarquees process is not running"
     fi
 else
-    if [ "$transport" = "TCP" ]; then
-        if tcp_reachable "$remote_host" "$remote_port"; then
-            ok "TCP endpoint reachable: $remote_host:$remote_port"
-        else
-            ng "TCP endpoint unreachable: $remote_host:$remote_port"
-        fi
+    if tcp_reachable "$remote_host" "$remote_port"; then
+        ok "TCP endpoint reachable: $remote_host:$remote_port"
     else
-        wn "UDP reachability probe skipped: healthcheck uses bash /dev/tcp and does not require netcat"
+        ng "TCP endpoint unreachable: $remote_host:$remote_port"
     fi
 fi
 
