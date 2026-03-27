@@ -18,7 +18,17 @@ if [ "${EUID:-$(id -u)}" -ne 0 ]; then
     exit 1
 fi
 
+
+# Always overwrite the systemd service file
 install -m 0644 "$SERVICE_SRC" "$SERVICE_DST"
+
+# Ensure the multi-user.target.wants symlink is correct
+WANTS_DIR="/etc/systemd/system/multi-user.target.wants"
+WANTS_LINK="$WANTS_DIR/dmarquees-daemon.service"
+if [ -L "$WANTS_LINK" ] || [ -e "$WANTS_LINK" ]; then
+    rm -f "$WANTS_LINK"
+fi
+ln -s "$SERVICE_DST" "$WANTS_LINK"
 
 if [ ! -f "$ENV_DST" ]; then
     install -m 0644 "$ENV_EXAMPLE_SRC" "$ENV_DST"
