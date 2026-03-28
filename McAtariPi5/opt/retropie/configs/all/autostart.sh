@@ -162,85 +162,6 @@ advanced_menu() {
     done
 }
 
-# === Build main menu items dynamically ===
-while true; do
-    restore_cfg
-    python3 $HOME/scripts/leds_off.py
-    MENU_ITEMS=(
-        E "EmulationStation Normal/Horizontal"
-        V "Vertical Arcade  Portrait/Vertical"
-        M "MAME Lanscape    Normal/Horizontal"
-        P "MAME Portrait    Portrait/Vertical"
-        A "A Advanced Config Initial Setup/Options"
-        C "Command Prompt   Do not launch GUI"
-        X "Exit to Desktop  X/Wayland Desktop"
-    )
-    if [ $status -eq 1 ]; then
-        MENU_ITEMS+=(S "[DEFAULT] Swap Xin-Mo Controllers")
-        DEF_KEY="S"
-    fi
-    CHOICE=$(dialog --timeout $TIMEOUT --title "Arcade Menu" --default-item "$DEF_KEY" --menu "Choose Fontend: (timeout 1 min.)" 15 50 4 \
-        "${MENU_ITEMS[@]}" \
-        2>&1 > /dev/tty)
-    printf "\033[2J\033[H"
-    if [[ "$CHOICE" == "" ]]; then
-        CHOICE=$DEF_KEY
-    fi
-    persist_frontend_choice "$CHOICE"
-    case $CHOICE in
-        E)
-            mv $CFG_RA_PATH $CFG_PATH
-            echo "ROL_FLAG=\"-norol\"" > $HOME/.rol_flag
-            send_dmarquees_cmd "RA"
-            emulationstation #auto
-            send_dmarquees_cmd "NA"
-            continue
-            ;;
-        V)
-            mv $CFG_RA_PATH $CFG_PATH
-            echo "ROL_FLAG=\"-rol\"" > $HOME/.rol_flag
-            send_dmarquees_cmd "RA"
-            emulationstation --screenrotate 3 --screensize 1200 1600 #auto
-            send_dmarquees_cmd "NA"
-            continue
-            ;;
-        M)
-            send_dmarquees_cmd "SA"
-            mv $CFG_SA_PATH $CFG_PATH
-            mame -norol -inipath "/opt/retropie/emulators/mame/ini" -cfg_directory $CFG_PATH -joystickprovider sdljoy
-            send_dmarquees_cmd "NA"
-            continue
-            ;;
-        P)
-            send_dmarquees_cmd "SA"
-            mv $CFG_SA_PATH $CFG_PATH
-            mame -rol -inipath "/opt/retropie/emulators/mame/ini;/opt/retropie/emulators/mame/ini_horz_ror" -cfg_directory $CFG_PATH -joystickprovider sdljoy
-            send_dmarquees_cmd "NA"
-            continue
-            ;;
-        A)
-            advanced_menu
-            continue
-            ;;
-        C)
-            ;;
-        S)
-            $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_ra 1
-            $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_sa 1
-            status=0
-            continue
-            ;;
-        *)
-            shutdown_dmarquees
-            launch_desktop
-            ;;
-    esac
-    break
-
-    # Trixie uses this crap
-    sudo systemctl start lightdm
-}
-
 # ==========================================
 #  Marquee setup: mount and daemon launch
 # ==========================================
@@ -512,6 +433,87 @@ swap_banner_art()
     sleep 1
 }
 
-break
-done
+# Main menu logic as a function
 
+main_menu() {
+    local status=0
+    local DEF_KEY="E"
+    while true; do
+        restore_cfg
+        python3 $HOME/scripts/leds_off.py
+        MENU_ITEMS=(
+            E "EmulationStation Normal/Horizontal"
+            V "Vertical Arcade  Portrait/Vertical"
+            M "MAME Landscape   Normal/Horizontal"
+            P "MAME Portrait    Portrait/Vertical"
+            A "Advanced Config  Initial Setup/Opt"
+            C "Command Prompt   Do not launch GUI"
+            X "Exit to Desktop  X/Wayland Desktop"
+        )
+        if [ $status -eq 1 ]; then
+            MENU_ITEMS+=(S "[DEFAULT] Swap Xin-Mo Controllers")
+            DEF_KEY="S"
+        fi
+        CHOICE=$(dialog --timeout $TIMEOUT --title "Arcade Menu" --default-item "$DEF_KEY" --menu "Choose Fontend: (timeout 1 min.)" 15 50 4 \
+            "${MENU_ITEMS[@]}" \
+            2>&1 > /dev/tty)
+        printf "\033[2J\033[H"
+        if [[ "$CHOICE" == "" ]]; then
+            CHOICE=$DEF_KEY
+        fi
+        persist_frontend_choice "$CHOICE"
+        case $CHOICE in
+            E)
+                mv $CFG_RA_PATH $CFG_PATH
+                echo "ROL_FLAG=\"-norol\"" > $HOME/.rol_flag
+                send_dmarquees_cmd "RA"
+                emulationstation #auto
+                send_dmarquees_cmd "NA"
+                continue
+                ;;
+            V)
+                mv $CFG_RA_PATH $CFG_PATH
+                echo "ROL_FLAG=\"-rol\"" > $HOME/.rol_flag
+                send_dmarquees_cmd "RA"
+                emulationstation --screenrotate 3 --screensize 1200 1600 #auto
+                send_dmarquees_cmd "NA"
+                continue
+                ;;
+            M)
+                send_dmarquees_cmd "SA"
+                mv $CFG_SA_PATH $CFG_PATH
+                mame -norol -inipath "/opt/retropie/emulators/mame/ini" -cfg_directory $CFG_PATH -joystickprovider sdljoy
+                send_dmarquees_cmd "NA"
+                continue
+                ;;
+            P)
+                send_dmarquees_cmd "SA"
+                mv $CFG_SA_PATH $CFG_PATH
+                mame -rol -inipath "/opt/retropie/emulators/mame/ini;/opt/retropie/emulators/mame/ini_horz_ror" -cfg_directory $CFG_PATH -joystickprovider sdljoy
+                send_dmarquees_cmd "NA"
+                continue
+                ;;
+            A)
+                advanced_menu
+                continue
+                ;;
+            C)
+                ;;
+            S)
+                $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_ra 1
+                $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_sa 1
+                status=0
+                continue
+                ;;
+            *)
+                shutdown_dmarquees
+                launch_desktop
+                ;;
+        esac
+        break
+    done
+}
+
+# Auto-start MAIN MENU display on Pi5 boot
+
+main_menu
