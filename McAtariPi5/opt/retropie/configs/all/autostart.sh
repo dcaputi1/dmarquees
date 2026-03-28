@@ -1,17 +1,13 @@
-# Function to restore existing cfg directory to original name
-restore_cfg() {
-    if [ -d "$CFG_PATH" ]; then
-        if [ ! -d "$CFG_SA_PATH" ]; then
-            echo "Restoring cfg to cfg_sa"
-            mv "$CFG_PATH" "$CFG_SA_PATH"
-        elif [ ! -d "$CFG_RA_PATH" ]; then
-            echo "Restoring cfg to cfg_ra"
-            mv "$CFG_PATH" "$CFG_RA_PATH"
-        else
-            echo "Removing old 'cfg' directory"
-            rm -rf "$CFG_PATH"
-        fi
+# XinMo status check function
+check_xinmo_status() {
+    python3 "$HOME/scripts/xinmo-swapcheck.py"
+    status=$?
+    if [ $status -eq 1 ]; then
+        XINMO_STATUS_MSG="XinMo: Swap Required"
+    else
+        XINMO_STATUS_MSG="XinMo: OK"
     fi
+    XINMO_STATUS_CODE=$status
 }
 #!/bin/bash
 
@@ -49,6 +45,23 @@ DMARQUEES_REMOTE_HOST="$DMARQUEES_DEFAULT_REMOTE_HOST"
 DMARQUEES_REMOTE_PORT="$DMARQUEES_DEFAULT_REMOTE_PORT"
 
 TTY_CONSOLE_TOKEN="console=tty1"
+
+# Function to restore existing cfg directory to original name
+restore_cfg()
+{
+    if [ -d "$CFG_PATH" ]; then
+        if [ ! -d "$CFG_SA_PATH" ]; then
+            echo "Restoring cfg to cfg_sa"
+            mv "$CFG_PATH" "$CFG_SA_PATH"
+        elif [ ! -d "$CFG_RA_PATH" ]; then
+            echo "Restoring cfg to cfg_ra"
+            mv "$CFG_PATH" "$CFG_RA_PATH"
+        else
+            echo "Removing old 'cfg' directory"
+            rm -rf "$CFG_PATH"
+        fi
+    fi
+}
 
 send_remote_netbridge_cmd()
 {
@@ -436,11 +449,13 @@ swap_banner_art()
 # Main menu logic as a function
 
 main_menu() {
-    local status=0
-    local DEF_KEY="E"
+    local DEF_KEY="X"
     while true; do
         restore_cfg
         python3 $HOME/scripts/leds_off.py
+
+        # Use global XINMO_STATUS_CODE and XINMO_STATUS_MSG set at startup or after swap
+
         MENU_ITEMS=(
             E "EmulationStation Normal/Horizontal"
             V "Vertical Arcade  Portrait/Vertical"
@@ -450,11 +465,14 @@ main_menu() {
             C "Command Prompt   Do not launch GUI"
             X "Exit to Desktop  X/Wayland Desktop"
         )
-        if [ $status -eq 1 ]; then
+        if [ $XINMO_STATUS_CODE -eq 1 ]; then
             MENU_ITEMS+=(S "[DEFAULT] Swap Xin-Mo Controllers")
             DEF_KEY="S"
         fi
-        CHOICE=$(dialog --timeout $TIMEOUT --title "Arcade Menu" --default-item "$DEF_KEY" --menu "Choose Fontend: (timeout 1 min.)" 15 50 4 \
+
+        # Add XinMo status message to the menu box
+        CHOICE=$(dialog --timeout $TIMEOUT --title "Arcade Menu" --default-item "$DEF_KEY" \
+            --menu "Choose Fontend: (timeout 1 min.)\n\n$XINMO_STATUS_MSG" 16 50 4 \
             "${MENU_ITEMS[@]}" \
             2>&1 > /dev/tty)
         printf "\033[2J\033[H"
@@ -502,7 +520,7 @@ main_menu() {
             S)
                 $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_ra 1
                 $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_sa 1
-                status=0
+                check_xinmo_status
                 continue
                 ;;
             *)
@@ -516,4 +534,6 @@ main_menu() {
 
 # Auto-start MAIN MENU display on Pi5 boot
 
+# Check XinMo status once at startup
+check_xinmo_status
 main_menu
