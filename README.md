@@ -2,12 +2,24 @@
 
 Arcade automation suite for Raspberry Pi / RetroPie systems.
 
+
 ## Overview
 
 IvarArcade is a collection of tools designed to enhance your RetroPie arcade experience:
 
 - **dmarquees** - Display daemon for arcade marquee images on a secondary monitor
 - **analyze_games** - Automated MAME game analyzer and configuration generator
+
+## Display and Pi3 Presence Configuration
+
+The system now uses two booleans for display and network configuration:
+
+- `PI5_DUAL_DISPLAY` (true/false): Enables dual display (marquee + main) when true, single display when false.
+- `PI3_PRESENT` (true/false): Indicates if a networked Pi3 is present.
+
+You can toggle these options interactively from the Advanced Menu in the main arcade menu. Changes are persisted to the autostart.sh file.
+
+All legacy dual monitor and transport logic has been removed. Use these booleans for all related configuration.
 
 ## Components
 

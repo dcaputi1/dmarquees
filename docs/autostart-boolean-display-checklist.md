@@ -22,8 +22,12 @@ This checklist guides the refactor of autostart.sh to replace legacy dual monito
 - [ ] Test all code paths (local, remote, dual, single, Pi3 present/absent).
 
 ## Step 5: Documentation
-- [ ] Update README and in-code comments to reflect new logic.
-- [ ] Remove references to old dual/transport logic.
+- [x] Update README and in-code comments to reflect new logic.
+- [x] Remove references to old dual/transport logic.
+
+---
+
+The autostart.sh script now uses only PI5_DUAL_DISPLAY and PI3_PRESENT booleans for all display and Pi3 presence logic. The Advanced Menu allows toggling these interactively, and all documentation and comments have been updated. No legacy dual/transport logic remains.
 
 ---
 

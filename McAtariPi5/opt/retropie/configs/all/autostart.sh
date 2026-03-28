@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# ==========================================
+#  Boolean display and Pi3 presence config
+# ==========================================
+# Set these to true/false as needed, or load from a config file in the future
+PI5_DUAL_DISPLAY=false  # true = dual display, false = single display
+PI3_PRESENT=false       # true = Pi3 present, false = Pi3 not present
+
 TIMEOUT=60
 BASE_PATH="/opt/retropie/emulators/mame"
 CFG_PATH="$BASE_PATH/cfg"
@@ -111,16 +118,51 @@ launch_desktop()
 advanced_menu()
 {
     while true; do
+        # Show current boolean states
+        local dual_display_state pi3_present_state
+        if [ "$PI5_DUAL_DISPLAY" = true ]; then
+            dual_display_state="ON"
+        else
+            dual_display_state="OFF"
+        fi
+        if [ "$PI3_PRESENT" = true ]; then
+            pi3_present_state="ON"
+        else
+            pi3_present_state="OFF"
+        fi
+
         local ADV_ITEMS=(
+            D "Toggle Pi5 Dual Display:   $dual_display_state"
+            P "Toggle Pi3 Present:        $pi3_present_state"
             Y "Pi3 tty Console  Remote Toggle"
             B "Banner Art Swap  Marquees/C-Panels"
             Q "Return to Main Menu"
         )
         local ADV_CHOICE
-        ADV_CHOICE=$(dialog --title "Advanced Config Initial Setup/Options" --menu "Advanced options:" 12 60 3 \
+        ADV_CHOICE=$(dialog --title "Advanced Config Initial Setup/Options" --menu "Advanced options:" 16 60 5 \
             "${ADV_ITEMS[@]}" \
             2>&1 > /dev/tty)
         case $ADV_CHOICE in
+            D)
+                # Toggle PI5_DUAL_DISPLAY
+                if [ "$PI5_DUAL_DISPLAY" = true ]; then
+                    PI5_DUAL_DISPLAY=false
+                else
+                    PI5_DUAL_DISPLAY=true
+                fi
+                # Persist change in file
+                sed -i "s/^PI5_DUAL_DISPLAY=.*/PI5_DUAL_DISPLAY=$PI5_DUAL_DISPLAY/" "$0"
+                ;;
+            P)
+                # Toggle PI3_PRESENT
+                if [ "$PI3_PRESENT" = true ]; then
+                    PI3_PRESENT=false
+                else
+                    PI3_PRESENT=true
+                fi
+                # Persist change in file
+                sed -i "s/^PI3_PRESENT=.*/PI3_PRESENT=$PI3_PRESENT/" "$0"
+                ;;
             Y)
                 toggle_tty_console_boot
                 ;;
