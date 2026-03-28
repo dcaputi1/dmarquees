@@ -74,102 +74,144 @@ toggle_tty_console_boot()
     fi
 }
 
-persist_frontend_choice()
-{
-    # Persist only frontend launch choices so utility actions (T/Y/B/S) do not
-    # become the default selection on the next boot.
-    case "$1" in
-        E|V|M|P|C|X)
-            echo "DEF_KEY=\"$1\"" > "$HOME/.def_key"
-            echo "DEF_KEY=\"$1\"" > "$HOME/.opt_key"
-            echo "OPT_KEY=\"$1\"" >> "$HOME/.opt_key"
+        wayfire-pi
+    fi
+
+# --- Advanced submenu logic ---
+ADVANCED_DUAL_MODE_FILE="$HOME/.dual_monitor_mode"
+get_dual_monitor_mode() {
+    if [ -f "$ADVANCED_DUAL_MODE_FILE" ]; then
+        cat "$ADVANCED_DUAL_MODE_FILE"
+    else
+        echo "single"
+    fi
+}
+set_dual_monitor_mode() {
+    echo "$1" > "$ADVANCED_DUAL_MODE_FILE"
+}
+
+advanced_menu() {
+    while true; do
+        local dual_mode
+        dual_mode=$(get_dual_monitor_mode)
+        local dual_label="D Pi5 Dual/Single Monitor Mode"
+        if [ "$dual_mode" = "dual" ]; then
+            dual_label="$dual_label [Dual]"
+        else
+            dual_label="$dual_label [Single]"
+        fi
+        local ADV_ITEMS=(
+            T "Marquee Pi3/Pi5  Remote/Local Swap"
+            Y "Pi3 tty Console  Remote Toggle"
+            B "Banner Art Swap  Marquees/C-Panels"
+            D "$dual_label"
+            Q "Return to Main Menu"
+        )
+        local ADV_CHOICE
+        ADV_CHOICE=$(dialog --title "Advanced Config Initial Setup/Options" --menu "Advanced options:" 16 60 5 \
+            "${ADV_ITEMS[@]}" \
+            2>&1 > /dev/tty)
+        case $ADV_CHOICE in
+            T)
+                select_dmarquees_transport
+                ;;
+            Y)
+                toggle_tty_console_boot
+                ;;
+            B)
+                swap_banner_art
+                ;;
+            D)
+                # Toggle dual/single mode
+                if [ "$(get_dual_monitor_mode)" = "dual" ]; then
+                    set_dual_monitor_mode "single"
+                    dialog --msgbox "Set to SINGLE monitor mode. Local Pi5 daemon will NOT run." 7 50
+                else
+                    set_dual_monitor_mode "dual"
+                    dialog --msgbox "Set to DUAL monitor mode. Local Pi5 daemon will run. T option determines secondary display usage." 8 60
+                fi
+                ;;
+            Q|"" )
+                break
+                ;;
+        esac
+    done
+}
+
+# === Build main menu items dynamically ===
+while true; do
+    restore_cfg
+    python3 $HOME/scripts/leds_off.py
+    MENU_ITEMS=(
+        E "EmulationStation Normal/Horizontal"
+        V "Vertical Arcade  Portrait/Vertical"
+        M "MAME Lanscape    Normal/Horizontal"
+        P "MAME Portrait    Portrait/Vertical"
+        A "A Advanced Config Initial Setup/Options"
+        C "Command Prompt   Do not launch GUI"
+        X "Exit to Desktop  X/Wayland Desktop"
+    )
+    if [ $status -eq 1 ]; then
+        MENU_ITEMS+=(S "[DEFAULT] Swap Xin-Mo Controllers")
+        DEF_KEY="S"
+    fi
+    CHOICE=$(dialog --timeout $TIMEOUT --title "Arcade Menu" --default-item "$DEF_KEY" --menu "Choose Fontend: (timeout 1 min.)" 15 50 4 \
+        "${MENU_ITEMS[@]}" \
+        2>&1 > /dev/tty)
+    printf "\033[2J\033[H"
+    if [[ "$CHOICE" == "" ]]; then
+        CHOICE=$DEF_KEY
+    fi
+    persist_frontend_choice "$CHOICE"
+    case $CHOICE in
+        E)
+            mv $CFG_RA_PATH $CFG_PATH
+            echo "ROL_FLAG=\"-norol\"" > $HOME/.rol_flag
+            send_dmarquees_cmd "RA"
+            emulationstation #auto
+            send_dmarquees_cmd "NA"
+            continue
             ;;
-    esac
-}
-
-dmarquees_transport_cfg_path()
-{
-    local HOME_DIR="/home/$ARCADE_USER"
-    echo "$HOME_DIR/$DMARQUEES_TRANSPORT_CFG_NAME"
-}
-
-ensure_dmarquees_transport_cfg()
-{
-    local cfg_path
-    cfg_path="$(dmarquees_transport_cfg_path)"
-
-    if [ ! -f "$cfg_path" ]; then
-        cat > "$cfg_path" <<EOF
-DMARQUEES_TRANSPORT="LOCAL"
-DMARQUEES_REMOTE_HOST="$DMARQUEES_DEFAULT_REMOTE_HOST"
-DMARQUEES_REMOTE_PORT="$DMARQUEES_DEFAULT_REMOTE_PORT"
-EOF
-        chown "$ARCADE_USER:$ARCADE_USER" "$cfg_path" 2>/dev/null || true
-    fi
-}
-
-load_dmarquees_transport_cfg()
-{
-    DMARQUEES_TRANSPORT="LOCAL"
-    DMARQUEES_REMOTE_HOST="$DMARQUEES_DEFAULT_REMOTE_HOST"
-    DMARQUEES_REMOTE_PORT="$DMARQUEES_DEFAULT_REMOTE_PORT"
-
-    local cfg_path
-    cfg_path="$(dmarquees_transport_cfg_path)"
-    if [ -f "$cfg_path" ]; then
-        # shellcheck disable=SC1090
-        source "$cfg_path"
-    fi
-
-    case "$DMARQUEES_TRANSPORT" in
-        LOCAL|TCP)
+        V)
+            mv $CFG_RA_PATH $CFG_PATH
+            echo "ROL_FLAG=\"-rol\"" > $HOME/.rol_flag
+            send_dmarquees_cmd "RA"
+            emulationstation --screenrotate 3 --screensize 1200 1600 #auto
+            send_dmarquees_cmd "NA"
+            continue
+            ;;
+        M)
+            send_dmarquees_cmd "SA"
+            mv $CFG_SA_PATH $CFG_PATH
+            mame -norol -inipath "/opt/retropie/emulators/mame/ini" -cfg_directory $CFG_PATH -joystickprovider sdljoy
+            send_dmarquees_cmd "NA"
+            continue
+            ;;
+        P)
+            send_dmarquees_cmd "SA"
+            mv $CFG_SA_PATH $CFG_PATH
+            mame -rol -inipath "/opt/retropie/emulators/mame/ini;/opt/retropie/emulators/mame/ini_horz_ror" -cfg_directory $CFG_PATH -joystickprovider sdljoy
+            send_dmarquees_cmd "NA"
+            continue
+            ;;
+        A)
+            advanced_menu
+            continue
+            ;;
+        C)
+            ;;
+        S)
+            $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_ra 1
+            $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_sa 1
+            status=0
+            continue
             ;;
         *)
-            DMARQUEES_TRANSPORT="LOCAL"
+            shutdown_dmarquees
+            launch_desktop
             ;;
     esac
-
-    if ! [[ "$DMARQUEES_REMOTE_PORT" =~ ^[0-9]+$ ]]; then
-        DMARQUEES_REMOTE_PORT="$DMARQUEES_DEFAULT_REMOTE_PORT"
-    fi
-}
-
-save_dmarquees_transport_cfg()
-{
-    local cfg_path
-    cfg_path="$(dmarquees_transport_cfg_path)"
-
-    cat > "$cfg_path" <<EOF
-DMARQUEES_TRANSPORT="$DMARQUEES_TRANSPORT"
-DMARQUEES_REMOTE_HOST="$DMARQUEES_REMOTE_HOST"
-DMARQUEES_REMOTE_PORT="$DMARQUEES_REMOTE_PORT"
-EOF
-    chown "$ARCADE_USER:$ARCADE_USER" "$cfg_path" 2>/dev/null || true
-}
-
-send_dmarquees_cmd()
-{
-    local cmd="$1"
-    local HOME_DIR="/home/$ARCADE_USER"
-    local SENDER="$HOME_DIR/scripts/dmarquees-send.sh"
-    local cfg_path
-    cfg_path="$(dmarquees_transport_cfg_path)"
-
-    if [ -x "$SENDER" ]; then
-        DMARQUEES_TRANSPORT_CFG="$cfg_path" DMARQUEES_CMD_FIFO="/tmp/dmarquees_cmd" "$SENDER" "$cmd"
-    else
-        echo "$cmd" > /tmp/dmarquees_cmd
-    fi
-}
-
-launch_desktop()
-{
-    # Legacy Wayfire (if present)
-    if command -v wayfire-pi >/dev/null 2>&1; then
-        echo "[autostart] Launching Wayfire desktop..."
-        wayfire-pi
-        return
-    fi
+    break
 
     # Trixie uses this crap
     sudo systemctl start lightdm
@@ -268,7 +310,7 @@ setup_dmarquees()
 
     if ! pgrep -x dmarquees >/dev/null; then
         echo "[autostart] Starting dmarquees daemon..."
-        sudo stdbuf -oL -eL "$DAEMON" -u "$ARCADE_USER" -f "$fe_mode" -d /dev/dri/card1 -o HDMI-A-2 >"$LOG" 2>&1 &
+        sudo stdbuf -oL -eL "$DAEMON" -f "$fe_mode" -d /dev/dri/card1 -o HDMI-A-2 >"$LOG" 2>&1 &
         sleep 1
     fi
 
