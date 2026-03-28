@@ -1,34 +1,9 @@
-# XinMo status check function
-check_xinmo_status() {
-    python3 "$HOME/scripts/xinmo-swapcheck.py"
-    status=$?
-    if [ $status -eq 1 ]; then
-        XINMO_STATUS_MSG="XinMo: Swap Required"
-    else
-        XINMO_STATUS_MSG="XinMo: OK"
-    fi
-    XINMO_STATUS_CODE=$status
-}
 #!/bin/bash
 
 TIMEOUT=60
 BASE_PATH="/opt/retropie/emulators/mame"
 CFG_PATH="$BASE_PATH/cfg"
 INI_PATH="$BASE_PATH/ini"
-
-# Resolve the primary non-root account; allow explicit override via ARCADE_USER.
-if [ -z "$ARCADE_USER" ]; then
-    ARCADE_USER="${SUDO_USER:-${LOGNAME:-${USER:-}}}"
-    if [ -z "$ARCADE_USER" ] || [ "$ARCADE_USER" = "root" ]; then
-        ARCADE_USER="$(getent passwd 1000 2>/dev/null | cut -d: -f1)"
-    fi
-    if [ -z "$ARCADE_USER" ] || [ "$ARCADE_USER" = "root" ]; then
-        ARCADE_USER="$(find /home -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | head -n 1)"
-    fi
-    if [ -z "$ARCADE_USER" ] || [ "$ARCADE_USER" = "root" ]; then
-        ARCADE_USER="pi"
-    fi
-fi
 
 # Keep StandAlone and RetroArch config files seperate
 CFG_SA_PATH="$BASE_PATH/cfg_sa"
@@ -45,6 +20,21 @@ DMARQUEES_REMOTE_HOST="$DMARQUEES_DEFAULT_REMOTE_HOST"
 DMARQUEES_REMOTE_PORT="$DMARQUEES_DEFAULT_REMOTE_PORT"
 
 TTY_CONSOLE_TOKEN="console=tty1"
+
+# XinMo status check function
+check_xinmo_status()
+{
+    python3 "$HOME/scripts/xinmo-swapcheck.py"
+    status=$?
+
+    if [ $status -eq 1 ]; then
+        XINMO_STATUS_MSG="XinMo: Swap Required"
+    else
+        XINMO_STATUS_MSG="XinMo: OK"
+    fi
+
+    XINMO_STATUS_CODE=$status
+}
 
 # Function to restore existing cfg directory to original name
 restore_cfg()
@@ -103,70 +93,39 @@ toggle_tty_console_boot()
 }
 
 
-launch_desktop() {
+launch_desktop()
+{
     # Try legacy Wayfire (if present)
     if command -v wayfire-pi >/dev/null 2>&1; then
         echo "[autostart] Launching Wayfire desktop..."
         wayfire-pi
         return
     fi
+
     # Trixie uses this
     sudo systemctl start lightdm
 }
 
 # --- Advanced submenu logic ---
-ADVANCED_DUAL_MODE_FILE="$HOME/.dual_monitor_mode"
-get_dual_monitor_mode() {
-    if [ -f "$ADVANCED_DUAL_MODE_FILE" ]; then
-        cat "$ADVANCED_DUAL_MODE_FILE"
-    else
-        echo "single"
-    fi
-}
-set_dual_monitor_mode() {
-    echo "$1" > "$ADVANCED_DUAL_MODE_FILE"
-}
 
-advanced_menu() {
+advanced_menu()
+{
     while true; do
-        local dual_mode
-        dual_mode=$(get_dual_monitor_mode)
-        local dual_label="D Pi5 Dual/Single Monitor Mode"
-        if [ "$dual_mode" = "dual" ]; then
-            dual_label="$dual_label [Dual]"
-        else
-            dual_label="$dual_label [Single]"
-        fi
         local ADV_ITEMS=(
-            T "Marquee Pi3/Pi5  Remote/Local Swap"
             Y "Pi3 tty Console  Remote Toggle"
             B "Banner Art Swap  Marquees/C-Panels"
-            D "$dual_label"
             Q "Return to Main Menu"
         )
         local ADV_CHOICE
-        ADV_CHOICE=$(dialog --title "Advanced Config Initial Setup/Options" --menu "Advanced options:" 16 60 5 \
+        ADV_CHOICE=$(dialog --title "Advanced Config Initial Setup/Options" --menu "Advanced options:" 12 60 3 \
             "${ADV_ITEMS[@]}" \
             2>&1 > /dev/tty)
         case $ADV_CHOICE in
-            T)
-                select_dmarquees_transport
-                ;;
             Y)
                 toggle_tty_console_boot
                 ;;
             B)
                 swap_banner_art
-                ;;
-            D)
-                # Toggle dual/single mode
-                if [ "$(get_dual_monitor_mode)" = "dual" ]; then
-                    set_dual_monitor_mode "single"
-                    dialog --msgbox "Set to SINGLE monitor mode. Local Pi5 daemon will NOT run." 7 50
-                else
-                    set_dual_monitor_mode "dual"
-                    dialog --msgbox "Set to DUAL monitor mode. Local Pi5 daemon will run. T option determines secondary display usage." 8 60
-                fi
                 ;;
             Q|"" )
                 break
@@ -175,19 +134,19 @@ advanced_menu() {
     done
 }
 
+
+
 # ==========================================
 #  Marquee setup: mount and daemon launch
 # ==========================================
-
 setup_dmarquees()
 {
     local fe_mode="$1"   # frontend mode: SA (standalone MAME) or RA (RetroArch)
-    local HOME_DIR="/home/$ARCADE_USER"
-    local ZIP="$HOME_DIR/MAME_0.256_EXTRAs/marquees.zip"
-    local MNT="$HOME_DIR/mnt/marquees"
+    local ZIP="$HOME/MAME_0.256_EXTRAs/marquees.zip"
+    local MNT="$HOME/mnt/marquees"
     local CMD_FIFO="/tmp/dmarquees_cmd"
-    local DAEMON="$HOME_DIR/marquees/bin/dmarquees"
-    local LOG="$HOME_DIR/marquees/dmarquees.log"
+    local DAEMON="$HOME/marquees/bin/dmarquees"
+    local LOG="$HOME/marquees/dmarquees.log"
 
     ensure_dmarquees_transport_cfg
     load_dmarquees_transport_cfg
@@ -214,7 +173,7 @@ setup_dmarquees()
 
         if ! pgrep -x dmarquees >/dev/null; then
             echo "[autostart] Starting dmarquees splash daemon (-s)..."
-            sudo stdbuf -oL -eL "$DAEMON" -u "$ARCADE_USER" -f "$fe_mode" -d /dev/dri/card1 -o HDMI-A-2 -s >"$LOG" 2>&1 &
+            sudo stdbuf -oL -eL "$DAEMON" -f "$fe_mode" -d /dev/dri/card1 -o HDMI-A-2 -s >"$LOG" 2>&1 &
             sleep 1
         fi
 
@@ -279,12 +238,13 @@ setup_dmarquees()
     fi
 }
 
+
+
 # ==========================================
 #  Marquee shutdown: cleanly stop daemon + unmount
 # ==========================================
 shutdown_dmarquees()
 {
-    local HOME_DIR="/home/$ARCADE_USER"
     local CMD_FIFO="/tmp/dmarquees_cmd"
 
     ensure_dmarquees_transport_cfg
@@ -305,74 +265,10 @@ shutdown_dmarquees()
     # Remove FIFO
     [ -p "$CMD_FIFO" ] && rm -f "$CMD_FIFO"
 
-    if [ "$DMARQUEES_TRANSPORT" != "LOCAL" ]; then
-        echo "[autostart] Network transport mode active ($DMARQUEES_TRANSPORT $DMARQUEES_REMOTE_HOST:$DMARQUEES_REMOTE_PORT)."
-        echo "[autostart] Remote daemon on Pi3 was left running."
-    fi
-
-    echo "[autostart] Marquees stopped and cleaned up."
+    echo "[autostart] dmarquees stopped and cleaned up."
 }
 
-select_dmarquees_transport()
-{
-    ensure_dmarquees_transport_cfg
-    load_dmarquees_transport_cfg
 
-    local default_item="L"
-    [ "$DMARQUEES_TRANSPORT" = "TCP" ] && default_item="R"
-
-    local remote_label="Pi3 Game Marquees  (Pi5 splash + Pi3 art)"
-    local local_label="Pi5 Splash Only    (no Pi3 game art)"
-    if [ "$DMARQUEES_TRANSPORT" = "LOCAL" ]; then
-        local_label="$local_label [active]"
-    else
-        remote_label="$remote_label [active]"
-    fi
-
-    local choice
-    choice=$(dialog --title "Marquee Transport" --default-item "$default_item" --menu "Select command transport" 14 68 2 \
-        R "$remote_label" \
-        L "$local_label" \
-        2>&1 > /dev/tty)
-
-    if [ -z "$choice" ]; then
-        return 0
-    fi
-
-    local host="$DMARQUEES_REMOTE_HOST"
-    local port="$DMARQUEES_REMOTE_PORT"
-    local mode="LOCAL"
-
-    if [ "$choice" = "R" ]; then
-        host=$(dialog --title "Remote Host" --inputbox "Remote Pi3 IP/hostname:" 8 60 "$host" 2>&1 > /dev/tty)
-        if [ -z "$host" ]; then
-            return 0
-        fi
-
-        port=$(dialog --title "Remote Port" --inputbox "Remote Pi3 port:" 8 40 "$port" 2>&1 > /dev/tty)
-        if ! [[ "$port" =~ ^[0-9]+$ ]] || [ "$port" -lt 1 ] || [ "$port" -gt 65535 ]; then
-            dialog --msgbox "Invalid port: $port" 6 40
-            return 1
-        fi
-
-        mode="TCP"
-    fi
-
-    DMARQUEES_TRANSPORT="$mode"
-    DMARQUEES_REMOTE_HOST="$host"
-    DMARQUEES_REMOTE_PORT="$port"
-    save_dmarquees_transport_cfg
-
-    # The Pi5 splash daemon always runs locally regardless of transport mode.
-    # Just (re)start it so it picks up the new frontend mode.
-    setup_dmarquees NA
-
-    if [ "$DMARQUEES_TRANSPORT" = "LOCAL" ]; then
-        dialog --msgbox "Marquee transport set to LOCAL\nGame marquees: Pi5 splash only (no Pi3)" 8 64
-    else
-        dialog --msgbox "Marquee transport set to TCP\nGame marquees: Pi3 at $DMARQUEES_REMOTE_HOST:$DMARQUEES_REMOTE_PORT\nSplash daemon: Pi5 card1 (always active)" 9 68
-    fi
-}
 
 # ==========================================
 #  Banner Art Swap: toggle between marquees and cpanel
@@ -380,10 +276,9 @@ select_dmarquees_transport()
 
 swap_banner_art()
 {
-    local HOME_DIR="/home/$ARCADE_USER"
-    local MNT="$HOME_DIR/mnt/marquees"
-    local MARQUEES_ZIP="$HOME_DIR/MAME_0.256_EXTRAs/marquees.zip"
-    local CPANEL_ZIP="$HOME_DIR/MAME_0.256_EXTRAs/cpanel.zip"
+    local MNT="$HOME/mnt/marquees"
+    local MARQUEES_ZIP="$HOME/MAME_0.256_EXTRAs/marquees.zip"
+    local CPANEL_ZIP="$HOME/MAME_0.256_EXTRAs/cpanel.zip"
     local CMD_FIFO="/tmp/dmarquees_cmd"
 
     ensure_dmarquees_transport_cfg
@@ -448,7 +343,8 @@ swap_banner_art()
 
 # Main menu logic as a function
 
-main_menu() {
+main_menu()
+{
     local DEF_KEY="X"
     while true; do
         restore_cfg
@@ -465,10 +361,6 @@ main_menu() {
             C "Command Prompt   Do not launch GUI"
             X "Exit to Desktop  X/Wayland Desktop"
         )
-        if [ $XINMO_STATUS_CODE -eq 1 ]; then
-            MENU_ITEMS+=(S "[DEFAULT] Swap Xin-Mo Controllers")
-            DEF_KEY="S"
-        fi
 
         # Add XinMo status message to the menu box
         CHOICE=$(dialog --timeout $TIMEOUT --title "Arcade Menu" --default-item "$DEF_KEY" \
@@ -516,6 +408,7 @@ main_menu() {
                 continue
                 ;;
             C)
+                # exit to command prompt (do not continue main menu loop)
                 ;;
             S)
                 $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_ra 1
@@ -532,8 +425,9 @@ main_menu() {
     done
 }
 
-# Auto-start MAIN MENU display on Pi5 boot
 
 # Check XinMo status once at startup
 check_xinmo_status
+
+# Auto-start MAIN MENU display on Pi5 boot
 main_menu
