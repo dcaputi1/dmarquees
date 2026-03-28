@@ -1,3 +1,18 @@
+# Function to restore existing cfg directory to original name
+restore_cfg() {
+    if [ -d "$CFG_PATH" ]; then
+        if [ ! -d "$CFG_SA_PATH" ]; then
+            echo "Restoring cfg to cfg_sa"
+            mv "$CFG_PATH" "$CFG_SA_PATH"
+        elif [ ! -d "$CFG_RA_PATH" ]; then
+            echo "Restoring cfg to cfg_ra"
+            mv "$CFG_PATH" "$CFG_RA_PATH"
+        else
+            echo "Removing old 'cfg' directory"
+            rm -rf "$CFG_PATH"
+        fi
+    fi
+}
 #!/bin/bash
 
 TIMEOUT=60
@@ -74,8 +89,17 @@ toggle_tty_console_boot()
     fi
 }
 
+
+launch_desktop() {
+    # Try legacy Wayfire (if present)
+    if command -v wayfire-pi >/dev/null 2>&1; then
+        echo "[autostart] Launching Wayfire desktop..."
         wayfire-pi
+        return
     fi
+    # Trixie uses this
+    sudo systemctl start lightdm
+}
 
 # --- Advanced submenu logic ---
 ADVANCED_DUAL_MODE_FILE="$HOME/.dual_monitor_mode"
@@ -488,169 +512,6 @@ swap_banner_art()
     sleep 1
 }
 
-# Function to restore existing cfg directory to original name
-restore_cfg()
-{
-    if [ -d "$CFG_PATH" ]; then
-        if [ ! -d "$CFG_SA_PATH" ]; then
-            echo "Restoring cfg to cfg_sa"
-            mv "$CFG_PATH" "$CFG_SA_PATH"
-        elif [ ! -d "$CFG_RA_PATH" ]; then
-            echo "Restoring cfg to cfg_ra"
-            mv "$CFG_PATH" "$CFG_RA_PATH"
-        else
-            echo "Removing old 'cfg' directory"
-            rm -rf "$CFG_PATH"
-        fi
-    fi
-}
-
-# launch the marquee daemon
-setup_dmarquees NA
-
-# Initialize mount state file if it doesn't exist
-if [ ! -f "$CURRENT_MOUNT_STATE" ]; then
-    echo "marquees" > "$CURRENT_MOUNT_STATE"
-fi
-
-# Check for fight stick xin-mo controller swap
-python3 $HOME/scripts/xinmo-swapcheck.py
-status=$?
-
-# Read the last key (~/.opt_key preferred for compatibility) to use as default.
-if [[ -f $HOME/.opt_key ]]; then
-    source $HOME/.opt_key
-elif [[ -f $HOME/.def_key ]]; then
-    source $HOME/.def_key
-else
-    DEF_KEY="X"
-fi
-
-if [[ -z "$DEF_KEY" && -n "$OPT_KEY" ]]; then
-    DEF_KEY="$OPT_KEY"
-fi
-
-case "$DEF_KEY" in
-    E|V|M|P|C|X)
-        ;;
-    *)
-        DEF_KEY="X"
-        ;;
-esac
-
-###########################################
-# Front-End Chooser Menu loop
-
-while true; do
-
-# Begin by restoring the cfg folder to cfg_sa or cfg_ra
-restore_cfg
-
-# Turn off Panel1 LEDS
-python3 $HOME/scripts/leds_off.py
-
-# === Build menu items dynamically ===
-MENU_ITEMS=(
-    E "EmulationStation Normal/Horizontal"
-    V "Vertical Arcade  Portrait/Vertical"
-    M "MAME Lanscape    Normal/Horizontal"
-    P "MAME Portrait    Portrait/Vertical"
-    T "Marquee Pi3/Pi5  Remote/Local Swap"
-    Y "Pi3 tty Console  Remote Toggle"
-    B "Banner Art Swap  Marquees/C-Panels"
-    C "Command Prompt   Do not launch GUI"
-    X "Exit to Desktop  X/Wayland Desktop"
-)
-
-if [ $status -eq 1 ]; then
-    MENU_ITEMS+=(S "[DEFAULT] Swap Xin-Mo Controllers")
-    DEF_KEY="S"
-fi
-
-# Invoke the "Choice" dialog box menu...
-CHOICE=$(dialog --timeout $TIMEOUT --title "Arcade Menu" --default-item "$DEF_KEY" --menu "Choose Fontend: (timeout 1 min.)" 15 50 4 \
-      "${MENU_ITEMS[@]}" \
-       2>&1 > /dev/tty)
-
-### clear   WARNING: this clear command kills dmarquees ability to display artwork!
-printf "\033[2J\033[H"
-
-if [[ "$CHOICE" == "" ]]; then
-   CHOICE=$DEF_KEY
-fi
-
-persist_frontend_choice "$CHOICE"
-
-# Launch the selected frontend with the appropriate parameters...
-case $CHOICE in
-E)
-   mv $CFG_RA_PATH $CFG_PATH
-   echo "ROL_FLAG=\"-norol\"" > $HOME/.rol_flag
-    send_dmarquees_cmd "RA"
-   emulationstation #auto
-    send_dmarquees_cmd "NA"
-   continue
-   ;;
-V)
-   mv $CFG_RA_PATH $CFG_PATH
-   echo "ROL_FLAG=\"-rol\"" > $HOME/.rol_flag
-    send_dmarquees_cmd "RA"
-   emulationstation --screenrotate 3 --screensize 1200 1600 #auto
-    send_dmarquees_cmd "NA"
-   continue
-   ;;
-M)
-    send_dmarquees_cmd "SA"
-   mv $CFG_SA_PATH $CFG_PATH
-   mame -norol -inipath "/opt/retropie/emulators/mame/ini" -cfg_directory $CFG_PATH -joystickprovider sdljoy
-    send_dmarquees_cmd "NA"
-   continue
-   ;;
-P)
-    send_dmarquees_cmd "SA"
-   mv $CFG_SA_PATH $CFG_PATH
-   mame -rol -inipath "/opt/retropie/emulators/mame/ini;/opt/retropie/emulators/mame/ini_horz_ror" -cfg_directory $CFG_PATH -joystickprovider sdljoy
-    send_dmarquees_cmd "NA"
-   continue
-   ;;
-T)
-    select_dmarquees_transport
-    continue
-    ;;
-Y)
-    toggle_tty_console_boot
-    continue
-    ;;
-B)
-   # B - Banner Art Swap (toggle between marquees and cpanel)
-   swap_banner_art
-   continue
-   ;;
-C)
-   # C for command prompt (do nothing)
-   ;;
-S)
-   # S - swap controllers
-   $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_ra 1
-   $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_sa 1
-   status=0
-   continue
-   ;;
-*)
-   shutdown_dmarquees
-   launch_desktop
-   ;;
-esac
-
 break
-
 done
-
-# end by restoring the cfg folder to cfg_sa or cfg_ra (in case any edits were made while running a frontend)
-# also restore js3/js4 swapped config files back to normal
-restore_cfg
-$HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_ra 0
-$HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_sa 0
-
-shutdown_dmarquees
 
