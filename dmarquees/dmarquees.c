@@ -82,6 +82,7 @@ static void* fb_map = NULL;
 
 bool _this_is_pi5 = false;
 bool _pi5_dual_display = false;
+bool _pi3_present = false;
 FrontendMode _frontend_mode = eNA;
 bool _splash_mode = false;
 char _drm_device_path[128] = "";
@@ -93,7 +94,6 @@ static char current_rom_shortname[128] = {0};
 
 static const char* _image_dir = HOME_PATH "/mnt/marquees";
 static const char* _image_dir_alt = HOME_PATH "/RetroPie/roms/mame/media/marquees";
-static const char* _program_dir = HOME_PATH "/IvarArcade";
 static const char* _default_marquee_dir = HOME_PATH "/IvarArcade/images";
 static const char* _dcpanel_template = HOME_PATH "/IvarArcade/images/dcpanel-1-labels.svg";
 static const char* _mcpanel_template = HOME_PATH "/IvarArcade/images/mcpanel-1-labels.svg";
@@ -174,13 +174,14 @@ static const char *default_marquee_name_for(FrontendMode m)
 {
     switch (m)
     {
-    case eSA: return DEF_SA_MARQUEE_NAME;
-    case eRA: return DEF_RA_MARQUEE_NAME;
-    case eNA:
-    default:  return DEF_MARQUEE_NAME;
+        case eSA: return DEF_SA_MARQUEE_NAME;
+        case eRA: return DEF_RA_MARQUEE_NAME;
+        case eNA:
+        default:  return DEF_MARQUEE_NAME;
+    }
 }
 
-static bool read_bool_file(const char *path, bool default_value = false)
+static bool read_bool_file(const char *path, bool default_value)
 {
     FILE *fp = fopen(path, "r");
 
@@ -218,13 +219,13 @@ static void initialize_globals()
 
     if (!_this_is_pi5 || !_pi5_dual_display)
     {
-        strncpy(_drm_connector_name, sizeof(_drm_connector_name), "HDMI-A-1");
-        strncpy(_drm_device_path, sizeof(_drm_device_path), "/dev/dri/card0");
+        strncpy(_drm_connector_name, "HDMI-A-1", sizeof(_drm_connector_name));
+        strncpy(_drm_device_path, "/dev/dri/card0", sizeof(_drm_device_path));
     }
     else
     {
-        strncpy(_drm_connector_name, sizeof(_drm_connector_name), "HDMI-A-2");
-        strncpy(_drm_device_path, sizeof(_drm_device_path), "/dev/dri/card1");
+        strncpy(_drm_connector_name, "HDMI-A-2", sizeof(_drm_connector_name));
+        strncpy(_drm_device_path, "/dev/dri/card1", sizeof(_drm_device_path));
     }
 }
 
@@ -987,7 +988,44 @@ static bool toggle_panel_display(bool dc_panel, bool panel_on)
     return show_game_marquee(current_rom_shortname);
 }
 
-static void refresh_current_marquee(void);
+static void refresh_current_marquee(void)
+{
+    if (!fb_map)
+        return;
+    
+    if (last_image_path[0] == '\0')
+    {
+        ts_printf("dmarquees: REFRESH - no image loaded yet\n");
+        return;
+    }
+    
+    ts_printf("dmarquees: REFRESH - reloading %s\n", last_image_path);
+    
+    int iw = 0, ih = 0;
+    
+    if (image)
+        free(image);
+    
+    image = load_png_rgba(last_image_path, &iw, &ih);
+    
+    if (image == NULL)
+    {
+        ts_fprintf(stderr, "error: png load failed during refresh: %s\n", last_image_path);
+        return;
+    }
+    
+    // Clear screen and blit refreshed image
+    uint32_t* fbptr = (uint32_t*)fb_map;
+    int fb_w = chosen_mode.hdisplay;
+    int fb_h = chosen_mode.vdisplay;
+    int stride_pixels = stride / 4;
+    
+    memset(fb_map, 0, bo_size);
+    scale_and_blit_to_xrgb(image, iw, ih, fbptr, fb_w, fb_h, stride_pixels, 0, _splash_mode);
+    try_reset_crtc();
+    
+    ts_printf("dmarquees: REFRESH complete\n");
+}
 
 static void handle_fifo_command(char *cmd_str)
 {
@@ -1114,44 +1152,6 @@ static void handle_fifo_command(char *cmd_str)
     }
 }
 
-static void refresh_current_marquee(void)
-{
-    if (!fb_map)
-        return;
-    
-    if (last_image_path[0] == '\0')
-    {
-        ts_printf("dmarquees: REFRESH - no image loaded yet\n");
-        return;
-    }
-    
-    ts_printf("dmarquees: REFRESH - reloading %s\n", last_image_path);
-    
-    int iw = 0, ih = 0;
-    
-    if (image)
-        free(image);
-    
-    image = load_png_rgba(last_image_path, &iw, &ih);
-    
-    if (image == NULL)
-    {
-        ts_fprintf(stderr, "error: png load failed during refresh: %s\n", last_image_path);
-        return;
-    }
-    
-    // Clear screen and blit refreshed image
-    uint32_t* fbptr = (uint32_t*)fb_map;
-    int fb_w = chosen_mode.hdisplay;
-    int fb_h = chosen_mode.vdisplay;
-    int stride_pixels = stride / 4;
-    
-    memset(fb_map, 0, bo_size);
-    scale_and_blit_to_xrgb(image, iw, ih, fbptr, fb_w, fb_h, stride_pixels, 0, _splash_mode);
-    try_reset_crtc();
-    
-    ts_printf("dmarquees: REFRESH complete\n");
-}
 
 int main(int argc, char **argv)
 {
