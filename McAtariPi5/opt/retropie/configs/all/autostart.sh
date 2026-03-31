@@ -1,32 +1,63 @@
 #!/bin/bash
 
-# ==========================================
-#  Boolean display and Pi3 presence config
-# ==========================================
-# Set these to true/false as needed, or load from a config file in the future
-PI5_DUAL_DISPLAY=false  # true = dual display, false = single display
-PI3_PRESENT=false       # true = Pi3 present, false = Pi3 not present
+# ============================================================
+#  autostart.sh - RetroPie bootup entry point (pi3 and pi5)
+# ============================================================
 
-TIMEOUT=60
+PI5_HOSTNAME="McAtariPi5"
+THIS_IS_PI5=true
+PI5_DUAL_DISPLAY=true
+PI3_PRESENT=true
+MENU_TIMEOUT=60
 BASE_PATH="/opt/retropie/emulators/mame"
 CFG_PATH="$BASE_PATH/cfg"
 INI_PATH="$BASE_PATH/ini"
-
-# Keep StandAlone and RetroArch config files seperate
 CFG_SA_PATH="$BASE_PATH/cfg_sa"
 CFG_RA_PATH="$BASE_PATH/cfg_ra"
+CMD_FIFO="/tmp/dmarquees_cmd"
+PI3_REMOTE_HOST="10.77.77.3"
+PI3_REMOTE_PORT="5533"
+MOUNTED_GAME_ART="marquees" # or "cpanel"
 
-# Track which zip is currently mounted (marquees or cpanel)
-CURRENT_MOUNT_STATE="/tmp/current_mount_state"
+load_persisted_options()
+{
+    # Detect if this is Pi5 by hostname
+    HOSTNAME=$(hostname)
 
-DMARQUEES_TRANSPORT_CFG_NAME=".dmarquees_transport.conf"
-DMARQUEES_DEFAULT_REMOTE_HOST="10.77.77.3"
-DMARQUEES_DEFAULT_REMOTE_PORT="5533"
-DMARQUEES_TRANSPORT="LOCAL"
-DMARQUEES_REMOTE_HOST="$DMARQUEES_DEFAULT_REMOTE_HOST"
-DMARQUEES_REMOTE_PORT="$DMARQUEES_DEFAULT_REMOTE_PORT"
+    if [ "$HOSTNAME" = "$PI5_HOSTNAME" ]; then
+        THIS_IS_PI5=true
 
-TTY_CONSOLE_TOKEN="console=tty1"
+        PI3_PRESENT=true
+        PI3_PRESENT_FILE="$HOME/.pi3_present"
+        if [ -f "$PI3_PRESENT_FILE" ]; then
+            PI3_PRESENT=$(cat "$PI3_PRESENT_FILE")
+        else
+            echo "$PI3_PRESENT" > "$PI3_PRESENT_FILE"
+        fi
+
+        # Determine if dual displays
+        PI5_DUAL_DISPLAY=true
+        PI5_DUAL_DISPLAY_FILE="$HOME/.pi5_dual_display"
+        if [ -f "$PI5_DUAL_DISPLAY_FILE" ]; then
+            PI5_DUAL_DISPLAY=$(cat "$PI5_DUAL_DISPLAY_FILE")
+        else
+            echo "$PI5_DUAL_DISPLAY" > "$PI5_DUAL_DISPLAY_FILE"
+        fi
+    else
+        THIS_IS_PI5=false
+    fi
+}
+
+# Function to print a severe error and wait for user acknowledgement
+echo_error_and_wait()
+{
+    local msg="$1"
+    echo
+    echo "[autostart] ERROR: $msg"
+    echo
+    echo "Press ENTER to acknowledge and continue..."
+    read -r _
+}
 
 # XinMo status check function
 check_xinmo_status()
@@ -60,46 +91,6 @@ restore_cfg()
     fi
 }
 
-send_remote_netbridge_cmd()
-{
-    local host="$1"
-    local port="$2"
-    local cmd="$3"
-
-    {
-        printf '%s\n' "$cmd"
-        sleep 0.1
-    } > /dev/tcp/"$host"/"$port" 2>/dev/null
-}
-
-toggle_tty_console_boot()
-{
-    local host port
-
-    ensure_dmarquees_transport_cfg
-    load_dmarquees_transport_cfg
-
-    host="$DMARQUEES_REMOTE_HOST"
-    port="$DMARQUEES_REMOTE_PORT"
-
-    if [ -z "$host" ] || ! [[ "$port" =~ ^[0-9]+$ ]]; then
-        dialog --msgbox "Remote Pi3 host/port is not configured." 6 52
-        return 0
-    fi
-
-    if ! dialog --title "Pi3 tty1 Console Boot" --yesno "Send remote toggle command to Pi3?\n\nTarget: $host:$port\nCommand: PI3_TTY_TOGGLE\n\nThis only flips the cmdline.txt console=tty1 token and requires a Pi3 reboot." 11 72; then
-        return 0
-    fi
-
-    if send_remote_netbridge_cmd "$host" "$port" "PI3_TTY_TOGGLE"; then
-        dialog --msgbox "Remote Pi3 toggle request sent to $host:$port.\n\nReboot Pi3 after a few seconds to apply." 8 70
-    else
-        dialog --msgbox "Failed to send PI3_TTY_TOGGLE to $host:$port.\nCheck network reachability and Pi3 netbridge service." 7 72
-        return 1
-    fi
-}
-
-
 launch_desktop()
 {
     # Try legacy Wayfire (if present)
@@ -112,8 +103,6 @@ launch_desktop()
     # Trixie uses this
     sudo systemctl start lightdm
 }
-
-# --- Advanced submenu logic ---
 
 advanced_menu()
 {
@@ -134,14 +123,16 @@ advanced_menu()
         local ADV_ITEMS=(
             D "Toggle Pi5 Dual Display:   $dual_display_state"
             P "Toggle Pi3 Present:        $pi3_present_state"
-            Y "Pi3 tty Console  Remote Toggle"
-            B "Banner Art Swap  Marquees/C-Panels"
+            S "Swap Xin-Mo Player 1 & 2"
             Q "Return to Main Menu"
         )
+
         local ADV_CHOICE
+
         ADV_CHOICE=$(dialog --title "Advanced Config Initial Setup/Options" --menu "Advanced options:" 16 60 5 \
             "${ADV_ITEMS[@]}" \
             2>&1 > /dev/tty)
+
         case $ADV_CHOICE in
             D)
                 # Toggle PI5_DUAL_DISPLAY
@@ -163,11 +154,11 @@ advanced_menu()
                 # Persist change in file
                 sed -i "s/^PI3_PRESENT=.*/PI3_PRESENT=$PI3_PRESENT/" "$0"
                 ;;
-            Y)
-                toggle_tty_console_boot
-                ;;
-            B)
-                swap_banner_art
+            S)
+                $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_ra 1
+                $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_sa 1
+                check_xinmo_status
+                continue
                 ;;
             Q|"" )
                 break
@@ -176,58 +167,20 @@ advanced_menu()
     done
 }
 
-
-
 # ==========================================
 #  Marquee setup: mount and daemon launch
 # ==========================================
 setup_dmarquees()
 {
-    local fe_mode="$1"   # frontend mode: SA (standalone MAME) or RA (RetroArch)
     local ZIP="$HOME/MAME_0.256_EXTRAs/marquees.zip"
     local MNT="$HOME/mnt/marquees"
-    local CMD_FIFO="/tmp/dmarquees_cmd"
     local DAEMON="$HOME/marquees/bin/dmarquees"
     local LOG="$HOME/marquees/dmarquees.log"
 
-    ensure_dmarquees_transport_cfg
-    load_dmarquees_transport_cfg
-
-    if [ "$DMARQUEES_TRANSPORT" != "LOCAL" ]; then
-        echo "[autostart] Marquee transport mode: $DMARQUEES_TRANSPORT ($DMARQUEES_REMOTE_HOST:$DMARQUEES_REMOTE_PORT)"
-        echo "[autostart] Starting local Pi5 splash daemon while game art is driven remotely."
-
-        if pgrep -x dmarquees >/dev/null; then
-            echo "EXIT" > "$CMD_FIFO" 2>/dev/null || true
-            sleep 0.5
-            pgrep -x dmarquees >/dev/null && sudo pkill -9 dmarquees
-        fi
-
-        if mountpoint -q "$MNT"; then
-            fusermount -u "$MNT" || sudo umount -f "$MNT"
-            sleep 0.5
-        fi
-
-        if [ ! -p "$CMD_FIFO" ]; then
-            mkfifo "$CMD_FIFO"
-            chmod 666 "$CMD_FIFO"
-        fi
-
-        if ! pgrep -x dmarquees >/dev/null; then
-            echo "[autostart] Starting dmarquees splash daemon (-s)..."
-            sudo stdbuf -oL -eL "$DAEMON" -f "$fe_mode" -d /dev/dri/card1 -o HDMI-A-2 -s >"$LOG" 2>&1 &
-            sleep 1
-        fi
-
-        if pgrep -x dmarquees >/dev/null; then
-            echo "[autostart] Pi5 splash daemon running."
-        else
-            echo "[autostart] ERROR: Pi5 splash daemon failed to start. Check $LOG file."
-        fi
-
+    if [ "$THIS_IS_PI5" = true ] && [ ! "$DUAL_DISPLAY" = true ]; then
+        echo "[autostart] Pi5 with single display, skipping dmarquees setup."
         return 0
     fi
-
     echo "[autostart] Setting up marquee..."
 
     # Ensure mount point exists
@@ -269,7 +222,7 @@ setup_dmarquees()
 
     if ! pgrep -x dmarquees >/dev/null; then
         echo "[autostart] Starting dmarquees daemon..."
-        sudo stdbuf -oL -eL "$DAEMON" -f "$fe_mode" -d /dev/dri/card1 -o HDMI-A-2 >"$LOG" 2>&1 &
+        sudo stdbuf -oL -eL "$DAEMON" >"$LOG" 2>&1 &
         sleep 1
     fi
 
@@ -280,24 +233,22 @@ setup_dmarquees()
     fi
 }
 
-
-
 # ==========================================
 #  Marquee shutdown: cleanly stop daemon + unmount
 # ==========================================
 shutdown_dmarquees()
 {
-    local CMD_FIFO="/tmp/dmarquees_cmd"
+    local FOUND_DMARQUEES=false
 
-    ensure_dmarquees_transport_cfg
-    load_dmarquees_transport_cfg
-
-    echo "[autostart] Shutting down marquees..."
-
-    # Signal the local splash daemon to exit
+    # Signal the dmarquees daemon to exit
     if pgrep -x dmarquees >/dev/null; then
+        FOUND_DMARQUEES=true
+
+        echo "[autostart] Shutting down marquees..."
         echo "EXIT" > "$CMD_FIFO" 2>/dev/null || true
+
         sleep 0.5
+
         # Force-kill if still alive
         if pgrep -x dmarquees >/dev/null; then
             sudo pkill -9 dmarquees
@@ -307,84 +258,12 @@ shutdown_dmarquees()
     # Remove FIFO
     [ -p "$CMD_FIFO" ] && rm -f "$CMD_FIFO"
 
-    echo "[autostart] dmarquees stopped and cleaned up."
-}
-
-
-
-# ==========================================
-#  Banner Art Swap: toggle between marquees and cpanel
-# ==========================================
-
-swap_banner_art()
-{
-    local MNT="$HOME/mnt/marquees"
-    local MARQUEES_ZIP="$HOME/MAME_0.256_EXTRAs/marquees.zip"
-    local CPANEL_ZIP="$HOME/MAME_0.256_EXTRAs/cpanel.zip"
-    local CMD_FIFO="/tmp/dmarquees_cmd"
-
-    ensure_dmarquees_transport_cfg
-    load_dmarquees_transport_cfg
-
-    # In TCP mode the mount and the daemon both live on Pi3.
-    # Send SWAPART over the network; the netbridge handles the actual zip swap
-    # and sends REFRESH to the local Pi3 daemon automatically.
-    if [ "$DMARQUEES_TRANSPORT" != "LOCAL" ]; then
-        echo "[autostart] TCP mode: delegating art swap to Pi3 via SWAPART command"
-        send_dmarquees_cmd "SWAPART"
-        return $?
+    if [ $FOUND_DMARQUEES = true ]; then
+        echo "[autostart] dmarquees stopped and cleaned up."
     fi
-
-    # Check what's currently mounted
-    if [ -f "$CURRENT_MOUNT_STATE" ]; then
-        MOUNTED=$(cat "$CURRENT_MOUNT_STATE")
-    else
-        MOUNTED="marquees"
-        echo "marquees" > "$CURRENT_MOUNT_STATE"
-    fi
-
-    echo "[autostart] Current mount: $MOUNTED"
-
-    # Unmount current
-    if mountpoint -q "$MNT"; then
-        echo "[autostart] Unmounting $MOUNTED..."
-        fusermount -u "$MNT"
-        sleep 0.5
-    fi
-
-    # Toggle to the other one
-    if [ "$MOUNTED" = "marquees" ]; then
-        # Switch to cpanel
-        echo "[autostart] Mounting cpanel.zip..."
-        fuse-zip -r -o allow_other "$CPANEL_ZIP" "$MNT" || {
-            echo "[autostart] Failed to mount $CPANEL_ZIP"
-            # Try to restore marquees if cpanel mount failed
-            fuse-zip -r -o allow_other "$MARQUEES_ZIP" "$MNT"
-            return 1
-        }
-        echo "cpanel" > "$CURRENT_MOUNT_STATE"
-        echo "[autostart] Switched to Control Panel artwork"
-    else
-        # Switch back to marquees
-        echo "[autostart] Mounting marquees.zip..."
-        fuse-zip -r -o allow_other "$MARQUEES_ZIP" "$MNT" || {
-            echo "[autostart] Failed to mount $MARQUEES_ZIP"
-            return 1
-        }
-        echo "marquees" > "$CURRENT_MOUNT_STATE"
-        echo "[autostart] Switched to Marquee artwork"
-    fi
-
-    # Signal daemon to refresh (commented out - frontend marquees aren't loaded from zip files)
- #   if pgrep -x dmarquees >/dev/null; then
- #       echo "REFRESH" > "$CMD_FIFO" 2>/dev/null || true
- #   fi
-
-    sleep 1
 }
 
 # Main menu logic as a function
-
 main_menu()
 {
     local DEF_KEY="X"
@@ -405,8 +284,8 @@ main_menu()
         )
 
         # Add XinMo status message to the menu box
-        CHOICE=$(dialog --timeout $TIMEOUT --title "Arcade Menu" --default-item "$DEF_KEY" \
-            --menu "Choose Fontend: (timeout 1 min.)\n\n$XINMO_STATUS_MSG" 16 50 4 \
+        CHOICE=$(dialog --timeout $MENU_TIMEOUT --title "Arcade Menu" --default-item "$DEF_KEY" \
+            --menu "Choose Fontend: (timeout $MENU_TIMEOUT secs)\n\n$XINMO_STATUS_MSG" 16 50 4 \
             "${MENU_ITEMS[@]}" \
             2>&1 > /dev/tty)
         printf "\033[2J\033[H"
@@ -452,12 +331,6 @@ main_menu()
             C)
                 # exit to command prompt (do not continue main menu loop)
                 ;;
-            S)
-                $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_ra 1
-                $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_sa 1
-                check_xinmo_status
-                continue
-                ;;
             *)
                 shutdown_dmarquees
                 launch_desktop
@@ -467,8 +340,37 @@ main_menu()
     done
 }
 
+start_netbridge()
+{
+    # Start the network link listener (netbridge)
+    if [ -x "$HOME/scripts/dmarquees-netbridge.py" ]; then
+        if ! pgrep -f dmarquees-netbridge.py >/dev/null; then
+            nohup python3 "$HOME/scripts/dmarquees-netbridge.py" > "$HOME/marquees/dmarquees-netbridge.log" 2>&1 &
+        fi
+    else
+        echo_error_and_wait "$HOME/scripts/dmarquees-netbridge.py not found or not executable. Pi3 network bridge commands will NOT work."
+    fi
+}
 
-# Check XinMo status once at startup
+
+# ---------------------------------------------------
+# AUTOSTART.SH MAIN PROCESS
+# ---------------------------------------------------
+
+load_persisted_options
+
+if [ "$THIS_IS_PI5" != true ] || [ "$PI5_DUAL_DISPLAY" = true ]; then
+    setup_dmarquees
+fi
+
+if [ "$THIS_IS_PI5" != true ]; then
+    start_netbridge
+    echo "[autostart] Pi3 running dmarquees netbridge (ENTER key will exit autostart.sh)"
+    read -r _
+    exit 0
+fi
+
+# Check for XinMo player 1-2 swap
 check_xinmo_status
 
 # Auto-start MAIN MENU display on Pi5 boot

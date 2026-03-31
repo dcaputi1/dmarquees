@@ -21,11 +21,6 @@ typedef enum
 FrontendMode toFrontendMode(const char *s);
 const char *fromFrontendMode(FrontendMode m);
 
-// Globals defined in dmarquees.c
-extern FrontendMode g_frontend_mode;
-extern char g_drm_device_path[128];
-extern char g_drm_connector_name[32];
-extern bool g_splash_mode;
 // Command type enum and conversion helpers
 typedef enum
 {
@@ -51,8 +46,6 @@ void scale_and_blit_to_xrgb(const uint8_t *src_rgba, int src_w, int src_h,
                             uint32_t *dst, int dst_w, int dst_h, int dst_stride,
                             int dest_x, bool center);
 char *trim(char *s, size_t len);
-int parseFrontendModeArg(int argc, char **argv);
-// Returns non-zero on error or help-print, 0 on success.
 
 // Get current timestamp in HH:MM:SS format
 void get_timestamp(char *buffer, size_t size);

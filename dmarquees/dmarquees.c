@@ -52,8 +52,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#define VERSION "1.7.2"
-#define DEVICE_PATH "/dev/dri/card1"
+#define VERSION "1.8.0"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
 #define DEF_MARQUEE_NAME "RetroPieMarquee"
 #define DEF_RA_MARQUEE_NAME "RetroArch_logo"
@@ -81,59 +80,27 @@ static uint32_t stride = 0;
 static uint64_t bo_size = 0;
 static void* fb_map = NULL;
 
-FrontendMode g_frontend_mode = eNA;
-bool g_splash_mode = false;
-char g_drm_device_path[128] = DEVICE_PATH;
-char g_drm_connector_name[32] = "";
-static time_t g_ra_init_hold = 0;
+bool _this_is_pi5 = false;
+bool _pi5_dual_display = false;
+FrontendMode _frontend_mode = eNA;
+bool _splash_mode = false;
+char _drm_device_path[128] = "";
+char _drm_connector_name[32] = "";
+static time_t _ra_init_hold = 0;
 static uint8_t* image = NULL;
 static char last_image_path[PATH_MAX] = {0};
 static char current_rom_shortname[128] = {0};
-static char g_image_dir[PATH_MAX] = {0};
-static char g_image_dir_alt[PATH_MAX] = {0};
-static char g_program_dir[PATH_MAX] = {0};
-static char g_default_marquee_dir[PATH_MAX] = {0};
-static char g_dcpanel_template[PATH_MAX] = {0};
-static char g_mcpanel_template[PATH_MAX] = {0};
-static char g_labels_dir[PATH_MAX] = {0};
 
-
-
-static bool init_runtime_paths(void)
-{
-    // Build all paths relative to HOME_PATH constant
-    int n = snprintf(g_image_dir, sizeof(g_image_dir), HOME_PATH "/mnt/marquees");
-    if (n <= 0 || (size_t)n >= sizeof(g_image_dir))
-        return false;
-
-    n = snprintf(g_image_dir_alt, sizeof(g_image_dir_alt), HOME_PATH "/RetroPie/roms/mame/media/marquees");
-    if (n <= 0 || (size_t)n >= sizeof(g_image_dir_alt))
-        return false;
-
-    n = snprintf(g_program_dir, sizeof(g_program_dir), HOME_PATH "/IvarArcade");
-    if (n <= 0 || (size_t)n >= sizeof(g_program_dir))
-        return false;
-
-    n = snprintf(g_default_marquee_dir, sizeof(g_default_marquee_dir), "%s/images", g_program_dir);
-    if (n <= 0 || (size_t)n >= sizeof(g_default_marquee_dir))
-        return false;
-
-    n = snprintf(g_dcpanel_template, sizeof(g_dcpanel_template), "%s/images/dcpanel-1-labels.svg", g_program_dir);
-    if (n <= 0 || (size_t)n >= sizeof(g_dcpanel_template))
-        return false;
-
-    n = snprintf(g_mcpanel_template, sizeof(g_mcpanel_template), "%s/images/mcpanel-1-labels.svg", g_program_dir);
-    if (n <= 0 || (size_t)n >= sizeof(g_mcpanel_template))
-        return false;
-
-    n = snprintf(g_labels_dir, sizeof(g_labels_dir), "%s/labels", g_program_dir);
-    if (n <= 0 || (size_t)n >= sizeof(g_labels_dir))
-        return false;
-
-    ts_printf("dmarquees: asset root=%s\n", g_program_dir);
-
-    return true;
-}
+static const char* _image_dir = HOME_PATH "/mnt/marquees";
+static const char* _image_dir_alt = HOME_PATH "/RetroPie/roms/mame/media/marquees";
+static const char* _program_dir = HOME_PATH "/IvarArcade";
+static const char* _default_marquee_dir = HOME_PATH "/IvarArcade/images";
+static const char* _dcpanel_template = HOME_PATH "/IvarArcade/images/dcpanel-1-labels.svg";
+static const char* _mcpanel_template = HOME_PATH "/IvarArcade/images/mcpanel-1-labels.svg";
+static const char* _labels_dir = HOME_PATH "/IvarArcade/labels";
+static const char* _this_is_pi5_file = HOME_PATH "/.this_is_pi5";
+static const char* _pi5_dual_display_file = HOME_PATH "/.pi5_dual_display";
+static const char* _pi3_is_present_file = HOME_PATH "/.pi3_present";
 
 static bool join_path(char *out, size_t out_size, const char *dir, const char *file)
 {
@@ -211,6 +178,53 @@ static const char *default_marquee_name_for(FrontendMode m)
     case eRA: return DEF_RA_MARQUEE_NAME;
     case eNA:
     default:  return DEF_MARQUEE_NAME;
+}
+
+static bool read_bool_file(const char *path, bool default_value = false)
+{
+    FILE *fp = fopen(path, "r");
+
+    if (!fp)
+        return default_value;
+
+    char buf[20] = {0};
+    if (!fgets(buf, sizeof(buf), fp))
+    {
+        fclose(fp);
+        return default_value;
+    }
+
+    fclose(fp);
+
+    // Trim whitespace
+    char *p = buf;
+    while (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r')
+        ++p;
+
+    for (char *q = p; *q; ++q)
+        if (*q == '\n' || *q == '\r')
+            *q = 0;
+
+    return strcasecmp(p, "true") == 0;
+}
+
+static void initialize_globals()
+{
+    _this_is_pi5 = read_bool_file(_this_is_pi5_file, true);
+    _pi5_dual_display = read_bool_file(_pi5_dual_display_file, true);
+    _pi3_present = read_bool_file(_pi3_is_present_file, true);
+
+    _splash_mode = _this_is_pi5 && _pi3_present && _pi5_dual_display;
+
+    if (!_this_is_pi5 || !_pi5_dual_display)
+    {
+        strncpy(_drm_connector_name, sizeof(_drm_connector_name), "HDMI-A-1");
+        strncpy(_drm_device_path, sizeof(_drm_device_path), "/dev/dri/card0");
+    }
+    else
+    {
+        strncpy(_drm_connector_name, sizeof(_drm_connector_name), "HDMI-A-2");
+        strncpy(_drm_device_path, sizeof(_drm_device_path), "/dev/dri/card1");
     }
 }
 
@@ -220,11 +234,11 @@ static void show_default_marquee(void)
     if (!fb_map)
         return;
 
-    const char *name = default_marquee_name_for(g_frontend_mode);
+    const char *name = default_marquee_name_for(_frontend_mode);
     char imgpath[PATH_MAX];
-    if (!build_png_path(imgpath, sizeof(imgpath), g_default_marquee_dir, name))
+    if (!build_png_path(imgpath, sizeof(imgpath), _default_marquee_dir, name))
     {
-        ts_fprintf(stderr, "error: default marquee path too long: %s/%s.png\n", g_default_marquee_dir, name);
+        ts_fprintf(stderr, "error: default marquee path too long: %s/%s.png\n", _default_marquee_dir, name);
         return;
     }
 
@@ -246,17 +260,11 @@ static void show_default_marquee(void)
 
     ts_printf("dmarquees: showing default marquee: %s\n", imgpath);
 
-    scale_and_blit_to_xrgb(image, iw, ih, (uint32_t*)fb_map, fb_w, fb_h, stride / 4, 0, g_splash_mode);
+    scale_and_blit_to_xrgb(image, iw, ih, (uint32_t*)fb_map, fb_w, fb_h, stride / 4, 0, _splash_mode);
     try_reset_crtc();
     
     // Save the current image path for REFRESH command
     snprintf(last_image_path, sizeof(last_image_path), "%s", imgpath);
-}
-
-static void __attribute__((unused)) print_usage(const char *prog)
-{
-    ts_fprintf(stderr, "Usage: %s [-f SA|RA|NA] [-d /dev/dri/cardX] [-o HDMI-A-2] [-s]\n", prog);
-    ts_fprintf(stderr, "  -s  Splash screen mode: center NA/RA/SA art, blank display during games.\n");
 }
 
 static const char *connector_type_name(uint32_t type)
@@ -311,14 +319,14 @@ static int find_connector_mode(int fd, uint32_t *out_conn, uint32_t *out_crtc, d
     if (!res)
         return -1;
 
-    if (g_drm_connector_name[0] != '\0')
+    if (_drm_connector_name[0] != '\0')
     {
         for (int i = 0; i < res->count_connectors; ++i)
         {
             drmModeConnector *conn = drmModeGetConnector(fd, res->connectors[i]);
             if (!conn)
                 continue;
-            if (!connector_name_matches(conn, g_drm_connector_name) || conn->connection != DRM_MODE_CONNECTED || conn->count_modes == 0)
+            if (!connector_name_matches(conn, _drm_connector_name) || conn->connection != DRM_MODE_CONNECTED || conn->count_modes == 0)
             {
                 drmModeFreeConnector(conn);
                 continue;
@@ -358,7 +366,7 @@ static int find_connector_mode(int fd, uint32_t *out_conn, uint32_t *out_crtc, d
             return 0;
         }
 
-        ts_fprintf(stderr, "warning: connector '%s' not found/connected, falling back to automatic selection\n", g_drm_connector_name);
+        ts_fprintf(stderr, "warning: connector '%s' not found/connected, falling back to automatic selection\n", _drm_connector_name);
     }
     // preferred
     for (int i = 0; i < res->count_connectors; ++i)
@@ -499,6 +507,8 @@ static void destroy_dumb_fb(int fd)
 
 static int initialize(void)
 {
+    initialize_globals();
+
     // ensure FIFO exists
     if (mkfifo(CMD_FIFO, 0666) < 0)
     {
@@ -511,11 +521,11 @@ static int initialize(void)
     chmod(CMD_FIFO, 0666); // allow any user to write commands
 
     // open DRM device (default is /dev/dri/card1, overridable with -d)
-    drm_fd = open(g_drm_device_path, O_RDWR | O_CLOEXEC);
+    drm_fd = open(_drm_device_path, O_RDWR | O_CLOEXEC);
     if (drm_fd < 0)
     {
         ts_perror("open drm");
-        ts_fprintf(stderr, "error: failed to open DRM device: %s\n", g_drm_device_path);
+        ts_fprintf(stderr, "error: failed to open DRM device: %s\n", _drm_device_path);
         return 1;
     }
 
@@ -565,9 +575,9 @@ static int initialize(void)
 static bool show_game_marquee(const char* cmd_str)
 {
     char imgpath[PATH_MAX];
-    if (!build_png_path(imgpath, sizeof(imgpath), g_image_dir, cmd_str))
+    if (!build_png_path(imgpath, sizeof(imgpath), _image_dir, cmd_str))
     {
-        ts_fprintf(stderr, "warning: image path too long: %s/%s.png\n", g_image_dir, cmd_str);
+        ts_fprintf(stderr, "warning: image path too long: %s/%s.png\n", _image_dir, cmd_str);
         return false;
     }
 
@@ -575,14 +585,14 @@ static bool show_game_marquee(const char* cmd_str)
     if (stat(imgpath, &st) != 0)
     {
         // Try IMAGE_DIR_ALT as fallback
-        if (!build_png_path(imgpath, sizeof(imgpath), g_image_dir_alt, cmd_str))
+        if (!build_png_path(imgpath, sizeof(imgpath), _image_dir_alt, cmd_str))
         {
-            ts_fprintf(stderr, "warning: alternate image path too long: %s/%s.png\n", g_image_dir_alt, cmd_str);
+            ts_fprintf(stderr, "warning: alternate image path too long: %s/%s.png\n", _image_dir_alt, cmd_str);
             return false;
         }
         if (stat(imgpath, &st) != 0)
         {
-            ts_fprintf(stderr, "warning: image missing in both directories: %s/%s.png\n", g_image_dir, cmd_str);
+            ts_fprintf(stderr, "warning: image missing in both directories: %s/%s.png\n", _image_dir, cmd_str);
             return false;
         }
         ts_printf("dmarquees: using alternate image directory: %s\n", imgpath);
@@ -869,7 +879,7 @@ static bool find_panel_map(const char *shortname, bool dc_panel, char *out_path,
     memcpy(file_name, shortname, short_len);
     memcpy(file_name + short_len, ext, ext_len + 1);
 
-    if (!join_path(out_path, out_size, g_labels_dir, file_name))
+    if (!join_path(out_path, out_size, _labels_dir, file_name))
         return false;
 
     if (stat(out_path, &st) == 0)
@@ -894,7 +904,7 @@ static bool convert_svg_to_png(const char *svg_path, const char *png_path)
 
 static bool show_panel_marquee(const char *shortname, bool dc_panel)
 {
-    const char *template_path = dc_panel ? g_dcpanel_template : g_mcpanel_template;
+    const char *template_path = dc_panel ? _dcpanel_template : _mcpanel_template;
     const char *tmp_svg = dc_panel ? PANEL_TMP_DC_SVG : PANEL_TMP_MC_SVG;
     const char *tmp_png = dc_panel ? PANEL_TMP_DC_PNG : PANEL_TMP_MC_PNG;
 
@@ -995,19 +1005,19 @@ static void handle_fifo_command(char *cmd_str)
     switch (command)
     {
     case CMD_RA:
-        g_frontend_mode = eRA;
+        _frontend_mode = eRA;
         ts_printf("dmarquees: frontend mode changed to RA\n");
         show_default_marquee();
         break;
 
     case CMD_SA:
-        g_frontend_mode = eSA;
+        _frontend_mode = eSA;
         ts_printf("dmarquees: frontend mode changed to SA\n");
         show_default_marquee();
         break;
 
     case CMD_NA:
-        g_frontend_mode = eNA;
+        _frontend_mode = eNA;
         ts_printf("dmarquees: frontend mode changed to NA\n");
         show_default_marquee();
         break;
@@ -1029,7 +1039,7 @@ static void handle_fifo_command(char *cmd_str)
         break;
 
     case CMD_DCPANEL:
-        if (g_splash_mode)
+        if (_splash_mode)
         {
             ts_printf("dmarquees: splash mode - DCPANEL ignored\n");
             break;
@@ -1044,7 +1054,7 @@ static void handle_fifo_command(char *cmd_str)
         break;
 
     case CMD_MCPANEL:
-        if (g_splash_mode)
+        if (_splash_mode)
         {
             ts_printf("dmarquees: splash mode - MCPANEL ignored\n");
             break;
@@ -1061,7 +1071,7 @@ static void handle_fifo_command(char *cmd_str)
     case CMD_ROM:
         // In splash screen mode: blank the display so dual-screen games (e.g. Punch-Out)
         // can use the secondary monitor.  No game marquee art is shown.
-        if (g_splash_mode)
+        if (_splash_mode)
         {
             ts_printf("dmarquees: splash mode - blanking screen for game\n");
             if (fb_map)
@@ -1077,7 +1087,7 @@ static void handle_fifo_command(char *cmd_str)
         if (!strncmp(cmd_str, "RC:", 3))
             cmd_str += 3;
         // In RA mode: reject plain ROM names (could be spurious RA plugin signals).
-        else if (g_frontend_mode == eRA)
+        else if (_frontend_mode == eRA)
             break;
 
         // If we reach here, it's either eROM or an unknown command - treat as ROM shortname
@@ -1137,7 +1147,7 @@ static void refresh_current_marquee(void)
     int stride_pixels = stride / 4;
     
     memset(fb_map, 0, bo_size);
-    scale_and_blit_to_xrgb(image, iw, ih, fbptr, fb_w, fb_h, stride_pixels, 0, g_splash_mode);
+    scale_and_blit_to_xrgb(image, iw, ih, fbptr, fb_w, fb_h, stride_pixels, 0, _splash_mode);
     try_reset_crtc();
     
     ts_printf("dmarquees: REFRESH complete\n");
@@ -1147,21 +1157,7 @@ int main(int argc, char **argv)
 {
     ts_printf("dmarquees: v%s starting...\n", VERSION);
 
-    // parse command line for frontend mode
-    int parse_result = parseFrontendModeArg(argc, argv);
-    if (parse_result != 0)
-        return parse_result;
-
-    ts_printf("dmarquees: frontend=%s\n", fromFrontendMode(g_frontend_mode));
-    ts_printf("dmarquees: drm_device=%s\n", g_drm_device_path);
-    if (g_drm_connector_name[0] != '\0')
-        ts_printf("dmarquees: drm_connector=%s\n", g_drm_connector_name);
-
-    if (!init_runtime_paths())
-    {
-        ts_fprintf(stderr, "error: failed to initialize runtime paths\n");
-        return 1;
-    }
+    _frontend_mode = eNA;
 
     signal(SIGINT, sigint_handler);
 
@@ -1198,13 +1194,13 @@ int main(int argc, char **argv)
             // Looks like we have one or more newline-delimited commands.
             buf[read_len] = '\0';
         }
-        else if (g_ra_init_hold && (time(NULL) > g_ra_init_hold))
+        else if (_ra_init_hold && (time(NULL) > _ra_init_hold))
         {
             ts_printf("dmarquees: retrying crtc now...\n");
             if (try_reset_crtc())
-                g_ra_init_hold = 0;                 // clear hold
+                _ra_init_hold = 0;                 // clear hold
             else
-                g_ra_init_hold = time(NULL) + 1;    // try again in 1 second
+                _ra_init_hold = time(NULL) + 1;    // try again in 1 second
 
             continue;
         }

@@ -13,7 +13,6 @@ import time
 from typing import Iterable
 
 running = True
-TTY_CONSOLE_TOKEN = "console=tty1"
 FIFO_WRITE_RETRIES = 12
 FIFO_RETRY_DELAY_SEC = 0.05
 
@@ -156,82 +155,6 @@ def swap_art(marquees_zip: str, cpanel_zip: str, mnt: str, state_file: str, fifo
         print(f"[netbridge] SWAPART complete: now showing {next_state}")
 
 
-def get_boot_cmdline_path() -> str | None:
-    for path in ("/boot/firmware/cmdline.txt", "/boot/cmdline.txt"):
-        if os.path.isfile(path):
-            return path
-    return None
-
-
-def tty_console_boot_enabled(cmdline_path: str) -> bool:
-    try:
-        with open(cmdline_path, "r", encoding="utf-8", errors="replace") as f:
-            tokens = f.read().strip().split()
-    except OSError:
-        return False
-    return TTY_CONSOLE_TOKEN in tokens
-
-
-def set_tty_console_boot(enable: bool, verbose: bool) -> None:
-    cmdline_path = get_boot_cmdline_path()
-    if not cmdline_path:
-        raise RuntimeError("Could not find cmdline.txt under /boot/firmware or /boot")
-
-    with open(cmdline_path, "r", encoding="utf-8", errors="replace") as f:
-        tokens = f.read().strip().split()
-
-    tokens = [t for t in tokens if t != TTY_CONSOLE_TOKEN]
-    if enable:
-        tokens.append(TTY_CONSOLE_TOKEN)
-
-    with open(cmdline_path, "w", encoding="utf-8") as f:
-        f.write(" ".join(tokens) + "\n")
-
-    if verbose:
-        state = "ENABLED" if enable else "DISABLED"
-        print(f"[netbridge] PI3_TTY_TOGGLE applied: cmdline console=tty1 {state} ({cmdline_path})")
-
-
-def run_systemctl(args: list[str], verbose: bool) -> None:
-    cmd = ["systemctl", *args]
-    proc = subprocess.run(cmd, check=False, capture_output=True, text=True)
-    if proc.returncode != 0:
-        stderr = (proc.stderr or "").strip()
-        stdout = (proc.stdout or "").strip()
-        detail = stderr or stdout or f"exit code {proc.returncode}"
-        raise RuntimeError(f"{' '.join(cmd)} failed: {detail}")
-    if verbose:
-        print(f"[netbridge] ran: {' '.join(cmd)}")
-
-
-def set_tty_getty(enable: bool, verbose: bool) -> None:
-    service = "getty@tty1.service"
-    if enable:
-        run_systemctl(["unmask", service], verbose)
-        run_systemctl(["enable", service], verbose)
-    else:
-        # Stop first so the login prompt clears right away on the current boot.
-        run_systemctl(["disable", "--now", service], verbose)
-        run_systemctl(["mask", service], verbose)
-
-
-def toggle_tty_console_boot(verbose: bool) -> None:
-    cmdline_path = get_boot_cmdline_path()
-    if not cmdline_path:
-        print("[netbridge] PI3_TTY_TOGGLE failed: cmdline.txt not found", file=sys.stderr)
-        return
-
-    current = tty_console_boot_enabled(cmdline_path)
-    try:
-        set_tty_console_boot(not current, verbose)
-        set_tty_getty(not current, verbose)
-        if verbose:
-            state = "ENABLED" if not current else "DISABLED"
-            print(f"[netbridge] PI3_TTY_TOGGLE complete: tty console boot {state}")
-    except Exception as exc:
-        print(f"[netbridge] PI3_TTY_TOGGLE failed: {exc}", file=sys.stderr)
-
-
 def handle_command(line: str, fifo: str, swap_cfg: dict, verbose: bool) -> None:
     """Dispatch a single received command: intercept SWAPART, forward everything else."""
     cmd = line.strip().upper()
@@ -244,8 +167,6 @@ def handle_command(line: str, fifo: str, swap_cfg: dict, verbose: bool) -> None:
             fifo,
             verbose,
         )
-    elif cmd == "PI3_TTY_TOGGLE":
-        toggle_tty_console_boot(verbose)
     else:
         write_fifo_nonblocking(fifo, line, verbose)
 
@@ -284,7 +205,6 @@ def serve_tcp(host: str, port: int, fifo_path: str, swap_cfg: dict, verbose: boo
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="dmarquees network to FIFO bridge")
-    parser.add_argument("--protocol", choices=["tcp"], default="tcp")
     parser.add_argument("--host", default="0.0.0.0", help="Bind address")
     parser.add_argument("--port", type=int, default=5533)
     parser.add_argument("--fifo", default="/tmp/dmarquees_cmd")
