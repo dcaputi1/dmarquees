@@ -210,9 +210,9 @@ static bool read_bool_file(const char *path, bool default_value = false)
 
 static void initialize_globals()
 {
-    _this_is_pi5 = read_bool_file(_this_is_pi5_file, true);
+    _this_is_pi5      = read_bool_file(_this_is_pi5_file,      true);
     _pi5_dual_display = read_bool_file(_pi5_dual_display_file, true);
-    _pi3_present = read_bool_file(_pi3_is_present_file, true);
+    _pi3_present      = read_bool_file(_pi3_is_present_file,   true);
 
     _splash_mode = _this_is_pi5 && _pi3_present && _pi5_dual_display;
 
@@ -1081,12 +1081,11 @@ static void handle_fifo_command(char *cmd_str)
             }
             break;
         }
-        // Strip optional RC: prefix (marks command from trusted runcommand source).
-        // Accept RC: in all frontend modes so the MAME plugin can reliably sync
-        // the current ROM shortname regardless of which mode the daemon is in.
+
+        // Strip optional RC: prefix (marks command from runcommand launch source).
         if (!strncmp(cmd_str, "RC:", 3))
             cmd_str += 3;
-        // In RA mode: reject plain ROM names (could be spurious RA plugin signals).
+        // In RA mode ignore ROM name without "RC:" (marquee plugin conflicts with DRM master)
         else if (_frontend_mode == eRA)
             break;
 

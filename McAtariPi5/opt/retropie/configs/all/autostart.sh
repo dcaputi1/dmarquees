@@ -363,15 +363,14 @@ if [ "$THIS_IS_PI5" != true ] || [ "$PI5_DUAL_DISPLAY" = true ]; then
     setup_dmarquees
 fi
 
-if [ "$THIS_IS_PI5" != true ]; then
+if [ "$THIS_IS_PI5" = true ]; then
+
+    check_xinmo_status
+    main_menu
+
+else # This is Pi3...
+
     start_netbridge
     echo "[autostart] Pi3 running dmarquees netbridge (ENTER key will exit autostart.sh)"
     read -r _
-    exit 0
 fi
-
-# Check for XinMo player 1-2 swap
-check_xinmo_status
-
-# Auto-start MAIN MENU display on Pi5 boot
-main_menu
