@@ -19,6 +19,7 @@ PI3_REMOTE_HOST="10.77.77.3"
 PI3_REMOTE_PORT="5533"
 MOUNTED_GAME_ART="marquees" # or "cpanel"
 
+
 load_persisted_options()
 {
     # Detect if this is Pi5 by hostname
@@ -261,6 +262,11 @@ shutdown_dmarquees()
     if [ $FOUND_DMARQUEES = true ]; then
         echo "[autostart] dmarquees stopped and cleaned up."
     fi
+}
+
+persist_frontend_choice()
+{
+    echo "DEF_KEY=\"$1\"" > "$HOME/.def_key"
 }
 
 # Main menu logic as a function
