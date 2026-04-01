@@ -40,7 +40,7 @@ install: all
 	@# Install runtime resources (images directory)
 	@if [ -d images ]; then \
 		if [ ! -d $(INSTALL_DIR)/images ]; then \
-			cp -a images $(INSTALL_DIR)/ && echo "Updated: $(INSTALL_DIR)/images"; \
+			cp -a --exclude='__pycache__' images $(INSTALL_DIR)/ && echo "Updated: $(INSTALL_DIR)/images"; \
 		else \
 			echo "Skipped: $(INSTALL_DIR)/images (already exists)"; \
 		fi; \
@@ -55,7 +55,7 @@ install: all
 	@# Install plugins to local directory
 	@if [ -d plugins ]; then \
 		if [ ! -d $(INSTALL_DIR)/plugins ]; then \
-			cp -a plugins $(INSTALL_DIR)/ && echo "Updated: $(INSTALL_DIR)/plugins"; \
+			cp -a --exclude='__pycache__' plugins $(INSTALL_DIR)/ && echo "Updated: $(INSTALL_DIR)/plugins"; \
 		else \
 			echo "Skipped: $(INSTALL_DIR)/plugins (already exists)"; \
 		fi; \
@@ -67,9 +67,9 @@ install: all
 		echo "Error: McAtariPi5 source directory missing"; \
 	else \
 		echo "Syncing /opt directory (newer files only)..."; \
-		rsync -a --update --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS McAtariPi5/opt/ /opt/; \
-		echo "Syncing /home directory (newer files only)..."; \
-		rsync -a --update --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS McAtariPi5/home/ /home/; \
+			rsync -a --update --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS --exclude='__pycache__' McAtariPi5/opt/ /opt/; \
+			echo "Syncing /home directory (newer files only)..."; \
+			rsync -a --update --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS --exclude='__pycache__' McAtariPi5/home/ /home/; \
 	fi
 	
 	@echo "Installation complete!"
@@ -84,12 +84,12 @@ install-force: all
 	
 	@# Force install runtime resources (images directory)
 	@if [ -d images ]; then \
-		cp -af images $(INSTALL_DIR)/ && echo "Installed: $(INSTALL_DIR)/images"; \
+		cp -af --exclude='__pycache__' images $(INSTALL_DIR)/ && echo "Installed: $(INSTALL_DIR)/images"; \
 	fi
 
 	@# Force install panel label mappings
 	@if [ -d labels ]; then \
-		cp -af labels $(INSTALL_DIR)/ && echo "Installed: $(INSTALL_DIR)/labels"; \
+		cp -af --exclude='__pycache__' labels $(INSTALL_DIR)/ && echo "Installed: $(INSTALL_DIR)/labels"; \
 	fi
 	
 	@# Force sync McAtariPi5 contents to system (overwrite all files)
@@ -97,9 +97,9 @@ install-force: all
 		echo "Error: McAtariPi5 source directory missing"; \
 	else \
 		echo "Syncing /opt directory (forcing overwrites)..."; \
-		rsync -a --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS McAtariPi5/opt/ /opt/; \
-		echo "Syncing /home directory (forcing overwrites)..."; \
-		rsync -a --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS McAtariPi5/home/ /home/; \
+			rsync -a --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS --exclude='__pycache__' McAtariPi5/opt/ /opt/; \
+			echo "Syncing /home directory (forcing overwrites)..."; \
+			rsync -a --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS --exclude='__pycache__' McAtariPi5/home/ /home/; \
 	fi
 	
 	@echo "Force installation complete!"
@@ -201,7 +201,7 @@ sync-back:
 	# --- Phase A: sync only MODIFIED files that ALREADY EXIST in the target tree ---
 	# NOTE: --existing prevents new files from being created in the target tree.
 	rsync -ai --existing --update \
-		--no-perms --no-owner --no-group --omit-dir-times \
+		--no-perms --no-owner --no-group --omit-dir-times --exclude='__pycache__' \
 		"$$SRC/" "$$DST/"
 
 
@@ -226,7 +226,7 @@ sync-back:
 			fi
 		done \
 		| rsync -ai --ignore-existing --from0 --files-from=- --no-implied-dirs \
-			--no-perms --no-owner --no-group --omit-dir-times \
+			--no-perms --no-owner --no-group --omit-dir-times --exclude='__pycache__' \
 			"$$src_dir/" "$$dst_dir/"
 	done
 
