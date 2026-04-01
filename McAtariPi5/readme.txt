@@ -52,13 +52,7 @@ steps:
 8. run ~/IvarArcade/McAtariPi5/ra_final.sh (formerly cp_opt.sh)
 9. run ~/IvarArcade/analyze_games/analyze_games (not sudo!)
 10.sudo ~/scripts/set_asound.sh (for Trixie sound problem - not needed for Bookworm Debian base OS)
-11.if using Pi3 as remote marquee node, configure transport + verify from Pi5:
-   cat > ~/.dmarquees_transport.conf <<'EOF'
-   DMARQUEES_TRANSPORT="TCP"
-   DMARQUEES_REMOTE_HOST="10.77.77.3"
-   DMARQUEES_REMOTE_PORT="5533"
-   EOF
-   /home/danc/scripts/dmarquees-healthcheck.sh --ssh danc@10.77.77.3
+11.if using Pi3 as remote marquee node, see below "Pi3...Setup"
 
 optional:
 A. sudo apt install meld
@@ -66,7 +60,8 @@ C. sudo apt install jstest-gtk
 D. sudo apt install code
 required:
 E. sudo apt install fuse-zip (mounts zip file w/ PNGs)
-   sudo nano /etc/fuse.conf and uncomment #user_allow_other
+   edit /etc/fuse.conf and uncomment #user_allow_other:
+   sudo sed -i 's/^#user_allow_other/user_allow_other/' /etc/fuse.conf
 
 problem log:
 1/11/26 [x] ES launch in-game tab menu, return/backspace swapped
@@ -133,12 +128,20 @@ Pi3 Light OS baseline setup
    cp -v /media/danc/ExtremeSSD/Mame/MAME_0.256_EXTRAs/cpanel.zip ~/MAME_0.256_EXTRAs/
    sudo apt update
    sudo apt install -y git
+   git clone --depth=1 https://github.com/RetroPie/RetroPie-Setup.git
+   run retropie-setup and install ES (needed?) and run it on startup
+   4/1/2026 - ES build from source (only option) took a long time (~45 mins?),
+               investigate dcaputi1/RetroPie-Setup (used for Trixie on Pi5)
    git clone https://github.com/dcaputi1/IvarArcade.git
    cd IvarArcade
    sudo apt install -y build-essential libdrm-dev libpng-dev libtinyxml2-dev fuse-zip
-   sudo make install-pi3
+   4/1/2026 - retropie-setup added above (TBD may not need all the previous apts)
+   sudo chown -R danc /opt/retropie
+   make install
+   cd
+   
 
-1) Configure direct wired link static IPs (NetworkManager):
+   Configure direct wired link static IPs (NetworkManager):
 
    # Pi3 side (run on Pi3)
    sudo nmcli con add type ethernet ifname eth0 con-name eth0-static ip4 10.77.77.3/24
@@ -151,65 +154,5 @@ Pi3 Light OS baseline setup
    # Verify from Pi5
    ping -c2 10.77.77.3
 
-   # Set marquee transport on Pi5 to wired Pi3 endpoint
-   cat > ~/.dmarquees_transport.conf <<'EOF'
-DMARQUEES_TRANSPORT="TCP"
-DMARQUEES_REMOTE_HOST="10.77.77.3"
-DMARQUEES_REMOTE_PORT="5533"
-EOF
-
-   # Health check
-   /home/danc/scripts/dmarquees-healthcheck.sh --ssh danc@10.77.77.3
-   # Note: --ssh uses batch-mode SSH and requires key-based auth from Pi5 to Pi3.
    # If this is a fresh Pi3 baseline, run once on the Pi5:
    ssh-copy-id danc@10.77.77.3
-
-2) Install/enable services: (already staged by sudo make install-pi3)
-
-   sudo /home/danc/scripts/install-dmarquees-mount-service.sh
-   sudo /home/danc/scripts/install-dmarquees-daemon-service.sh
-   sudo /home/danc/scripts/install-dmarquees-netbridge-service.sh
-
-3) Enforce Pi3-safe defaults:
-   sudo tee /etc/default/dmarquees-mount >/dev/null <<'EOF'
-DMARQUEES_USER=danc
-DMARQUEES_ZIP=/home/danc/MAME_0.256_EXTRAs/marquees.zip
-DMARQUEES_MNT=/home/danc/mnt/marquees
-EOF
-
-   sudo tee /etc/default/dmarquees-daemon >/dev/null <<'EOF'
-DMARQUEES_USER=danc
-DMARQUEES_FRONTEND=NA
-DMARQUEES_DRM_DEVICE=/dev/dri/card0
-EOF
-
-4) Restart + verify:
-   sudo systemctl daemon-reload
-   sudo systemctl restart dmarquees-mount.service dmarquees-daemon.service dmarquees-netbridge.service
-   systemctl status --no-pager dmarquees-mount.service dmarquees-daemon.service dmarquees-netbridge.service
-   ss -tulpen | grep 5533
-
-   If the Pi3 boots to a tty login prompt instead of the NA marquee, disable tty1 console boot:
-
-   Option A - from the Pi5 Arcade Menu / custom autostart.sh:
-   use menu item `Y  Pi3 tty Console  Remote Toggle`
-   this sends `PI3_TTY_TOGGLE` to the Pi3 netbridge listener on port 5533
-   the Pi3 listener toggles `console=tty1` in active `cmdline.txt` and enables/disables `getty@tty1`
-   reboot Pi3 after changing it
-
-   Option B - manual commands on the pi3:
-   sudo systemctl disable getty@tty1.service
-   sudo systemctl mask getty@tty1.service
-   if [ -f /boot/firmware/cmdline.txt ]; then
-       sudo sed -i 's/ console=tty1//g' /boot/firmware/cmdline.txt
-   else
-       sudo sed -i 's/ console=tty1//g' /boot/cmdline.txt
-   fi
-   sudo reboot
-
-   To re-enable tty console boot later, add `console=tty1` back to the same file,
-   then `sudo systemctl unmask getty@tty1.service && sudo systemctl enable getty@tty1.service`
-
-TBD 3/26/2026 - are these needed?
-sudo fusermount -u /home/danc/mnt/marquees 2>/dev/null || true
-sudo fuse-zip -r -o allow_other /home/danc/MAME_0.256_EXTRAs/marquees.zip /home/danc/mnt/marquees
