@@ -51,6 +51,7 @@
 #include <unistd.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
+#include <sys/utsname.h>
 
 #define VERSION "1.8.0"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
@@ -98,7 +99,7 @@ static const char* _default_marquee_dir = HOME_PATH "/IvarArcade/images";
 static const char* _dcpanel_template = HOME_PATH "/IvarArcade/images/dcpanel-1-labels.svg";
 static const char* _mcpanel_template = HOME_PATH "/IvarArcade/images/mcpanel-1-labels.svg";
 static const char* _labels_dir = HOME_PATH "/IvarArcade/labels";
-static const char* _this_is_pi5_file = HOME_PATH "/.this_is_pi5";
+static const char* _PI5_HOSTNAME = "McAtariPi5";
 static const char* _pi5_dual_display_file = HOME_PATH "/.pi5_dual_display";
 static const char* _pi3_is_present_file = HOME_PATH "/.pi3_present";
 
@@ -211,7 +212,15 @@ static bool read_bool_file(const char *path, bool default_value)
 
 static void initialize_globals()
 {
-    _this_is_pi5      = read_bool_file(_this_is_pi5_file,      true);
+
+    // Set _this_is_pi5 based on hostname
+    char hostname[11] = {0};
+    if (gethostname(hostname, sizeof(hostname)) == 0 && strcmp(hostname, _PI5_HOSTNAME) == 0) {
+        _this_is_pi5 = true;
+    } else {
+        _this_is_pi5 = false;
+    }
+
     _pi5_dual_display = read_bool_file(_pi5_dual_display_file, true);
     _pi3_present      = read_bool_file(_pi3_is_present_file,   true);
 
