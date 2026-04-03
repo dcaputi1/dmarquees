@@ -47,6 +47,15 @@ load_persisted_options()
     else
         THIS_IS_PI5=false
     fi
+
+
+
+    # Debug: Show all three variables and wait for user
+    echo "[autostart] PI5_HOSTNAME: $PI5_HOSTNAME"
+    echo "[autostart] THIS_IS_PI5: $THIS_IS_PI5"
+    echo "[autostart] PI5_DUAL_DISPLAY: $PI5_DUAL_DISPLAY"
+    echo "Press ENTER to continue..."
+    read -r _
 }
 
 # Function to print a severe error and wait for user acknowledgement
@@ -366,6 +375,9 @@ start_netbridge()
 load_persisted_options
 
 if [ "$THIS_IS_PI5" != true ] || [ "$PI5_DUAL_DISPLAY" = true ]; then
+    echo "[autostart] calling setup_dmatquees"
+    echo "Press ENTER to continue..."
+    read -r _
     setup_dmarquees
 fi
 
