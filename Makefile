@@ -40,7 +40,7 @@ install: all
 	@# Install runtime resources (images directory)
 	@if [ -d images ]; then \
 		if [ ! -d $(INSTALL_DIR)/images ]; then \
-			cp -a --exclude='__pycache__' images $(INSTALL_DIR)/ && echo "Updated: $(INSTALL_DIR)/images"; \
+			rsync -a --exclude='__pycache__' images $(INSTALL_DIR)/ && echo "Updated: $(INSTALL_DIR)/images"; \
 		else \
 			echo "Skipped: $(INSTALL_DIR)/images (already exists)"; \
 		fi; \
@@ -55,7 +55,7 @@ install: all
 	@# Install plugins to local directory
 	@if [ -d plugins ]; then \
 		if [ ! -d $(INSTALL_DIR)/plugins ]; then \
-			cp -a --exclude='__pycache__' plugins $(INSTALL_DIR)/ && echo "Updated: $(INSTALL_DIR)/plugins"; \
+			rsync -a --exclude='__pycache__' plugins $(INSTALL_DIR)/ && echo "Updated: $(INSTALL_DIR)/plugins"; \
 		else \
 			echo "Skipped: $(INSTALL_DIR)/plugins (already exists)"; \
 		fi; \
@@ -84,12 +84,12 @@ install-force: all
 	
 	@# Force install runtime resources (images directory)
 	@if [ -d images ]; then \
-		cp -af --exclude='__pycache__' images $(INSTALL_DIR)/ && echo "Installed: $(INSTALL_DIR)/images"; \
+		rsync -a --exclude='__pycache__' images $(INSTALL_DIR)/ && echo "Installed: $(INSTALL_DIR)/images"; \
 	fi
 
 	@# Force install panel label mappings
 	@if [ -d labels ]; then \
-		cp -af --exclude='__pycache__' labels $(INSTALL_DIR)/ && echo "Installed: $(INSTALL_DIR)/labels"; \
+		rsync -a --exclude='__pycache__' labels $(INSTALL_DIR)/ && echo "Installed: $(INSTALL_DIR)/labels"; \
 	fi
 	
 	@# Force sync McAtariPi5 contents to system (overwrite all files)
