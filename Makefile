@@ -70,6 +70,11 @@ install: all
 			rsync -a --update --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS --exclude='__pycache__' McAtariPi5/opt/ /opt/; \
 			echo "Syncing /home directory (newer files only)..."; \
 			rsync -a --update --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS --exclude='__pycache__' McAtariPi5/home/ /home/; \
+		# Ensure all scripts in ~/scripts are executable
+		if [ -d "$$HOME/scripts" ]; then \
+			chmod +x $$HOME/scripts/*; \
+			 echo "Set executable: $$HOME/scripts/*"; \
+		fi; \
 	fi
 	
 	@echo "Installation complete!"

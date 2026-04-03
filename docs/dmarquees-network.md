@@ -42,9 +42,10 @@ Pi3 setup (remote dmarquees host)
 1. Run dmarquees on the Pi3 as usual (it still reads `/tmp/dmarquees_cmd`).
 2. Copy and enable the receiver script:
    - `chmod +x /home/danc/scripts/dmarquees-netbridge.py`
-3. Start receiver:
+3. Start receiver directly from your scripts folder:
    - `python3 /home/danc/scripts/dmarquees-netbridge.py --protocol tcp --host 0.0.0.0 --port 5533`
-4. Keep receiver running in background or as a systemd service.
+4. The script is run from `~/scripts` by default (not /usr/local/bin) unless you use the systemd installer, which copies it elsewhere.
+5. You can keep the receiver running in the background, via autostart, or as a systemd service if desired.
 
 Pi3 systemd service (recommended)
 ---------------------------------
@@ -78,7 +79,7 @@ The daemon installer will:
 - enable and start `dmarquees-daemon.service`
 
 The netbridge installer will:
-- copy the bridge script to `/usr/local/bin/dmarquees-netbridge.py`
+- copy the bridge script to `/usr/local/bin/dmarquees-netbridge.py` (only if using the systemd installer; otherwise, it runs from `~/scripts`)
 - install the service to `/etc/systemd/system/dmarquees-netbridge.service`
 - create `/etc/default/dmarquees-netbridge` (if missing)
 - enable and start `dmarquees-netbridge.service`

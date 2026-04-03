@@ -53,7 +53,7 @@ make install  # Make build system
 cmake --install build  # CMake build system
 ```
 
-This installs executables to `$HOME/marquees/bin/` and copies shared resources (images, plugins, scripts).
+This installs executables to `$HOME/marquees/bin/` and copies shared resources (images, plugins, scripts). All scripts are placed in `~/scripts` and made executable automatically (Linux only). By default, scripts like `dmarquees-netbridge.py` are run directly from `~/scripts` unless you use a systemd installer.
 
 ### Build Individual Components
 ```bash
