@@ -19,6 +19,11 @@ PI3_REMOTE_HOST="10.77.77.3"
 PI3_REMOTE_PORT="5533"
 MOUNTED_GAME_ART="marquees" # or "cpanel"
 
+debug_wait()
+{
+    echo "Press ENTER to continue..."
+    read -r _
+}
 
 load_persisted_options()
 {
@@ -48,14 +53,11 @@ load_persisted_options()
         THIS_IS_PI5=false
     fi
 
-
-
     # Debug: Show all three variables and wait for user
     echo "[autostart] PI5_HOSTNAME: $PI5_HOSTNAME"
     echo "[autostart] THIS_IS_PI5: $THIS_IS_PI5"
     echo "[autostart] PI5_DUAL_DISPLAY: $PI5_DUAL_DISPLAY"
-    echo "Press ENTER to continue..."
-    read -r _
+    debug_wait
 }
 
 # Function to print a severe error and wait for user acknowledgement
@@ -65,8 +67,7 @@ echo_error_and_wait()
     echo
     echo "[autostart] ERROR: $msg"
     echo
-    echo "Press ENTER to acknowledge and continue..."
-    read -r _
+    debug_wait
 }
 
 # XinMo status check function
@@ -210,7 +211,7 @@ setup_dmarquees()
     # Mount marquees.zip read-only for all users
     echo "[autostart] Mounting marquees.zip..."
     fuse-zip -r -o allow_other "$ZIP" "$MNT" || {
-        echo "[autostart] Failed to mount $ZIP"
+        echo_error_and_wait "[autostart] Failed to mount $ZIP"
         return 1
     }
 
@@ -234,12 +235,14 @@ setup_dmarquees()
         echo "[autostart] Starting dmarquees daemon..."
         sudo stdbuf -oL -eL "$DAEMON" >"$LOG" 2>&1 &
         sleep 1
+        debug_wait
     fi
 
     if pgrep -x dmarquees >/dev/null; then
         echo "[autostart] dmarquees started successfully."
+        debug_wait
     else
-        echo "[autostart] ERROR: dmarquees failed to start. Check $LOG file."
+        echo_error_and_wait "[autostart] ERROR: dmarquees failed to start. Check $LOG file."
     fi
 }
 
@@ -376,8 +379,7 @@ load_persisted_options
 
 if [ "$THIS_IS_PI5" != true ] || [ "$PI5_DUAL_DISPLAY" = true ]; then
     echo "[autostart] calling setup_dmatquees"
-    echo "Press ENTER to continue..."
-    read -r _
+    debug_wait
     setup_dmarquees
 fi
 
