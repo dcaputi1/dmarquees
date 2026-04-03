@@ -188,7 +188,7 @@ setup_dmarquees()
     local DAEMON="$HOME/marquees/bin/dmarquees"
     local LOG="$HOME/marquees/dmarquees.log"
 
-    if [ "$THIS_IS_PI5" = true ] && [ ! "$DUAL_DISPLAY" = true ]; then
+    if [ "$THIS_IS_PI5" = true ] && [ ! "$PI5_DUAL_DISPLAY" = true ]; then
         echo "[autostart] Pi5 with single display, skipping dmarquees setup."
         return 0
     fi
