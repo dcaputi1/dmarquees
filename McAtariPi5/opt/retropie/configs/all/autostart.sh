@@ -1,12 +1,4 @@
 #!/bin/bash
-send_dmarquees_cmd() {
-    local cmd="$1"
-    if [ -x "$HOME/scripts/dmarquees-send.sh" ]; then
-        "$HOME/scripts/dmarquees-send.sh" "$cmd"
-    else
-        echo "[autostart] ERROR: $HOME/scripts/dmarquees-send.sh not found or not executable. Cannot send command '$cmd'." >&2
-    fi
-}
 
 # ============================================================
 #  autostart.sh - RetroPie bootup entry point (pi3 and pi5)
@@ -27,10 +19,14 @@ PI3_REMOTE_HOST="10.77.77.3"
 PI3_REMOTE_PORT="5533"
 MOUNTED_GAME_ART="marquees" # or "cpanel"
 
+DEBUG=""  # set to 1 to enable debug_wait
+
 debug_wait()
 {
-    echo "Press ENTER to continue..."
-    read -r _
+    if [ -n "$DEBUG" ]; then
+        echo "Press ENTER to continue..."
+        read -r _
+    fi
 }
 
 load_persisted_options()
@@ -73,9 +69,9 @@ echo_error_and_wait()
 {
     local msg="$1"
     echo
-    echo "[autostart] ERROR: $msg"
+    echo "[autostart] ERROR: $msg (press ENTER to continue)"
     echo
-    debug_wait
+#   read -r _
 }
 
 # XinMo status check function
@@ -281,6 +277,16 @@ shutdown_dmarquees()
 
     if [ $FOUND_DMARQUEES = true ]; then
         echo "[autostart] dmarquees stopped and cleaned up."
+    fi
+}
+
+send_dmarquees_cmd()
+{
+    local cmd="$1"
+    if [ -x "$HOME/scripts/dmarquees-send.sh" ]; then
+        "$HOME/scripts/dmarquees-send.sh" "$cmd"
+    else
+        echo "[autostart] ERROR: $HOME/scripts/dmarquees-send.sh not found or not executable. Cannot send command '$cmd'." >&2
     fi
 }
 
