@@ -1188,7 +1188,7 @@ int main(int argc, char **argv)
             break;  // get out of main loop
         }
 
-        if (spam_count++ < 5)
+        if (spam_count++ < 50)
             ts_printf("dmarquees (%d): read on %s\n", spam_count, CMD_FIFO);
         else if (spam_count == 6)
             ts_printf("dmarquees: further logging for fifo suppressed\n");
