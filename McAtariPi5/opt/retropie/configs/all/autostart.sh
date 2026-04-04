@@ -320,7 +320,9 @@ main_menu()
             --menu "Choose Fontend: (timeout $MENU_TIMEOUT secs)\n\n$XINMO_STATUS_MSG" 16 50 4 \
             "${MENU_ITEMS[@]}" \
             2>&1 > /dev/tty)
-        printf "\033[2J\033[H"
+
+###     printf "\033[2J\033[H"  DO NOT USE (was 'clear' which was worse!)
+
         if [[ "$CHOICE" == "" ]]; then
             CHOICE=$DEF_KEY
         fi

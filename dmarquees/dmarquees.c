@@ -268,7 +268,10 @@ static void show_default_marquee(void)
         return; // screen remains black
     }
 
-    ts_printf("dmarquees: showing default marquee: %s\n", imgpath);
+    if (_splash_mode)
+        ts_printf("dmarquees: centering default splash screen: %s\n", imgpath);
+    else
+        ts_printf("dmarquees: showing default marquee: %s\n", imgpath);
 
     scale_and_blit_to_xrgb(image, iw, ih, (uint32_t*)fb_map, fb_w, fb_h, stride / 4, 0, _splash_mode);
     try_reset_crtc();
