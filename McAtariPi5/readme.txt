@@ -1,4 +1,4 @@
-steps to create an SD image baseline
+creating an SD image baseline Pi5 (Pi3 below problem log)
 ------------------------------------
 
 preliminary:
@@ -52,16 +52,17 @@ steps:
 8. run ~/IvarArcade/McAtariPi5/ra_final.sh (formerly cp_opt.sh)
 9. run ~/IvarArcade/analyze_games/analyze_games (not sudo!)
 10.sudo ~/scripts/set_asound.sh (for Trixie sound problem - not needed for Bookworm Debian base OS)
-11.if using Pi3 as remote marquee node, see below "Pi3...Setup"
+11.if using Pi3 as remote marquee node:
+   sudo nmcli con add type ethernet ifname eth0 con-name eth0-static ip4 10.77.77.5/24
+   sudo nmcli con up eth0-static
+12.sudo apt install fuse-zip (mounts zip file w/ PNGs)
+   edit /etc/fuse.conf and uncomment #user_allow_other:
+   sudo sed -i 's/^#user_allow_other/user_allow_other/' /etc/fuse.conf
 
 optional:
 A. sudo apt install meld
 C. sudo apt install jstest-gtk
 D. sudo apt install code
-required:
-E. sudo apt install fuse-zip (mounts zip file w/ PNGs)
-   edit /etc/fuse.conf and uncomment #user_allow_other:
-   sudo sed -i 's/^#user_allow_other/user_allow_other/' /etc/fuse.conf
 
 problem log:
 1/11/26 [x] ES launch in-game tab menu, return/backspace swapped
@@ -117,37 +118,49 @@ problem log:
 3/6/26  [x] defender L/R reverse NFG either, using defenderlr plugin
 
 ===========================================
-Pi3 Light OS baseline setup
+Pi3 baseline setup
 ===========================================
 
-   sudo dpkg-reconfigure locales (change GB to US)
-   sudo mkdir -p /media/danc/ExtremeSSD
-   sudo mount /dev/sda1 /media/danc/ExtremeSSD
-   mkdir -p ~/MAME_0.256_EXTRAs
-   cp -v /media/danc/ExtremeSSD/Mame/MAME_0.256_EXTRAs/marquees.zip ~/MAME_0.256_EXTRAs/
-   cp -v /media/danc/ExtremeSSD/Mame/MAME_0.256_EXTRAs/cpanel.zip ~/MAME_0.256_EXTRAs/
-   sudo apt update
-   sudo apt install -y git
-   git clone --depth=1 https://github.com/RetroPie/RetroPie-Setup.git
-   run retropie-setup and install ES (needed?) and run it on startup
-   4/1/2026 - ES build from source (only option) took a long time (~45 mins?),
-               investigate dcaputi1/RetroPie-Setup (used for Trixie on Pi5)
-   git clone https://github.com/dcaputi1/IvarArcade.git
-   cd IvarArcade
-   sudo apt install -y build-essential libdrm-dev libpng-dev libtinyxml2-dev fuse-zip
-   4/1/2026 - retropie-setup added above (TBD may not need all the previous apts)
-   sudo chown -R danc /opt/retropie
-   make install
-   cd
-   
+preliminary:
+a. use pi imager tool to create an SD pi3 32-bit OS image with:
+   enabled wifi credentials, wifi country US, user danc, host McAtariPi3
+   4/4/2026 - Trixie OK but ReroPie installs from source takes time
+b. boot to desktop GUI
+c. enable raspberry pi connect
+   (email: dcaputi@optonline.net, pass: E....D....123!)
+d. install updates
+e. preferences, pi config, localization US UTF-8 for all
+f. reboot, open command prompt and run:
+> locale (confirm all US UTF-8)
+> git clone https://github.com/dcaputi1/IvarArcade.git
+  then reload this readme.txt from ~/IvarArcade/McAtariPi5, make sure nothing above changed
+> git clone https://github.com/dcaputi1/RetroPie-Setup.git
+  4/4/2026 - any diffs with https://github.com/RetroPie/RetroPie-Setup.git ?
+> cd RetroPie-Setup
+> sudo ./retropie_setup.sh
+g. install all core packs, enable boot to ES
+h. do NOT reboot, from command prompt:
 
-   Configure direct wired link static IPs (NetworkManager):
+ > mkdir -p ~/MAME_0.256_EXTRAs
+ > cp -v /media/danc/ExtremeSSD/Mame/MAME_0.256_EXTRAs/marquees.zip ~/MAME_0.256_EXTRAs/
+ > cp -v /media/danc/ExtremeSSD/Mame/MAME_0.256_EXTRAs/cpanel.zip ~/MAME_0.256_EXTRAs/
+ > sudo apt update   
+ > cd IvarArcade
+ > sudo apt install -y libtinyxml2-dev fuse-zip
+ > sudo chown -R danc /opt/retropie
+ > make install
 
-   # Pi3 side (run on Pi3)
+4/4/2026 NA - sudo dpkg-reconfigure locales (change GB to US)
+4/4/2026 NA - sudo mkdir -p /media/danc/ExtremeSSD
+4/4/2026 NA - sudo mount /dev/sda1 /media/danc/ExtremeSSD
+
+i. Configure direct wired link static IPs (NetworkManager):
+
+   # Pi3 side
    sudo nmcli con add type ethernet ifname eth0 con-name eth0-static ip4 10.77.77.3/24
    sudo nmcli con up eth0-static
 
-   # Pi5 side (run on Pi5 once per baseline; keep wired link subnet in sync)
+   # Pi5 side
    sudo nmcli con add type ethernet ifname eth0 con-name eth0-static ip4 10.77.77.5/24
    sudo nmcli con up eth0-static
 
@@ -156,3 +169,4 @@ Pi3 Light OS baseline setup
 
    # If this is a fresh Pi3 baseline, run once on the Pi5:
    ssh-copy-id danc@10.77.77.3
+   04/4/2026 - may not need this
