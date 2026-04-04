@@ -1,4 +1,12 @@
 #!/bin/bash
+send_dmarquees_cmd() {
+    local cmd="$1"
+    if [ -x "$HOME/scripts/dmarquees-send.sh" ]; then
+        "$HOME/scripts/dmarquees-send.sh" "$cmd"
+    else
+        echo "[autostart] ERROR: $HOME/scripts/dmarquees-send.sh not found or not executable. Cannot send command '$cmd'." >&2
+    fi
+}
 
 # ============================================================
 #  autostart.sh - RetroPie bootup entry point (pi3 and pi5)

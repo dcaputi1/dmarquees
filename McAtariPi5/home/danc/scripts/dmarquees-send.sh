@@ -28,5 +28,18 @@ send_local() {
     fi
 }
 
+
+# Track success of each send
 send_local
+local_status=$?
 send_remote
+remote_status=$?
+
+# If both fail, exit with error
+if [ $local_status -ne 0 ] && [ $remote_status -ne 0 ]; then
+    echo "[dmarquees-send.sh] ERROR: Failed to send command to both local FIFO and remote TCP." >&2
+    exit 1
+fi
+
+# Success if at least one send worked
+exit 0
