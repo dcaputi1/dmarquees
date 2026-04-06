@@ -53,7 +53,7 @@
 #include <xf86drmMode.h>
 #include <sys/utsname.h>
 
-#define VERSION "1.8.0"
+#define VERSION "1.8.1"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
 #define DEF_MARQUEE_NAME "RetroPieMarquee"
 #define DEF_RA_MARQUEE_NAME "RetroArch_logo"
