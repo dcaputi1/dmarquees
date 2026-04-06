@@ -40,47 +40,50 @@ install: all
 	@# Install runtime resources (images directory)
 	@if [ -d images ]; then \
 		if [ ! -d $(INSTALL_DIR)/images ]; then \
-			rsync -a --exclude='__pycache__' images $(INSTALL_DIR)/ && echo "Updated: $(INSTALL_DIR)/images"; \
+			rsync -a images $(INSTALL_DIR)/ && echo "Updated: $(INSTALL_DIR)/images"; \
 		else \
 			echo "Skipped: $(INSTALL_DIR)/images (already exists)"; \
 		fi; \
 	fi
-
+	
 	@# Install panel label mappings
 	@if [ -d labels ]; then \
-		mkdir -p $(INSTALL_DIR)/labels; \
-		rsync -a --update labels/ $(INSTALL_DIR)/labels/ && echo "Updated: $(INSTALL_DIR)/labels"; \
+		if [ ! -d $(INSTALL_DIR)/labels ]; then \
+			rsync -a labels/ $(INSTALL_DIR)/ && echo "Updated: $(INSTALL_DIR)/labels"; \
+		else \
+			echo "Skipped: $(INSTALL_DIR)/labels (already exists)"; \
+		fi; \
 	fi
 	
 	@# Install plugins to local directory
 	@if [ -d plugins ]; then \
 		if [ ! -d $(INSTALL_DIR)/plugins ]; then \
-			rsync -a --exclude='__pycache__' plugins $(INSTALL_DIR)/ && echo "Updated: $(INSTALL_DIR)/plugins"; \
+			rsync -a plugins $(INSTALL_DIR)/ && echo "Updated: $(INSTALL_DIR)/plugins"; \
 		else \
 			echo "Skipped: $(INSTALL_DIR)/plugins (already exists)"; \
 		fi; \
 	fi
 	
-	       @# Sync McAtariPi5 contents to system (only newer files)
-	       @# This handles plugins, scripts, configs, and all other system files
-	       @if [ ! -d McAtariPi5 ]; then \
-		       echo "Error: McAtariPi5 source directory missing"; \
-	       else \
-		       echo "Syncing /opt directory (newer files only)..."; \
-			       rsync -a --update --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS --exclude='__pycache__' McAtariPi5/opt/ /opt/; \
-			       echo "Syncing /home directory (newer files only)..."; \
-			       rsync -a --update --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS --exclude='__pycache__' McAtariPi5/home/ /home/; \
-		       # Ensure all scripts in ~/scripts are executable
-		       if [ -d "$$HOME/scripts" ]; then \
-			       chmod +x $$HOME/scripts/*; \
-				echo "Set executable: $$HOME/scripts/*"; \
-		       fi; \
-		       # Ensure autostart.sh is executable
-		       if [ -f "/opt/retropie/configs/all/autostart.sh" ]; then \
-			       chmod +x /opt/retropie/configs/all/autostart.sh; \
-			       echo "Set executable: /opt/retropie/configs/all/autostart.sh"; \
-		       fi; \
-	       fi
+	@# Sync McAtariPi5 contents to system (only newer files)
+	@# This handles plugins, scripts, configs, and all other system files
+	@if [ ! -d McAtariPi5 ]; then \
+		echo "Error: McAtariPi5 source directory missing"; \
+	else \
+		echo "Syncing /opt directory (newer files only)..."; \
+			rsync -a --update --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS --exclude='__pycache__' McAtariPi5/opt/ /opt/; \
+			echo "Syncing /home directory (newer files only)..."; \
+			rsync -a --update --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS --exclude='__pycache__' McAtariPi5/home/ /home/; \
+		# Ensure all scripts in ~/scripts are executable
+		if [ -d "$$HOME/scripts" ]; then \
+			chmod +x $$HOME/scripts/*; \
+			echo "Set executable: $$HOME/scripts/*"; \
+		fi; \
+		# Ensure autostart.sh is executable
+		if [ -f "/opt/retropie/configs/all/autostart.sh" ]; then \
+			chmod +x /opt/retropie/configs/all/autostart.sh; \
+			echo "Set executable: /opt/retropie/configs/all/autostart.sh"; \
+		fi; \
+	fi
 	
 	@echo "Installation complete!"
 
@@ -94,28 +97,28 @@ install-force: all
 	
 	@# Force install runtime resources (images directory)
 	@if [ -d images ]; then \
-		rsync -a --exclude='__pycache__' images $(INSTALL_DIR)/ && echo "Installed: $(INSTALL_DIR)/images"; \
+		rsync -a images $(INSTALL_DIR)/ && echo "Installed: $(INSTALL_DIR)/images"; \
 	fi
 
 	@# Force install panel label mappings
 	@if [ -d labels ]; then \
-		rsync -a --exclude='__pycache__' labels $(INSTALL_DIR)/ && echo "Installed: $(INSTALL_DIR)/labels"; \
+		rsync -a labels $(INSTALL_DIR)/ && echo "Installed: $(INSTALL_DIR)/labels"; \
 	fi
 	
-	       @# Force sync McAtariPi5 contents to system (overwrite all files)
-	       @if [ ! -d McAtariPi5 ]; then \
-		       echo "Error: McAtariPi5 source directory missing"; \
-	       else \
-		       echo "Syncing /opt directory (forcing overwrites)..."; \
-			       rsync -a --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS --exclude='__pycache__' McAtariPi5/opt/ /opt/; \
-			       echo "Syncing /home directory (forcing overwrites)..."; \
-			       rsync -a --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS --exclude='__pycache__' McAtariPi5/home/ /home/; \
-		       # Ensure autostart.sh is executable
-		       if [ -f "/opt/retropie/configs/all/autostart.sh" ]; then \
-			       chmod +x /opt/retropie/configs/all/autostart.sh; \
-			       echo "Set executable: /opt/retropie/configs/all/autostart.sh"; \
-		       fi; \
-	       fi
+	@# Force sync McAtariPi5 contents to system (overwrite all files)
+	@if [ ! -d McAtariPi5 ]; then \
+		echo "Error: McAtariPi5 source directory missing"; \
+	else \
+		echo "Syncing /opt directory (forcing overwrites)..."; \
+			rsync -a --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS --exclude='__pycache__' McAtariPi5/opt/ /opt/; \
+			echo "Syncing /home directory (forcing overwrites)..."; \
+			rsync -a --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS --exclude='__pycache__' McAtariPi5/home/ /home/; \
+		# Ensure autostart.sh is executable
+		if [ -f "/opt/retropie/configs/all/autostart.sh" ]; then \
+			chmod +x /opt/retropie/configs/all/autostart.sh; \
+			echo "Set executable: /opt/retropie/configs/all/autostart.sh"; \
+		fi; \
+	fi
 	
 	@echo "Force installation complete!"
 
