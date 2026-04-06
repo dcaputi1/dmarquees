@@ -1139,8 +1139,10 @@ static void handle_fifo_command(char *cmd_str)
         else if (_frontend_mode == eRA)
             break;
 
-        // If we reach here, it's either eROM or an unknown command - treat as ROM shortname
-        if (game_has_multiple_screens(cmd_str))
+        // If we reach here, it's either eROM or an unknown command
+
+        // special case: punchout (dual screen) - allow possible 2nd screen usage
+        if (_this_is_pi5 && !_pi3_present && _pi5_dual_display && game_has_multiple_screens(cmd_str))
         {
             ts_printf("dmarquees: Skipping multi-screen game: %s\n", cmd_str);
             break;
