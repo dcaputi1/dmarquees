@@ -5,11 +5,9 @@ mame -inipath /opt/retropie/emulators/mame/ini \
      -effect scanlines \
      -video opengl \
      -prescale 1 \
-     -waitvsync \
-     -nothrottle \
+     -nowaitvsync \
+     -throttle \
      -nosleep \
-     -noautoframeskip \
-     -nofilter \
      -gl_glsl \
      -gl_glsl_filter 0 \
      punchout
