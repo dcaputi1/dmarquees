@@ -1,11 +1,11 @@
-local VERSION = "1.3.2"
+local VERSION = "1.4.0"
 
 local exports = {
     name = "leds",
     version = VERSION,
     description = "LED control plugin",
     license = "MIT",
-    author = { name = "DanC ChatGPT" }
+    author = { name = "Dan Caputi" }
 }
 
 local leds = exports
@@ -26,12 +26,12 @@ local reset_subscriber
 local stop_subscriber
 local frame_subscriber
 local machine_ok = true
-local attract_on = true    -- coin1 flashes in attract mode
+local attract_on = true    -- coin lit in attract mode (flashing killed performance)
 
 local coins1 = nil
 local start1 = nil
 local start2 = nil
-local player_buttons = {}  -- Table to hold player button references
+--local player_buttons = {}  -- Table to hold player button references
 local credits = 0
 
 local last_coins1 = 0
@@ -39,9 +39,9 @@ local last_start1 = 0
 local last_start2 = 0
 
 -- Attract mode and LED flashing
-local ATTRACT_MODE_TIMEOUT = 60.0  -- Return to attract mode after 1 minute of inactivity
+--local ATTRACT_MODE_TIMEOUT = 60.0  -- Return to attract mode after 1 minute of inactivity
 local COIN_FLASH_INTERVAL = 0.5    -- Flash coin LED every 0.5 seconds
-local last_button_press_time = 0
+--local last_button_press_time = 0
 
 -----------------------------------------------------------
 -- Helper Functions
@@ -81,9 +81,9 @@ local function initialize_ports()
                 start2 = { port = port, field = field }
             end
             -- Collect player button fields (P1_BUTTON1, P1_BUTTON2, etc.)
-            if field_name:lower():find("p1_button") or field_name:lower():find("button") then
-                table.insert(player_buttons, { port = port, field = field, name = field_name })
-            end
+--          if field_name:lower():find("p1_button") or field_name:lower():find("button") then
+--              table.insert(player_buttons, { port = port, field = field, name = field_name })
+--          end
         end
     end
 
@@ -154,38 +154,38 @@ local function on_frame()
     local current_time = os.clock()
         
     -- Track player button activity for attract mode
-    local any_player_button_pressed = false
-    for _, button_ref in ipairs(player_buttons) do
-        local button_now = button_ref.port:read()
-        if is_pressed(button_now, button_ref.field) then
-            any_player_button_pressed = true
-            break
-        end
-    end
+--  local any_player_button_pressed = false
+--  for _, button_ref in ipairs(player_buttons) do
+--      local button_now = button_ref.port:read()
+--      if is_pressed(button_now, button_ref.field) then
+--          any_player_button_pressed = true
+--          break
+--      end
+--  end
     
     -- Update last button press time only when player buttons are active
-    if any_player_button_pressed then
-        last_button_press_time = current_time
-        attract_on = false
-    end
+--  if any_player_button_pressed then
+--      last_button_press_time = current_time
+--      attract_on = false
+--  end
     
     -- Return to attract mode after player inactivity timeout
-    if (current_time - last_button_press_time) > ATTRACT_MODE_TIMEOUT then
-        attract_on = true
-    end
+--  if (current_time - last_button_press_time) > ATTRACT_MODE_TIMEOUT then
+--      attract_on = true
+--  end
 
     -- Start 1 now
     if s1_edge and credits >= 1 then
         credits = credits - 1
-        attract_on = false
         print("LEDS Plugin: 1 Player start. Credits: " .. credits)
+        attract_on = false
     end
 
     -- Start 2 now
     if s2_edge and credits >= 2 then
         credits = credits - 2
         print("LEDS Plugin: 2 Player start. Credits: " .. credits)
-        attract_on = false
+--      attract_on = false
     end
 
     last_coins1 = c1_now
@@ -223,7 +223,7 @@ local function on_game_start()
     last_start1 = 0
     last_start2 = 0
     credits = 0
-    last_button_press_time = 0
+--  last_button_press_time = 0
     
     local gamename = emu.romname()
     if gamename == "___empty" then return end
