@@ -32,11 +32,13 @@ local coins1 = nil
 local start1 = nil
 local start2 = nil
 --local player_buttons = {}  -- Table to hold player button references
+local button1 = nil
 local credits = 0
 
 local last_coins1 = 0
 local last_start1 = 0
 local last_start2 = 0
+local last_button1 = 0
 
 -- Attract mode and LED flashing
 --local ATTRACT_MODE_TIMEOUT = 60.0  -- Return to attract mode after 1 minute of inactivity
@@ -84,6 +86,10 @@ local function initialize_ports()
 --          if field_name:lower():find("p1_button") or field_name:lower():find("button") then
 --              table.insert(player_buttons, { port = port, field = field, name = field_name })
 --          end
+            -- punchout has "P1 Button 1" for A button
+            if emu.romname() == "punchout" and not button1 and match_field_name(field_name, "p1", "button 1") then
+                button1 = { port = port, field = field }
+            end
         end
     end
 
@@ -101,6 +107,7 @@ local function initialize_ports()
     if coins1 then last_coins1 = coins1.port:read() end
     if start1 then last_start1 = start1.port:read() end
     if start2 then last_start2 = start2.port:read() end
+    if button1 then last_button1 = button1.port:read() end
 end
 
 local function is_pressed(current, field)
@@ -125,9 +132,9 @@ local function on_frame()
 
     if not machine_ok then return end
 
-    local c1_now, s1_now, s2_now
-    local c1_down, s1_down, s2_down
-    local c1_edge, s1_edge, s2_edge
+    local c1_now, s1_now, s2_now, b1_now
+    local c1_down, s1_down, s2_down, b1_down
+    local c1_edge, s1_edge, s2_edge, b1_edge
 
     if coins1 then
         c1_now = coins1.port:read()
@@ -149,6 +156,13 @@ local function on_frame()
         s2_now = start2.port:read()
         s2_down = is_pressed(s2_now, start2.field)
         s2_edge = s2_down and s2_now ~= last_start2
+    end
+
+    -- track button 1 for Punch-Out! start...
+    if button1 then
+        b1_now = button1.port.read()
+        b1_down = is_pressed(b1_now, button1.field)
+        b1_edge = b1_down and b1_now ~= last_button1
     end
 
     local current_time = os.clock()
@@ -185,12 +199,20 @@ local function on_frame()
     if s2_edge and credits >= 2 then
         credits = credits - 2
         print("LEDS Plugin: 2 Player start. Credits: " .. credits)
---      attract_on = false
+        attract_on = false
+    end
+
+    -- Button 1 now (Punch-Out!)
+    if b1_edge and credits >= 1 then
+        credits = credits - 1
+        print("LEDS Plugin: Punch-Out! started. Credits: " .. credits)
+        attract_on = false
     end
 
     last_coins1 = c1_now
     last_start1 = s1_now
     last_start2 = s2_now
+    last_button1 = b1_now
 
     -- Update LED mask based on credits
     local mask_now = 0  -- Default to all LEDs off
