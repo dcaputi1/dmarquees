@@ -81,15 +81,14 @@ local function initialize_ports()
             elseif not start2 and match_field_name(field_name, "start", "2") then
                 print("start 2 found")
                 start2 = { port = port, field = field }
+            elseif emu.romname() == "punchout" and not button1 and match_field_name(field_name, "p1", "button 1") then
+                button1 = { port = port, field = field }
             end
             -- Collect player button fields (P1_BUTTON1, P1_BUTTON2, etc.)
 --          if field_name:lower():find("p1_button") or field_name:lower():find("button") then
 --              table.insert(player_buttons, { port = port, field = field, name = field_name })
 --          end
             -- punchout has "P1 Button 1" for A button
-            if emu.romname() == "punchout" and not button1 and match_field_name(field_name, "p1", "button 1") then
-                button1 = { port = port, field = field }
-            end
         end
     end
 
