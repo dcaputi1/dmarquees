@@ -299,6 +299,10 @@ persist_frontend_choice()
 main_menu()
 {
     local DEF_KEY="X"
+    if [[ -f $HOME/.def_key ]]; then
+        source $HOME/.def_key
+    fi
+
     while true; do
         restore_cfg
         python3 $HOME/scripts/leds_off.py
