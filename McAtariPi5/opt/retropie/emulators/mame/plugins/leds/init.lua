@@ -159,7 +159,7 @@ local function on_frame()
 
     -- track button 1 for Punch-Out! start...
     if button1 then
-        b1_now = button1.port.read()
+        b1_now = button1.port:read()
         b1_down = is_pressed(b1_now, button1.field)
         b1_edge = b1_down and b1_now ~= last_button1
     end
