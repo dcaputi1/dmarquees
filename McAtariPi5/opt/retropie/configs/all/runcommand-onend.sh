@@ -3,10 +3,10 @@
 
 ARCADE_HOME="${ARCADE_HOME:-/home/danc}"
 SENDER_SCRIPT="${DMARQUEES_SENDER_SCRIPT:-$ARCADE_HOME/scripts/dmarquees-send.sh}"
-TRANSPORT_CFG="${DMARQUEES_TRANSPORT_CFG:-$ARCADE_HOME/.dmarquees_transport.conf}"
+
 
 if [[ -x "$SENDER_SCRIPT" ]]; then
-	DMARQUEES_TRANSPORT_CFG="$TRANSPORT_CFG" DMARQUEES_CMD_FIFO="/tmp/dmarquees_cmd" "$SENDER_SCRIPT" "RA"
+	DMARQUEES_CMD_FIFO="/tmp/dmarquees_cmd" "$SENDER_SCRIPT" "RA"
 else
 	echo "RA" > /tmp/dmarquees_cmd
 fi

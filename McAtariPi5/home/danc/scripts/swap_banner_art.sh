@@ -1,34 +1,28 @@
 #!/bin/bash
 
+
 # ==========================================
 #  Banner Art Swap: toggle between marquees and cpanel
 # ==========================================
 
-MNT="/home/danc/mnt/marquees"
-MARQUEES_ZIP="/home/danc/MAME_0.256_EXTRAs/marquees.zip"
-CPANEL_ZIP="/home/danc/MAME_0.256_EXTRAs/cpanel.zip"
+MNT="$HOME/mnt/marquees"
+MARQUEES_ZIP="$HOME/MAME_0.256_EXTRAs/marquees.zip"
+CPANEL_ZIP="$HOME/MAME_0.256_EXTRAs/cpanel.zip"
 CMD_FIFO="/tmp/dmarquees_cmd"
 CURRENT_MOUNT_STATE="/tmp/current_mount_state"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ARCADE_HOME_DEFAULT="$(cd "$SCRIPT_DIR/.." && pwd)"
-TRANSPORT_CFG="${DMARQUEES_TRANSPORT_CFG:-$ARCADE_HOME_DEFAULT/.dmarquees_transport.conf}"
-SENDER_SCRIPT="${DMARQUEES_SENDER_SCRIPT:-$ARCADE_HOME_DEFAULT/scripts/dmarquees-send.sh}"
+SENDER_SCRIPT="$HOME/scripts/dmarquees-send.sh"
 
-# In TCP mode the mount and the daemon both live on Pi3.
-# Send SWAPART over the network; the netbridge handles the actual zip swap
-# and sends REFRESH to the local Pi3 daemon automatically.
-DMARQUEES_TRANSPORT="LOCAL"
-if [ -f "$TRANSPORT_CFG" ]; then
-    # shellcheck disable=SC1090
-    source "$TRANSPORT_CFG"
+# Read PI3_PRESENT from persisted file if it exists (match autostart.sh)
+# Match autostart.sh: default PI3_PRESENT to true, then override if file exists
+PI3_PRESENT=true
+PI3_PRESENT_FILE="$HOME/.pi3_present"
+if [ -f "$PI3_PRESENT_FILE" ]; then
+    PI3_PRESENT=$(cat "$PI3_PRESENT_FILE")
 fi
-
-if [ "${DMARQUEES_TRANSPORT:-LOCAL}" != "LOCAL" ]; then
-    echo "[swap_banner_art] TCP mode: delegating art swap to Pi3 via SWAPART command"
-    if [ -x "$SENDER_SCRIPT" ]; then
-        DMARQUEES_TRANSPORT_CFG="$TRANSPORT_CFG" DMARQUEES_CMD_FIFO="$CMD_FIFO" "$SENDER_SCRIPT" "SWAPART"
-    fi
-    exit 0
+# If PI3_PRESENT is true, send SWAPART to Pi3 and exit
+if [ "$PI3_PRESENT" = "true" ]; then
+    "$SENDER_SCRIPT" "SWAPART"
+    exit $?
 fi
 
 # Check what's currently mounted
@@ -73,9 +67,5 @@ fi
 
 # Signal daemon to refresh
 if pgrep -x dmarquees >/dev/null; then
-    if [ -x "$SENDER_SCRIPT" ]; then
-        DMARQUEES_TRANSPORT_CFG="$TRANSPORT_CFG" DMARQUEES_CMD_FIFO="$CMD_FIFO" "$SENDER_SCRIPT" "REFRESH" 2>/dev/null || true
-    else
-        echo "REFRESH" > "$CMD_FIFO" 2>/dev/null || true
-    fi
+    "$SENDER_SCRIPT" "REFRESH" 2>/dev/null || true
 fi

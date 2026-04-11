@@ -4,17 +4,16 @@
 
 echo "runcommand-onlaunch started $date" > /tmp/rc.out
 
-ARCADE_HOME="${ARCADE_HOME:-/home/danc}"
-SENDER_SCRIPT="${DMARQUEES_SENDER_SCRIPT:-$ARCADE_HOME/scripts/dmarquees-send.sh}"
-TRANSPORT_CFG="${DMARQUEES_TRANSPORT_CFG:-$ARCADE_HOME/.dmarquees_transport.conf}"
+SENDER_SCRIPT="${DMARQUEES_SENDER_SCRIPT:-/home/danc/scripts/dmarquees-send.sh}"
 
 #SYSTEM="$1"
 #EMULATOR="$2"
 ROM="$3"
 #CMD="$4"
 
-# send ROM name to marquee daemon
+# process per ROM customizations and send name to dmarquees FIFO
 echo "checking rom $ROM" >> /tmp/rc.out
+
 if [[ -n "$ROM" ]]; then
     romzip="$(basename "$ROM")"
     command="${romzip%.zip}"
@@ -45,12 +44,12 @@ if [[ -n "$ROM" ]]; then
             sudo ultrastikcmd -c 1 -u "/home/danc/IvarArcade/tools/UltraStikMaps/8-WayEasyDiagonals.um" >> /tmp/rc.out 2>&1
         fi
     fi
-    # Write the ROM short name to the marquee command file
-    # NOTE: do this last! (race condition)
-    # ALSO: we ignore all rom commands from RA unless sent from here with "RC:" prepended
-	echo "input $romzip : sending command $command to marquee daemon" >> /tmp/rc.out
+    # Send ROM short name to dmarquees-send.sh
+    # NOTE: RACE CONDITION - do this last and also note,
+    # dmarquees ignores rom commands in RA mode unless sent from here with "RC:" prepended
+	echo "input $romzip : sending $command to dmarquees" >> /tmp/rc.out
     if [[ -x "$SENDER_SCRIPT" ]]; then
-        DMARQUEES_TRANSPORT_CFG="$TRANSPORT_CFG" DMARQUEES_CMD_FIFO="/tmp/dmarquees_cmd" "$SENDER_SCRIPT" "RC:$command"
+        "$SENDER_SCRIPT" "RC:$command"
     else
         echo "RC:$command" > /tmp/dmarquees_cmd
     fi
