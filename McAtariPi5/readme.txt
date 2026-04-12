@@ -192,5 +192,5 @@ i. Configure direct wired link static IPs (NetworkManager):
         [ ] indytemp on RA does not run
 4/11/26 [ ] lightgun idea: House of the Dead (hotd) fail - try skipframes 1
 4/12/26 [ ] Atari 2600 paddles will NOT work with DC-Panel1 hub
-        [ ] pomg is still garbage even with Atari paddles
+        [ ] pong is still garbage even with Atari paddles
 
