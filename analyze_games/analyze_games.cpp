@@ -123,6 +123,7 @@ bool extractGameInfo(XMLDocument& doc, const string& shortName, GameInfo& info)
     return true;
 }
 
+#ifdef USE_CRTPI_SHADERS
 // Write shader preset file based on display type and rotation
 void writeShaderFile(const GameInfo& info)
 {
@@ -148,6 +149,7 @@ void writeShaderFile(const GameInfo& info)
     out << "SCANLINE_GAP_BRIGHTNESS = \"0.500000\"" << endl;
     out.close();
 }
+#endif
 
 // Write .ini file for joystick mapping if needed
 // ref. @ retrogamedeconstructionzone.com/2019/11/joystick-mapping-in-mame.html
@@ -269,7 +271,9 @@ int main()
             continue;
         }
 
+#ifdef USE_CRTPI_SHADERS
         writeShaderFile(info);
+#endif
         writeJoystickIni(info);
 
         // Optional summary output
