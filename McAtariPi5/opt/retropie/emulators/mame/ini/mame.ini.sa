@@ -10,10 +10,10 @@ writeconfig               0
 homepath                  .
 rompath                   /home/danc/RetroPie/BIOS/mame;/home/danc/RetroPie/roms/arcade
 hashpath                  /opt/retropie/emulators/mame/hash
-samplepath                /home/danc/RetroPie/roms/mame/samples;/home/danc/RetroPie/roms/arcade/samples;/home/danc/MAME_0.256_EXTRAs/samples
-artpath                   /opt/retropie/emulators/mame/artwork;/home/danc/RetroPie/roms/mame/artwork;/home/danc/MAME_0.256_EXTRAs/artwork
+samplepath                /opt/retropie/emulators/mame/samples;/home/danc/MAME_0.256_EXTRAs/samples
+artpath                   /opt/retropie/emulators/mame/artwork;/home/danc/MAME_0.256_EXTRAs/artwork
 ctrlrpath                 /opt/retropie/emulators/mame/ctrlr
-inipath                   /opt/retropie/emulators/mame/ini;/opt/retropie/emulators/mame/ini/presets
+inipath                   /opt/retropie/emulators/mame/ini
 fontpath                  .
 cheatpath                 cheat;/home/danc/MAME_0.256_EXTRAs
 crosshairpath             crosshair
