@@ -297,7 +297,6 @@ switchres                 0
 #
 filter                    1
 prescale                  1
-effect                    scanlines
 
 #
 # OpenGL-SPECIFIC OPTIONS

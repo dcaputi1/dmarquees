@@ -12,6 +12,7 @@ MENU_TIMEOUT=60
 BASE_PATH="/opt/retropie/emulators/mame"
 CFG_PATH="$BASE_PATH/cfg"
 INI_PATH="$BASE_PATH/ini"
+MAME_INI="$INI_PATH/mame.ini"
 CFG_SA_PATH="$BASE_PATH/cfg_sa"
 CFG_RA_PATH="$BASE_PATH/cfg_ra"
 CMD_FIFO="/tmp/dmarquees_cmd"
@@ -334,6 +335,7 @@ main_menu()
         case $CHOICE in
             E)
                 mv $CFG_RA_PATH $CFG_PATH
+                cp "$MAME_INI.ra" "$MAME_INI"
                 echo "ROL_FLAG=\"-norol\"" > $HOME/.rol_flag
                 send_dmarquees_cmd "RA"
                 emulationstation #auto
@@ -342,6 +344,7 @@ main_menu()
                 ;;
             V)
                 mv $CFG_RA_PATH $CFG_PATH
+                cp "$MAME_INI.ra" "$MAME_INI"
                 echo "ROL_FLAG=\"-rol\"" > $HOME/.rol_flag
                 send_dmarquees_cmd "RA"
                 emulationstation --screenrotate 3 --screensize 1200 1600 #auto
@@ -351,6 +354,7 @@ main_menu()
             M)
                 send_dmarquees_cmd "SA"
                 mv $CFG_SA_PATH $CFG_PATH
+                cp "$MAME_INI.sa" "$MAME_INI"
                 mame -norol -inipath "/opt/retropie/emulators/mame/ini" -cfg_directory $CFG_PATH -joystickprovider sdljoy
                 send_dmarquees_cmd "NA"
                 continue
@@ -358,6 +362,7 @@ main_menu()
             P)
                 send_dmarquees_cmd "SA"
                 mv $CFG_SA_PATH $CFG_PATH
+                cp "$MAME_INI.sa" "$MAME_INI"
                 mame -rol -inipath "/opt/retropie/emulators/mame/ini;/opt/retropie/emulators/mame/ini_horz_ror" -cfg_directory $CFG_PATH -joystickprovider sdljoy
                 send_dmarquees_cmd "NA"
                 continue

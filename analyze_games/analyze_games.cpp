@@ -11,6 +11,8 @@
 #include <cstdlib>
 #include <tinyxml2.h>
 
+#define USE_CRTPI_SHADERS
+
 using namespace std;
 using namespace tinyxml2;
 namespace fs = std::filesystem;
