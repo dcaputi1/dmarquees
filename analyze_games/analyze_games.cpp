@@ -11,7 +11,7 @@
 #include <cstdlib>
 #include <tinyxml2.h>
 
-#define USE_CRTPI_SHADERS
+#define USE_CRTPI_SHADERS   // create shader gamename.glslp file for all raster based games
 
 using namespace std;
 using namespace tinyxml2;
