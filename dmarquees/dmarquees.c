@@ -977,7 +977,7 @@ static bool show_panel_marquee(const char *shortname, bool dc_panel)
 
         memset(fb_map, 0, bo_size);
         scale_and_blit_to_xrgb(image, iw, ih, fbptr, fb_w, fb_h, stride_pixels, 0, false);
-        try_reset_crtc();
+//      try_reset_crtc();   TBD - needed?
         snprintf(last_image_path, sizeof(last_image_path), "%s", tmp_png);
     }
 
