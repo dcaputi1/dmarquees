@@ -72,6 +72,7 @@ steps:
 12.sudo apt install fuse-zip (mounts zip file w/ PNGs)
    edit /etc/fuse.conf and uncomment #user_allow_other:
    sudo sed -i 's/^#user_allow_other/user_allow_other/' /etc/fuse.conf
+13.sudo apt install librsvg2-bin
 
 optional:
 A. sudo apt install meld
@@ -107,7 +108,7 @@ h. do NOT reboot, from command prompt:
  > cp -v /media/danc/ExtremeSSD/Mame/MAME_0.256_EXTRAs/cpanel.zip ~/MAME_0.256_EXTRAs/
  > sudo apt update   
  > cd IvarArcade
- > sudo apt install -y libtinyxml2-dev fuse-zip
+ > sudo apt install -y libtinyxml2-dev fuse-zip librsvg2-bin
  > sudo chown -R danc /opt/retropie
  > make install
 
