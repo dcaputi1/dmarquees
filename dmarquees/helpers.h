@@ -18,8 +18,19 @@ typedef enum
     eRA = 2
 } FrontendMode;
 
-FrontendMode toFrontendMode(const char *s);
-const char *fromFrontendMode(FrontendMode m);
+FrontendMode toFrontendMode(const char* s);
+const char*  fromFrontendMode(FrontendMode m);
+
+// Control panels and conversion helpers
+typedef enum
+{
+    ePANEL_NA = 0,  // no panel selected
+    eATARI_MC = 1,  // Atari MicroCenter
+    eULTRA_DC = 2   // UltraStick, 2x spinners
+} ControlPanel;
+
+ControlPanel toControlPanel(const char* s);
+const char* fromControlPanel(ControlPanel cp);
 
 // Command type enum and conversion helpers
 typedef enum

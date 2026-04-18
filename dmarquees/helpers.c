@@ -198,9 +198,9 @@ FrontendMode toFrontendMode(const char *s)
 {
     if (!s)
         return eNA;
-    if (strcmp(s, "RA") == 0 || strcmp(s, "RetroArch") == 0)
+    if (strcmp(s, "RA") == 0)
         return eRA;
-    if (strcmp(s, "SA") == 0 || strcmp(s, "StandAlone") == 0)
+    if (strcmp(s, "SA") == 0)
         return eSA;
 
     return eNA;
@@ -215,6 +215,32 @@ const char *fromFrontendMode(FrontendMode m)
     case eSA:
         return "SA";
     case eNA:
+    default:
+        return "NA";
+    }
+}
+
+ControlPanel toControlPanel(const char *s)
+{
+    if (!s)
+        return ePANEL_NA;
+    if (strcmp(s, "MC") == 0)
+        return eRA;
+    if (strcmp(s, "DC") == 0)
+        return eSA;
+
+    return ePANEL_NA;
+}
+
+const char *fromControlPanel(ControlPanel cp)
+{
+    switch (cp)
+    {
+    case eULTRA_DC:
+        return "DC";
+    case eATARI_MC:
+        return "MC";
+    case ePANEL_NA:
     default:
         return "NA";
     }

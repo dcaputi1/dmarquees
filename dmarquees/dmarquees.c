@@ -85,6 +85,7 @@ bool _this_is_pi5 = false;
 bool _pi5_dual_display = false;
 bool _pi3_present = false;
 FrontendMode _frontend_mode = eNA;
+ControlPanel _control_panel = ePANEL_NA;
 bool _splash_mode = false;
 char _drm_device_path[128] = "";
 char _drm_connector_name[32] = "";
@@ -92,6 +93,7 @@ static time_t _ra_init_hold = 0;
 static uint8_t* image = NULL;
 static char last_image_path[PATH_MAX] = {0};
 static char current_rom_shortname[128] = {0};
+static char _szPanel[3] = {0};
 
 static const char* _image_dir = HOME_PATH "/mnt/marquees";
 static const char* _image_dir_alt = HOME_PATH "/RetroPie/roms/mame/media/marquees";
@@ -102,6 +104,7 @@ static const char* _labels_dir = HOME_PATH "/IvarArcade/labels";
 static const char* _PI5_HOSTNAME = "McAtariPi5";
 static const char* _pi5_dual_display_file = HOME_PATH "/.pi5_dual_display";
 static const char* _pi3_is_present_file = HOME_PATH "/.pi3_present";
+static const char* _panel_file = HOME_PATH "/.panel";
 
 static bool join_path(char *out, size_t out_size, const char *dir, const char *file)
 {
@@ -182,32 +185,45 @@ static const char *default_marquee_name_for(FrontendMode m)
     }
 }
 
-static bool read_bool_file(const char *path, bool default_value)
+static bool read_token_file(const char *path, char* token, size_t len)
 {
+    if (!token || len == 0)
+        return false;
+
     FILE *fp = fopen(path, "r");
-
     if (!fp)
-        return default_value;
+        return false;
 
-    char buf[20] = {0};
+    char buf[256] = {0};
     if (!fgets(buf, sizeof(buf), fp))
     {
         fclose(fp);
-        return default_value;
+        return false;
     }
-
     fclose(fp);
 
-    // Trim whitespace
+    // Trim leading whitespace
     char *p = buf;
     while (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r')
         ++p;
 
+    // Trim trailing newline or carriage return
     for (char *q = p; *q; ++q)
         if (*q == '\n' || *q == '\r')
             *q = 0;
 
-    return strcasecmp(p, "true") == 0;
+    // Copy to token buffer
+    strncpy(token, p, len - 1);
+    token[len - 1] = '\0';
+    return true;
+}
+
+static bool read_bool_file(const char *path, bool default_value)
+{
+    char token[32] = {0};
+    if (!read_token_file(path, token, sizeof(token)))
+        return default_value;
+    return strcasecmp(token, "true") == 0;
 }
 
 static void initialize_globals()
@@ -236,6 +252,9 @@ static void initialize_globals()
         strncpy(_drm_connector_name, "HDMI-A-2", sizeof(_drm_connector_name));
         strncpy(_drm_device_path, "/dev/dri/card1", sizeof(_drm_device_path));
     }
+
+    read_token_file(_panel_file, _szPanel, sizeof(_szPanel));
+    _control_panel = toControlPanel(_szPanel);
 }
 
 // Draw the default marquee. Clears screen to black first.
@@ -1119,18 +1138,6 @@ static void handle_fifo_command(char *cmd_str)
         break;
 
     case CMD_ROM:
-        // In splash screen mode: blank the display so dual-screen games (e.g. Punch-Out)
-        // can use the secondary monitor.  No game marquee art is shown.
-        if (_splash_mode)
-        {
-            ts_printf("dmarquees: splash mode - blanking screen for game\n");
-            if (fb_map)
-            {
-                memset(fb_map, 0x00, bo_size);
-                try_reset_crtc();
-            }
-            break;
-        }
 
         // Strip optional RC: prefix (marks command from runcommand launch source).
         if (!strncmp(cmd_str, "RC:", 3))
@@ -1139,8 +1146,6 @@ static void handle_fifo_command(char *cmd_str)
         else if (_frontend_mode == eRA)
             break;
 
-        // If we reach here, it's either eROM or an unknown command
-
         // special case: punchout (dual screen) - allow possible 2nd screen usage
         if (_this_is_pi5 && !_pi3_present && _pi5_dual_display && game_has_multiple_screens(cmd_str))
         {
@@ -1148,7 +1153,16 @@ static void handle_fifo_command(char *cmd_str)
             break;
         }
 
-        // otherwise treat as rom shortname
+        // if this daemon is driving the spare monitor on pi5 (aka splash mode),
+        // check for a panel cheat sheet (instead of just blank screen)
+        if (_splash_mode && _control_panel)
+        {
+            show_panel_marquee(cmd_str, _control_panel == eULTRA_DC);
+            break;
+        }
+
+        // if we got this far, we're driving the marquee: process rom shortname
+        //
         if (!show_game_marquee(cmd_str))
         {
             // Fallback: show default marquee
