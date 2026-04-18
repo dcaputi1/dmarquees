@@ -86,10 +86,10 @@ physical controllers through all software layers to MAME game controls.
            │          └──────┬───────┘
            │                 │
            ▼                 │
-    ┌─────────────┐         │
-    │  RetroPad   │         │
-    │   Layer     │         │
-    └──────┬──────┘         │
+    ┌─────────────┐          │
+    │  RetroPad   │          │
+    │   Layer     │          │
+    └──────┬──────┘          │
            │                 │
            └────────┬────────┘
                     │

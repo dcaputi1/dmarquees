@@ -229,7 +229,7 @@ setup_dmarquees()
         chmod 666 "$CMD_FIFO"
     fi
 
-    # Restart daemon in LOCAL mode so splash-mode settings from remote mode do not persist.
+    # Restart daemon if already running (testing?)
     if pgrep -x dmarquees >/dev/null; then
         echo "EXIT" > "$CMD_FIFO" 2>/dev/null || true
         sleep 0.5
