@@ -19,6 +19,7 @@ CMD_FIFO="/tmp/dmarquees_cmd"
 PI3_REMOTE_HOST="10.77.77.3"
 PI3_REMOTE_PORT="5533"
 MOUNTED_GAME_ART="marquees" # or "cpanel"
+PANEL="DC"
 
 DEBUG=""  # set to 1 to enable debug_wait
 
@@ -38,24 +39,30 @@ load_persisted_options()
     if [ "$HOSTNAME" = "$PI5_HOSTNAME" ]; then
         THIS_IS_PI5=true
 
-        PI3_PRESENT=true
         PI3_PRESENT_FILE="$HOME/.pi3_present"
         if [ -f "$PI3_PRESENT_FILE" ]; then
-            PI3_PRESENT=$(cat "$PI3_PRESENT_FILE")
+            PI3_PRESENT=$(<"$PI3_PRESENT_FILE")
         else
+            PI3_PRESENT=true
             echo "$PI3_PRESENT" > "$PI3_PRESENT_FILE"
         fi
 
-        # Determine if dual displays
-        PI5_DUAL_DISPLAY=true
         PI5_DUAL_DISPLAY_FILE="$HOME/.pi5_dual_display"
         if [ -f "$PI5_DUAL_DISPLAY_FILE" ]; then
-            PI5_DUAL_DISPLAY=$(cat "$PI5_DUAL_DISPLAY_FILE")
+            PI5_DUAL_DISPLAY=$(<"$PI5_DUAL_DISPLAY_FILE")
         else
+            PI5_DUAL_DISPLAY=true
             echo "$PI5_DUAL_DISPLAY" > "$PI5_DUAL_DISPLAY_FILE"
         fi
     else
         THIS_IS_PI5=false
+    fi
+
+    # initialize default/current cheat sheet panel image
+    if [[ -f $HOME/.panel ]]; then
+        PANEL=$(<"$HOME/.panel")
+    else
+        echo "$PANEL" > "$HOME/.panel"
     fi
 
     # Debug: Show all three variables and wait for user
@@ -136,10 +143,20 @@ advanced_menu()
             pi3_present_state="OFF"
         fi
 
+        local PANEL_IMAGE
+        if [ "$PANEL" = "DC" ]; then
+            PANEL_IMAGE="UltraStick/Spinners"
+        elif [ "$PANEL" = "MC" ]; then
+            PANEL_IMAGE="Atari/FightStick"
+        else
+            PANEL_IMAGE="None/Blank"
+        fi
+
         local ADV_ITEMS=(
             D "Toggle Pi5 Dual Display:   $dual_display_state"
             P "Toggle Pi3 Present:        $pi3_present_state"
             S "Swap Xin-Mo Player 1 & 2"
+            I "Panel Image...             $PANEL_IMAGE"
             Q "Return to Main Menu"
         )
 
@@ -174,6 +191,34 @@ advanced_menu()
                 $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_ra 1
                 $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_sa 1
                 check_xinmo_status
+                continue
+                ;;
+            I)
+                # Panel Image submenu
+                local PANEL_ITEMS=(
+                    N "None/Blank"
+                    A "Atari FS"
+                    U "UltraStick"
+                )
+                local PANEL_CHOICE
+                PANEL_CHOICE=$(dialog --title "Panel Image Selection" --menu "Choose panel image type:" 12 40 3 \
+                    "N" "None/Blank" \
+                    "A" "Atari FS" \
+                    "U" "UltraStick" \
+                    2>&1 > /dev/tty)
+
+                case $PANEL_CHOICE in
+                    N)
+                        PANEL_IMAGE="NA"
+                        ;;
+                    A)
+                        PANEL_IMAGE="MC"
+                        ;;
+                    U)
+                        PANEL_IMAGE="DC"
+                        ;;
+                esac
+                echo "$PANEL_IMAGE" > "$HOME/.panel"
                 continue
                 ;;
             Q|"" )
@@ -293,7 +338,7 @@ send_dmarquees_cmd()
 
 persist_frontend_choice()
 {
-    echo "DEF_KEY=\"$1\"" > "$HOME/.def_key"
+    echo "$1" > "$HOME/.def_key"
 }
 
 # Main menu logic as a function
@@ -301,7 +346,11 @@ main_menu()
 {
     local DEF_KEY="X"
     if [[ -f $HOME/.def_key ]]; then
-        source $HOME/.def_key
+        DEF_KEY=$(<"$HOME/.def_key")
+        # Backward compatibility: strip DEF_KEY= and quotes if present
+        DEF_KEY=${DEF_KEY#DEF_KEY=}
+        DEF_KEY=${DEF_KEY%"}
+        DEF_KEY=${DEF_KEY#"}
     fi
 
     while true; do
