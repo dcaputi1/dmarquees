@@ -349,8 +349,8 @@ main_menu()
         DEF_KEY=$(<"$HOME/.def_key")
         # Backward compatibility: strip DEF_KEY= and quotes if present
         DEF_KEY=${DEF_KEY#DEF_KEY=}
-        DEF_KEY=${DEF_KEY%"}
-        DEF_KEY=${DEF_KEY#"}
+        DEF_KEY=${DEF_KEY%\"}
+        DEF_KEY=${DEF_KEY#\"}
     fi
 
     while true; do
