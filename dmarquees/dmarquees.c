@@ -67,6 +67,7 @@
 #define PANEL_TMP_MC_SVG "/tmp/dmarquees_mcpanel.svg"
 #define PANEL_TMP_MC_PNG "/tmp/dmarquees_mcpanel.png"
 #define HOME_PATH "/home/danc"
+#define MAX_TOKEN 128
 
 static volatile bool running = true;
 static int drm_fd = -1;
@@ -194,7 +195,7 @@ static bool read_token_file(const char *path, char* token, size_t len)
     if (!fp)
         return false;
 
-    char buf[256] = {0};
+    char buf[MAX_TOKEN] = {0};
     if (!fgets(buf, sizeof(buf), fp))
     {
         fclose(fp);
@@ -212,15 +213,13 @@ static bool read_token_file(const char *path, char* token, size_t len)
         if (*q == '\n' || *q == '\r')
             *q = 0;
 
-    // Copy to token buffer
-    strncpy(token, p, len - 1);
-    token[len - 1] = '\0';
+    snprintf(token, len, "%s", p);
     return true;
 }
 
 static bool read_bool_file(const char *path, bool default_value)
 {
-    char token[32] = {0};
+    char token[MAX_TOKEN] = {0};
     if (!read_token_file(path, token, sizeof(token)))
         return default_value;
     return strcasecmp(token, "true") == 0;
