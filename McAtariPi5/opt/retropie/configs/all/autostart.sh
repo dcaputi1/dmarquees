@@ -356,6 +356,7 @@ main_menu()
     while true; do
         restore_cfg
         python3 $HOME/scripts/leds_off.py
+        send_dmarquees_cmd "NA"
 
         # Use global XINMO_STATUS_CODE and XINMO_STATUS_MSG set at startup or after swap
 
@@ -388,7 +389,6 @@ main_menu()
                 echo "ROL_FLAG=\"-norol\"" > $HOME/.rol_flag
                 send_dmarquees_cmd "RA"
                 emulationstation #auto
-                send_dmarquees_cmd "NA"
                 continue
                 ;;
             V)
@@ -397,7 +397,6 @@ main_menu()
                 echo "ROL_FLAG=\"-rol\"" > $HOME/.rol_flag
                 send_dmarquees_cmd "RA"
                 emulationstation --screenrotate 3 --screensize 1200 1600 #auto
-                send_dmarquees_cmd "NA"
                 continue
                 ;;
             M)
@@ -405,7 +404,6 @@ main_menu()
                 mv $CFG_SA_PATH $CFG_PATH
                 cp "$MAME_INI.sa" "$MAME_INI"
                 mame -norol -inipath "/opt/retropie/emulators/mame/ini" -cfg_directory $CFG_PATH -joystickprovider sdljoy
-                send_dmarquees_cmd "NA"
                 continue
                 ;;
             P)
@@ -413,7 +411,6 @@ main_menu()
                 mv $CFG_SA_PATH $CFG_PATH
                 cp "$MAME_INI.sa" "$MAME_INI"
                 mame -rol -inipath "/opt/retropie/emulators/mame/ini;/opt/retropie/emulators/mame/ini_horz_ror" -cfg_directory $CFG_PATH -joystickprovider sdljoy
-                send_dmarquees_cmd "NA"
                 continue
                 ;;
             A)
