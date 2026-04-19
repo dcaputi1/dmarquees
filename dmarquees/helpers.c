@@ -222,28 +222,14 @@ const char *fromFrontendMode(FrontendMode m)
 
 ControlPanel toControlPanel(const char *s)
 {
-    if (!s)
-        return ePANEL_NA;
-    if (strcmp(s, "MC") == 0)
-        return eRA;
-    if (strcmp(s, "DC") == 0)
-        return eSA;
-
-    return ePANEL_NA;
-}
-
-const char *fromControlPanel(ControlPanel cp)
-{
-    switch (cp)
+    if (s)
     {
-    case eULTRA_DC:
-        return "DC";
-    case eATARI_MC:
-        return "MC";
-    case ePANEL_NA:
-    default:
-        return "NA";
+        if (strcmp(s, "MC") == 0)
+            return eATARI_MC;
+        if (strcmp(s, "DC") == 0)
+            return eULTRA_DC;
     }
+    return ePANEL_NA;
 }
 
 CommandType toCommandType(const char *s)

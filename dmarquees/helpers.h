@@ -30,7 +30,6 @@ typedef enum
 } ControlPanel;
 
 ControlPanel toControlPanel(const char* s);
-const char* fromControlPanel(ControlPanel cp);
 
 // Command type enum and conversion helpers
 typedef enum
