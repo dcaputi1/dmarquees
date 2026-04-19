@@ -4,7 +4,8 @@
 
 echo "runcommand-onlaunch started $date" > /tmp/rc.out
 
-SENDER_SCRIPT="${DMARQUEES_SENDER_SCRIPT:-/home/danc/scripts/dmarquees-send.sh}"
+SENDER_SCRIPT="$HOME/scripts/dmarquees-send.sh"
+CMD_FIFO="/tmp/dmarquees_cmd"
 
 #SYSTEM="$1"
 #EMULATOR="$2"
@@ -44,15 +45,16 @@ if [[ -n "$ROM" ]]; then
             sudo ultrastikcmd -c 1 -u "/home/danc/IvarArcade/tools/UltraStikMaps/8-WayEasyDiagonals.um" >> /tmp/rc.out 2>&1
         fi
     fi
+
     # Send ROM short name to dmarquees-send.sh
     # NOTE: RACE CONDITION - do this last and also note,
     # dmarquees ignores rom commands in RA mode unless sent from here with "RC:" prepended
+
 	echo "input $romzip : sending $command to dmarquees" >> /tmp/rc.out
+
     if [[ -x "$SENDER_SCRIPT" ]]; then
         "$SENDER_SCRIPT" "RC:$command"
-    else
-        echo "RC:$command" > /tmp/dmarquees_cmd
     fi
-fi
 
-echo "runcommand-onlauch exit $date" >> /tmp/rc.out
+    echo "RC:$command" > "$CMD_FIFO"
+fi

@@ -1,6 +1,5 @@
 #!/bin/bash
 
-CMD_FIFO="/tmp/dmarquees_cmd"
 REMOTE_HOST="10.77.77.3"
 REMOTE_PORT="5533"
 
@@ -19,7 +18,5 @@ send_remote()
 }
 
 send_remote
-
-echo "$cmd" > "$CMD_FIFO"
 
 exit 0
