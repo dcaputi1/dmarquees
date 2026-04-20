@@ -129,24 +129,45 @@ def toggle_pi3_present():
 # --- Main Menu (from autostart.sh) ---
 def main_menu():
     MENU_ITEMS = [
-        ("EmulationStation Normal/Horizontal", lambda: launch_placeholder("EmulationStation Normal/Horizontal")),
-        ("Vertical Arcade Portrait/Vertical", lambda: launch_placeholder("Vertical Arcade Portrait/Vertical")),
-        ("MAME Landscape Normal/Horizontal", lambda: launch_placeholder("MAME Landscape Normal/Horizontal")),
-        ("MAME Portrait Portrait/Vertical", lambda: launch_placeholder("MAME Portrait Portrait/Vertical")),
+        ("EmulationStation", lambda: launch_emulationstation()),
+        ("MAME Standalone", lambda: launch_mame()),
         ("Advanced Config Initial Setup/Opt", lambda: advanced_menu()),
         ("Command Prompt (Exit to Shell)", lambda: sys.exit(0)),
         ("Exit to Desktop X/Wayland Desktop", lambda: sys.exit(0)),
     ]
+    def launch_emulationstation():
+        # Launch EmulationStation in the correct orientation
+        if screen_portrait:
+            launch_placeholder("Vertical Arcade Portrait/Vertical")
+        else:
+            launch_placeholder("EmulationStation Normal/Horizontal")
+
+    def launch_mame():
+        # Launch MAME in the correct orientation
+        if screen_portrait:
+            launch_placeholder("MAME Portrait Portrait/Vertical")
+        else:
+            launch_placeholder("MAME Landscape Normal/Horizontal")
     selected = 0
     running = True
     while running:
-        screen.fill((0,0,0))
+        # Step 4.a: Draw everything to a temporary surface
+        base_surface = pygame.Surface((700, 480))
+        base_surface.fill((0,0,0))
         title = font.render("Arcade Menu", True, (0,255,255))
-        screen.blit(title, (60, 20))
+        base_surface.blit(title, (60, 20))
         for i, (label, _) in enumerate(MENU_ITEMS):
             color = (255,255,0) if i == selected else (200,200,200)
             text = font.render(label, True, color)
-            screen.blit(text, (60, 80 + i*50))
+            base_surface.blit(text, (60, 80 + i*50))
+        # Step 4.b: Rotate if portrait
+        if screen_portrait:
+            rotated = pygame.transform.rotate(base_surface, 90)
+            rect = rotated.get_rect(center=screen.get_rect().center)
+            screen.fill((0,0,0))
+            screen.blit(rotated, rect)
+        else:
+            screen.blit(base_surface, (0,0))
         pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -162,12 +183,51 @@ def main_menu():
                     sys.exit(0)
 
 def launch_placeholder(name):
-    # Placeholder for launching actual commands
-    screen.fill((0,0,0))
-    text = font.render(f"Would launch: {name}", True, (255,255,255))
-    screen.blit(text, (60, 200))
-    pygame.display.flip()
-    pygame.time.wait(1200)
-
+        while running:
+            # Step 4.a: Draw everything to a temporary surface
+            base_surface = pygame.Surface((700, 480))
+            base_surface.fill((0,0,0))
+            for i, (label, _) in enumerate(MENU_ITEMS):
+                suffix = ""
+                if "Dual Display" in label:
+                    suffix = "ON" if dual_display else "OFF"
+                elif "Pi3 Present" in label:
+                    suffix = "ON" if pi3_present else "OFF"
+                elif "Screen Orientation" in label:
+                    suffix = "Portrait" if screen_portrait else "Landscape"
+                elif "Panel Image" in label:
+                    suffix = {"DC":"UltraStick/Spinners", "MC":"Atari/FightStick", "NA":"None/Blank"}.get(panel, "None/Blank")
+                color = (255,255,0) if i == selected else (200,200,200)
+                text = font.render(f"{label}: {suffix}", True, color)
+                base_surface.blit(text, (60, 80 + i*60))
+            # Step 4.b: Rotate if portrait
+            if screen_portrait:
+                rotated = pygame.transform.rotate(base_surface, 90)
+                rect = rotated.get_rect(center=screen.get_rect().center)
+                screen.fill((0,0,0))
+                screen.blit(rotated, rect)
+            else:
+                screen.blit(base_surface, (0,0))
+            def toggle_screen_orientation():
+                global screen_portrait
+                screen_portrait = not screen_portrait
+                save_state(SCREEN_ORIENTATION_FILE, screen_portrait)
+            pygame.display.flip()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit(0)
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP:
+                        selected = (selected - 1) % len(MENU_ITEMS)
+                    elif event.key == pygame.K_DOWN:
+                        selected = (selected + 1) % len(MENU_ITEMS)
+                    elif event.key in (pygame.K_RETURN, pygame.K_SPACE):
+                        if MENU_ITEMS[selected][0] == "Return to Main Menu":
+                            running = False
+                            break
+                        MENU_ITEMS[selected][1]()
+                    elif event.key == pygame.K_ESCAPE:
+                        running = False
 if __name__ == "__main__":
     main_menu()
+#eof
