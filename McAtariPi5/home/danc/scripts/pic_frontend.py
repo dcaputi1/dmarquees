@@ -81,7 +81,17 @@ def advanced_menu():
     selected = 0
     running = True
     while running:
-        screen.fill((0,0,0))
+        # Draw to a square base surface
+        base_surface = pygame.Surface((480, 480))
+        base_surface.fill((0,0,0))
+        # Title
+        title = font.render("Advanced Config", True, (0,255,255))
+        title_rect = title.get_rect(center=(240, 40))
+        base_surface.blit(title, title_rect)
+        # Menu items
+        item_count = len(MENU_ITEMS)
+        start_y = 100
+        spacing = (480 - start_y - 40) // max(item_count, 1)
         for i, (label, _) in enumerate(MENU_ITEMS):
             suffix = ""
             if "Dual Display" in label:
@@ -94,11 +104,17 @@ def advanced_menu():
                 suffix = {"DC":"UltraStick/Spinners", "MC":"Atari/FightStick", "NA":"None/Blank"}.get(panel, "None/Blank")
             color = (255,255,0) if i == selected else (200,200,200)
             text = font.render(f"{label}: {suffix}", True, color)
-            screen.blit(text, (60, 80 + i*60))
-        def toggle_screen_orientation():
-            global screen_portrait
-            screen_portrait = not screen_portrait
-            save_state(SCREEN_ORIENTATION_FILE, screen_portrait)
+            text_rect = text.get_rect(center=(240, start_y + i*spacing))
+            base_surface.blit(text, text_rect)
+        # Rotate if portrait
+        if screen_portrait:
+            rotated = pygame.transform.rotate(base_surface, 90)
+            rect = rotated.get_rect(center=screen.get_rect().center)
+            screen.fill((0,0,0))
+            screen.blit(rotated, rect)
+        else:
+            screen.fill((0,0,0))
+            screen.blit(base_surface, ((700-480)//2, 0))
         pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -116,6 +132,11 @@ def advanced_menu():
                 elif event.key == pygame.K_ESCAPE:
                     running = False
 
+def toggle_screen_orientation():
+    global screen_portrait
+    screen_portrait = not screen_portrait
+    save_state(SCREEN_ORIENTATION_FILE, screen_portrait)
+    
 def toggle_dual_display():
     global dual_display
     dual_display = not dual_display
