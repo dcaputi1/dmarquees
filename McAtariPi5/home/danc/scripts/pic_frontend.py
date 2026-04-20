@@ -152,14 +152,22 @@ def main_menu():
     running = True
     while running:
         # Step 4.a: Draw everything to a temporary surface
-        base_surface = pygame.Surface((700, 480))
+        # Step 5: Use a square surface for easier alignment
+        base_surface = pygame.Surface((480, 480))
         base_surface.fill((0,0,0))
+        # Center title horizontally
         title = font.render("Arcade Menu", True, (0,255,255))
-        base_surface.blit(title, (60, 20))
+        title_rect = title.get_rect(center=(240, 40))
+        base_surface.blit(title, title_rect)
+        # Calculate vertical spacing to fit all items
+        item_count = len(MENU_ITEMS)
+        start_y = 100
+        spacing = (480 - start_y - 40) // max(item_count, 1)
         for i, (label, _) in enumerate(MENU_ITEMS):
             color = (255,255,0) if i == selected else (200,200,200)
             text = font.render(label, True, color)
-            base_surface.blit(text, (60, 80 + i*50))
+            text_rect = text.get_rect(center=(240, start_y + i*spacing))
+            base_surface.blit(text, text_rect)
         # Step 4.b: Rotate if portrait
         if screen_portrait:
             rotated = pygame.transform.rotate(base_surface, 90)
@@ -167,7 +175,9 @@ def main_menu():
             screen.fill((0,0,0))
             screen.blit(rotated, rect)
         else:
-            screen.blit(base_surface, (0,0))
+            # Center the square horizontally in the 700x480 window
+            screen.fill((0,0,0))
+            screen.blit(base_surface, ((700-480)//2, 0))
         pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -185,8 +195,13 @@ def main_menu():
 def launch_placeholder(name):
         while running:
             # Step 4.a: Draw everything to a temporary surface
-            base_surface = pygame.Surface((700, 480))
+            # Step 5: Use a square surface for easier alignment
+            base_surface = pygame.Surface((480, 480))
             base_surface.fill((0,0,0))
+            # Calculate vertical spacing to fit all items
+            item_count = len(MENU_ITEMS)
+            start_y = 60
+            spacing = (480 - start_y - 40) // max(item_count, 1)
             for i, (label, _) in enumerate(MENU_ITEMS):
                 suffix = ""
                 if "Dual Display" in label:
@@ -199,7 +214,8 @@ def launch_placeholder(name):
                     suffix = {"DC":"UltraStick/Spinners", "MC":"Atari/FightStick", "NA":"None/Blank"}.get(panel, "None/Blank")
                 color = (255,255,0) if i == selected else (200,200,200)
                 text = font.render(f"{label}: {suffix}", True, color)
-                base_surface.blit(text, (60, 80 + i*60))
+                text_rect = text.get_rect(center=(240, start_y + i*spacing))
+                base_surface.blit(text, text_rect)
             # Step 4.b: Rotate if portrait
             if screen_portrait:
                 rotated = pygame.transform.rotate(base_surface, 90)
@@ -207,7 +223,9 @@ def launch_placeholder(name):
                 screen.fill((0,0,0))
                 screen.blit(rotated, rect)
             else:
-                screen.blit(base_surface, (0,0))
+                # Center the square horizontally in the 700x480 window
+                screen.fill((0,0,0))
+                screen.blit(base_surface, ((700-480)//2, 0))
             def toggle_screen_orientation():
                 global screen_portrait
                 screen_portrait = not screen_portrait
