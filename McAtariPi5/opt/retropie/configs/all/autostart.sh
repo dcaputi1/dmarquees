@@ -59,11 +59,92 @@ load_persisted_options()
     fi
 
     # initialize default/current cheat sheet panel image
-    main_menu()
-    {
-        # Launch the Pygame SDL menu instead of Bash dialog
-        python3 "$HOME/scripts/arcade_menu.py"
-    }
+    if [[ -f $HOME/.panel ]]; then
+        PANEL=$(<"$HOME/.panel")
+    else
+        echo "$PANEL" > "$HOME/.panel"
+    fi
+
+    # Debug: Show all three variables and wait for user
+    echo "[autostart] PI5_HOSTNAME: $PI5_HOSTNAME"
+    echo "[autostart] THIS_IS_PI5: $THIS_IS_PI5"
+    echo "[autostart] PI5_DUAL_DISPLAY: $PI5_DUAL_DISPLAY"
+    debug_wait
+}
+
+# Function to print a severe error and wait for user acknowledgement
+echo_error_and_wait()
+{
+    local msg="$1"
+    echo
+    echo "[autostart] ERROR: $msg (press ENTER to continue)"
+    echo
+#   read -r _
+}
+
+# XinMo status check function
+check_xinmo_status()
+{
+    python3 "$HOME/scripts/xinmo-swapcheck.py"
+    status=$?
+
+    if [ $status -eq 1 ]; then
+        XINMO_STATUS_MSG="XinMo: Swap Required"
+    else
+        XINMO_STATUS_MSG="XinMo: OK"
+    fi
+
+    XINMO_STATUS_CODE=$status
+}
+
+# Function to restore existing cfg directory to original name
+restore_cfg()
+{
+    if [ -d "$CFG_PATH" ]; then
+        if [ ! -d "$CFG_SA_PATH" ]; then
+            echo "Restoring cfg to cfg_sa"
+            mv "$CFG_PATH" "$CFG_SA_PATH"
+        elif [ ! -d "$CFG_RA_PATH" ]; then
+            echo "Restoring cfg to cfg_ra"
+            mv "$CFG_PATH" "$CFG_RA_PATH"
+        else
+            echo "Removing old 'cfg' directory"
+            rm -rf "$CFG_PATH"
+        fi
+    fi
+}
+
+launch_desktop()
+{
+    # Try legacy Wayfire (if present)
+    if command -v wayfire-pi >/dev/null 2>&1; then
+        echo "[autostart] Launching Wayfire desktop..."
+        wayfire-pi
+        return
+    fi
+
+    # Trixie uses this
+    sudo systemctl start lightdm
+}
+
+advanced_menu()
+{
+    while true; do
+        # Show current boolean states
+        local dual_display_state pi3_present_state
+        if [ "$PI5_DUAL_DISPLAY" = true ]; then
+            dual_display_state="ON"
+        else
+            dual_display_state="OFF"
+        fi
+        if [ "$PI3_PRESENT" = true ]; then
+            pi3_present_state="ON"
+        else
+            pi3_present_state="OFF"
+        fi
+
+        local PANEL_IMAGE
+        if [ "$PANEL" = "DC" ]; then
             PANEL_IMAGE="UltraStick/Spinners"
         elif [ "$PANEL" = "MC" ]; then
             PANEL_IMAGE="Atari/FightStick"
@@ -84,10 +165,106 @@ load_persisted_options()
         ADV_CHOICE=$(dialog --title "Advanced Config Initial Setup/Options" --menu "Advanced options:" 16 60 5 \
             "${ADV_ITEMS[@]}" \
             2>&1 > /dev/tty)
-# advanced_menu is now handled by arcade_menu.py
-advanced_menu() {
-    : # No-op, handled in Python menu
+
+        case $ADV_CHOICE in
+            D)
+                # Toggle PI5_DUAL_DISPLAY
+                if [ "$PI5_DUAL_DISPLAY" = true ]; then
+                    PI5_DUAL_DISPLAY=false
+                else
+                    PI5_DUAL_DISPLAY=true
+                fi
+                # Persist change in file
+                sed -i "s/^PI5_DUAL_DISPLAY=.*/PI5_DUAL_DISPLAY=$PI5_DUAL_DISPLAY/" "$0"
+                ;;
+            P)
+                # Toggle PI3_PRESENT
+                if [ "$PI3_PRESENT" = true ]; then
+                    PI3_PRESENT=false
+                else
+                    PI3_PRESENT=true
+                fi
+                # Persist change in file
+                sed -i "s/^PI3_PRESENT=.*/PI3_PRESENT=$PI3_PRESENT/" "$0"
+                ;;
+            S)
+                $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_ra 1
+                $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_sa 1
+                check_xinmo_status
+                continue
+                ;;
+            I)
+                # Panel Image submenu
+                local PANEL_ITEMS=(
+                    N "None/Blank"
+                    A "Atari FS"
+                    U "UltraStick"
+                )
+                local PANEL_CHOICE
+                PANEL_CHOICE=$(dialog --title "Panel Image Selection" --menu "Choose panel image type:" 12 40 3 \
+                    "N" "None/Blank" \
+                    "A" "Atari FS" \
+                    "U" "UltraStick" \
+                    2>&1 > /dev/tty)
+
+                case $PANEL_CHOICE in
+                    N)
+                        PANEL_IMAGE="NA"
+                        ;;
+                    A)
+                        PANEL_IMAGE="MC"
+                        ;;
+                    U)
+                        PANEL_IMAGE="DC"
+                        ;;
+                esac
+                echo "$PANEL_IMAGE" > "$HOME/.panel"
+                continue
+                ;;
+            Q|"" )
+                break
+                ;;
+        esac
+    done
 }
+
+# ==========================================
+#  Marquee setup: mount and daemon launch
+# ==========================================
+setup_dmarquees()
+{
+    local ZIP="$HOME/MAME_0.256_EXTRAs/marquees.zip"
+    local MNT="$HOME/mnt/marquees"
+    local DAEMON="$HOME/marquees/bin/dmarquees"
+    local LOG="$HOME/marquees/dmarquees.log"
+
+    if [ "$THIS_IS_PI5" = true ] && [ ! "$PI5_DUAL_DISPLAY" = true ]; then
+        echo "[autostart] Pi5 with single display, skipping dmarquees setup."
+        return 0
+    fi
+    echo "[autostart] Setting up marquee..."
+
+    # Ensure mount point exists
+    mkdir -p "$MNT"
+
+    # Unmount if it’s already mounted (just in case)
+    if mountpoint -q "$MNT"; then
+        fusermount -u "$MNT"
+        sleep 0.5
+    fi
+
+    # Make sure allow_other is permitted
+    if ! grep -q '^user_allow_other' /etc/fuse.conf 2>/dev/null; then
+        echo "user_allow_other" | sudo tee -a /etc/fuse.conf >/dev/null
+    fi
+
+    # Mount marquees.zip read-only for all users
+    echo "[autostart] Mounting marquees.zip..."
+    fuse-zip -r -o allow_other "$ZIP" "$MNT" || {
+        echo_error_and_wait "[autostart] Failed to mount $ZIP"
+        return 1
+    }
+
     # Wait a bit for DRM subsystem to be ready
     sleep 1
 
