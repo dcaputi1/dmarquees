@@ -32,24 +32,12 @@ dual_display = load_state(PI5_DUAL_DISPLAY_FILE, True)
 pi3_present = load_state(PI3_PRESENT_FILE, True)
 panel = load_state(PANEL_FILE, "DC")  # DC, MC, NA
 
-# Menu options
-MENU_ITEMS = [
-    ("Toggle Pi5 Dual Display", lambda: toggle_dual_display()),
-    ("Toggle Pi3 Present", lambda: toggle_pi3_present()),
-    ("Panel Image...", lambda: panel_menu()),
-    ("Quit", lambda: sys.exit(0)),
-]
+pygame.init()
+screen = pygame.display.set_mode((700, 480))
+pygame.display.set_caption("Arcade Menu")
+font = pygame.font.SysFont(None, 36)
 
-def toggle_dual_display():
-    global dual_display
-    dual_display = not dual_display
-    save_state(PI5_DUAL_DISPLAY_FILE, dual_display)
-
-def toggle_pi3_present():
-    global pi3_present
-    pi3_present = not pi3_present
-    save_state(PI3_PRESENT_FILE, pi3_present)
-
+# --- Advanced Config Menu (your current menu) ---
 def panel_menu():
     global panel
     options = [("None/Blank", "NA"), ("Atari FS", "MC"), ("UltraStick", "DC")]
@@ -78,31 +66,79 @@ def panel_menu():
                 elif event.key == pygame.K_ESCAPE:
                     running = False
 
-pygame.init()
-screen = pygame.display.set_mode((600, 400))
-pygame.display.set_caption("Advanced Config Initial Setup/Options")
-font = pygame.font.SysFont(None, 36)
-
-def draw_menu(selected):
-    screen.fill((0,0,0))
-    # Draw menu items
-    for i, (label, _) in enumerate(MENU_ITEMS):
-        suffix = ""
-        if "Dual Display" in label:
-            suffix = "ON" if dual_display else "OFF"
-        elif "Pi3 Present" in label:
-            suffix = "ON" if pi3_present else "OFF"
-        elif "Panel Image" in label:
-            suffix = {"DC":"UltraStick/Spinners", "MC":"Atari/FightStick", "NA":"None/Blank"}.get(panel, "None/Blank")
-        color = (255,255,0) if i == selected else (200,200,200)
-        text = font.render(f"{label}: {suffix}", True, color)
-        screen.blit(text, (60, 80 + i*60))
-    pygame.display.flip()
-
-def main():
+def advanced_menu():
+    global dual_display, pi3_present
+    MENU_ITEMS = [
+        ("Toggle Pi5 Dual Display", lambda: toggle_dual_display()),
+        ("Toggle Pi3 Present", lambda: toggle_pi3_present()),
+        ("Panel Image...", lambda: panel_menu()),
+        ("Return to Main Menu", lambda: None),
+        ("Quit", lambda: sys.exit(0)),
+    ]
     selected = 0
-    while True:
-        draw_menu(selected)
+    running = True
+    while running:
+        screen.fill((0,0,0))
+        for i, (label, _) in enumerate(MENU_ITEMS):
+            suffix = ""
+            if "Dual Display" in label:
+                suffix = "ON" if dual_display else "OFF"
+            elif "Pi3 Present" in label:
+                suffix = "ON" if pi3_present else "OFF"
+            elif "Panel Image" in label:
+                suffix = {"DC":"UltraStick/Spinners", "MC":"Atari/FightStick", "NA":"None/Blank"}.get(panel, "None/Blank")
+            color = (255,255,0) if i == selected else (200,200,200)
+            text = font.render(f"{label}: {suffix}", True, color)
+            screen.blit(text, (60, 80 + i*60))
+        pygame.display.flip()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit(0)
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    selected = (selected - 1) % len(MENU_ITEMS)
+                elif event.key == pygame.K_DOWN:
+                    selected = (selected + 1) % len(MENU_ITEMS)
+                elif event.key in (pygame.K_RETURN, pygame.K_SPACE):
+                    if MENU_ITEMS[selected][0] == "Return to Main Menu":
+                        running = False
+                        break
+                    MENU_ITEMS[selected][1]()
+                elif event.key == pygame.K_ESCAPE:
+                    running = False
+
+def toggle_dual_display():
+    global dual_display
+    dual_display = not dual_display
+    save_state(PI5_DUAL_DISPLAY_FILE, dual_display)
+
+def toggle_pi3_present():
+    global pi3_present
+    pi3_present = not pi3_present
+    save_state(PI3_PRESENT_FILE, pi3_present)
+
+# --- Main Menu (from autostart.sh) ---
+def main_menu():
+    MENU_ITEMS = [
+        ("EmulationStation Normal/Horizontal", lambda: launch_placeholder("EmulationStation Normal/Horizontal")),
+        ("Vertical Arcade Portrait/Vertical", lambda: launch_placeholder("Vertical Arcade Portrait/Vertical")),
+        ("MAME Landscape Normal/Horizontal", lambda: launch_placeholder("MAME Landscape Normal/Horizontal")),
+        ("MAME Portrait Portrait/Vertical", lambda: launch_placeholder("MAME Portrait Portrait/Vertical")),
+        ("Advanced Config Initial Setup/Opt", lambda: advanced_menu()),
+        ("Command Prompt (Exit to Shell)", lambda: sys.exit(0)),
+        ("Exit to Desktop X/Wayland Desktop", lambda: sys.exit(0)),
+    ]
+    selected = 0
+    running = True
+    while running:
+        screen.fill((0,0,0))
+        title = font.render("Arcade Menu", True, (0,255,255))
+        screen.blit(title, (60, 20))
+        for i, (label, _) in enumerate(MENU_ITEMS):
+            color = (255,255,0) if i == selected else (200,200,200)
+            text = font.render(label, True, color)
+            screen.blit(text, (60, 80 + i*50))
+        pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit(0)
@@ -116,5 +152,13 @@ def main():
                 elif event.key == pygame.K_ESCAPE:
                     sys.exit(0)
 
+def launch_placeholder(name):
+    # Placeholder for launching actual commands
+    screen.fill((0,0,0))
+    text = font.render(f"Would launch: {name}", True, (255,255,255))
+    screen.blit(text, (60, 200))
+    pygame.display.flip()
+    pygame.time.wait(1200)
+
 if __name__ == "__main__":
-    main()
+    main_menu()
