@@ -1,6 +1,16 @@
+
 import os
-import pygame
 import sys
+
+# --- SDL/Pygame environment setup for console/framebuffer ---
+if not os.environ.get("DISPLAY"):
+    # Try framebuffer console
+    os.environ["SDL_VIDEODRIVER"] = os.environ.get("SDL_VIDEODRIVER", "fbcon")
+    os.environ["SDL_FBDEV"] = os.environ.get("SDL_FBDEV", "/dev/fb0")
+    # Optionally, try KMSDRM for Pi4/Pi5
+    # os.environ["SDL_VIDEODRIVER"] = "kmsdrm"
+
+import pygame
 
 # State file paths
 HOME = os.path.expanduser("~")
@@ -55,9 +65,19 @@ def set_screen(fullscreen):
         FULLSCREEN = False
         WINDOWED = True
 
+
 pygame.init()
-set_screen(fullscreen=False)
-pygame.display.set_caption("Arcade Menu")
+try:
+    set_screen(fullscreen=False)
+    pygame.display.set_caption("Arcade Menu")
+except pygame.error as e:
+    print("\n[ERROR] Could not initialize Pygame display.\n" \
+          "If running from console, ensure you are on the Pi and have framebuffer permissions.\n" \
+          f"SDL_VIDEODRIVER={os.environ.get('SDL_VIDEODRIVER')}\n" \
+          f"SDL_FBDEV={os.environ.get('SDL_FBDEV')}\n" \
+          f"Error: {e}\n")
+    sys.exit(1)
+
 font = pygame.font.SysFont(None, 36)
 
 def toggle_fullscreen():
