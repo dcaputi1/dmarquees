@@ -83,6 +83,7 @@ def panel_menu():
                     running = False
                 elif event.key == pygame.K_ESCAPE:
                     running = False
+
 def advanced_menu():
     global dual_display, pi3_present, screen_portrait
     MENU_ITEMS = [
@@ -282,6 +283,7 @@ def launch_placeholder(name):
                         MENU_ITEMS[selected][1]()
                     elif event.key == pygame.K_ESCAPE:
                         running = False
+
 if __name__ == "__main__":
     main_menu()
 #eof
