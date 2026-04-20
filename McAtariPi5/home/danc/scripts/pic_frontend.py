@@ -34,10 +34,35 @@ pi3_present = load_state(PI3_PRESENT_FILE, True)
 panel = load_state(PANEL_FILE, "DC")  # DC, MC, NA
 screen_portrait = load_state(SCREEN_ORIENTATION_FILE, False)
 
+# --- NEW: Window/fullscreen mode and dynamic sizing ---
+WINDOWED = True
+FULLSCREEN = False
+def get_screen_size():
+    if screen_portrait:
+        return (480, 640)
+    else:
+        return (640, 480)
+
+def set_screen(fullscreen):
+    global screen, WINDOWED, FULLSCREEN
+    size = get_screen_size()
+    if fullscreen:
+        screen = pygame.display.set_mode(size, pygame.FULLSCREEN)
+        FULLSCREEN = True
+        WINDOWED = False
+    else:
+        screen = pygame.display.set_mode(size)
+        FULLSCREEN = False
+        WINDOWED = True
+
 pygame.init()
-screen = pygame.display.set_mode((700, 480))
+set_screen(fullscreen=False)
 pygame.display.set_caption("Arcade Menu")
 font = pygame.font.SysFont(None, 36)
+
+def toggle_fullscreen():
+    global FULLSCREEN
+    set_screen(not FULLSCREEN)
 
 def panel_menu():
     global panel, screen_portrait
@@ -46,20 +71,16 @@ def panel_menu():
     idx = idx[0] if idx else 0
     running = True
     while running:
-        # Draw to a square base surface
         base_surface = pygame.Surface((480, 480))
         base_surface.fill((0,0,0))
-        # Title
         title = font.render("Panel Image", True, (0,255,255))
         title_rect = title.get_rect(center=(240, 40))
         base_surface.blit(title, title_rect)
-        # Menu options
         for i, (label, code) in enumerate(options):
             color = (255,255,0) if i == idx else (200,200,200)
             text = font.render(label, True, color)
             text_rect = text.get_rect(center=(240, 120 + i*70))
             base_surface.blit(text, text_rect)
-        # Rotate if portrait
         if screen_portrait:
             rotated = pygame.transform.rotate(base_surface, 90)
             rect = rotated.get_rect(center=screen.get_rect().center)
@@ -67,7 +88,7 @@ def panel_menu():
             screen.blit(rotated, rect)
         else:
             screen.fill((0,0,0))
-            screen.blit(base_surface, ((700-480)//2, 0))
+            screen.blit(base_surface, ((screen.get_width()-480)//2, (screen.get_height()-480)//2))
         pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -83,6 +104,8 @@ def panel_menu():
                     running = False
                 elif event.key == pygame.K_ESCAPE:
                     running = False
+                elif event.key == pygame.K_F11:
+                    toggle_fullscreen()
 
 def advanced_menu():
     global dual_display, pi3_present, screen_portrait
@@ -97,14 +120,11 @@ def advanced_menu():
     selected = 0
     running = True
     while running:
-        # Draw to a square base surface
         base_surface = pygame.Surface((480, 480))
         base_surface.fill((0,0,0))
-        # Title
         title = font.render("Advanced Config", True, (0,255,255))
         title_rect = title.get_rect(center=(240, 40))
         base_surface.blit(title, title_rect)
-        # Menu items
         item_count = len(MENU_ITEMS)
         start_y = 100
         spacing = (480 - start_y - 40) // max(item_count, 1)
@@ -122,7 +142,6 @@ def advanced_menu():
             text = font.render(f"{label}: {suffix}", True, color)
             text_rect = text.get_rect(center=(240, start_y + i*spacing))
             base_surface.blit(text, text_rect)
-        # Rotate if portrait
         if screen_portrait:
             rotated = pygame.transform.rotate(base_surface, 90)
             rect = rotated.get_rect(center=screen.get_rect().center)
@@ -130,7 +149,7 @@ def advanced_menu():
             screen.blit(rotated, rect)
         else:
             screen.fill((0,0,0))
-            screen.blit(base_surface, ((700-480)//2, 0))
+            screen.blit(base_surface, ((screen.get_width()-480)//2, (screen.get_height()-480)//2))
         pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -147,11 +166,14 @@ def advanced_menu():
                     MENU_ITEMS[selected][1]()
                 elif event.key == pygame.K_ESCAPE:
                     running = False
+                elif event.key == pygame.K_F11:
+                    toggle_fullscreen()
 
 def toggle_screen_orientation():
     global screen_portrait
     screen_portrait = not screen_portrait
     save_state(SCREEN_ORIENTATION_FILE, screen_portrait)
+    set_screen(FULLSCREEN)
 
 def toggle_dual_display():
     global dual_display
@@ -163,7 +185,6 @@ def toggle_pi3_present():
     pi3_present = not pi3_present
     save_state(PI3_PRESENT_FILE, pi3_present)
 
-# --- Main Menu (from autostart.sh) ---
 def main_menu():
     MENU_ITEMS = [
         ("EmulationStation", lambda: launch_emulationstation()),
@@ -173,14 +194,12 @@ def main_menu():
         ("Exit to Desktop X/Wayland Desktop", lambda: sys.exit(0)),
     ]
     def launch_emulationstation():
-        # Launch EmulationStation in the correct orientation
         if screen_portrait:
             launch_placeholder("Vertical Arcade Portrait/Vertical")
         else:
             launch_placeholder("EmulationStation Normal/Horizontal")
 
     def launch_mame():
-        # Launch MAME in the correct orientation
         if screen_portrait:
             launch_placeholder("MAME Portrait Portrait/Vertical")
         else:
@@ -188,15 +207,11 @@ def main_menu():
     selected = 0
     running = True
     while running:
-        # Step 4.a: Draw everything to a temporary surface
-        # Step 5: Use a square surface for easier alignment
         base_surface = pygame.Surface((480, 480))
         base_surface.fill((0,0,0))
-        # Center title horizontally
         title = font.render("Arcade Menu", True, (0,255,255))
         title_rect = title.get_rect(center=(240, 40))
         base_surface.blit(title, title_rect)
-        # Calculate vertical spacing to fit all items
         item_count = len(MENU_ITEMS)
         start_y = 100
         spacing = (480 - start_y - 40) // max(item_count, 1)
@@ -205,16 +220,14 @@ def main_menu():
             text = font.render(label, True, color)
             text_rect = text.get_rect(center=(240, start_y + i*spacing))
             base_surface.blit(text, text_rect)
-        # Step 4.b: Rotate if portrait
         if screen_portrait:
             rotated = pygame.transform.rotate(base_surface, 90)
             rect = rotated.get_rect(center=screen.get_rect().center)
             screen.fill((0,0,0))
             screen.blit(rotated, rect)
         else:
-            # Center the square horizontally in the 700x480 window
             screen.fill((0,0,0))
-            screen.blit(base_surface, ((700-480)//2, 0))
+            screen.blit(base_surface, ((screen.get_width()-480)//2, (screen.get_height()-480)//2))
         pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -228,62 +241,12 @@ def main_menu():
                     MENU_ITEMS[selected][1]()
                 elif event.key == pygame.K_ESCAPE:
                     sys.exit(0)
+                elif event.key == pygame.K_F11:
+                    toggle_fullscreen()
 
 def launch_placeholder(name):
-        while running:
-            # Step 4.a: Draw everything to a temporary surface
-            # Step 5: Use a square surface for easier alignment
-            base_surface = pygame.Surface((480, 480))
-            base_surface.fill((0,0,0))
-            # Calculate vertical spacing to fit all items
-            item_count = len(MENU_ITEMS)
-            start_y = 60
-            spacing = (480 - start_y - 40) // max(item_count, 1)
-            for i, (label, _) in enumerate(MENU_ITEMS):
-                suffix = ""
-                if "Dual Display" in label:
-                    suffix = "ON" if dual_display else "OFF"
-                elif "Pi3 Present" in label:
-                    suffix = "ON" if pi3_present else "OFF"
-                elif "Screen Orientation" in label:
-                    suffix = "Portrait" if screen_portrait else "Landscape"
-                elif "Panel Image" in label:
-                    suffix = {"DC":"UltraStick/Spinners", "MC":"Atari/FightStick", "NA":"None/Blank"}.get(panel, "None/Blank")
-                color = (255,255,0) if i == selected else (200,200,200)
-                text = font.render(f"{label}: {suffix}", True, color)
-                text_rect = text.get_rect(center=(240, start_y + i*spacing))
-                base_surface.blit(text, text_rect)
-            # Step 4.b: Rotate if portrait
-            if screen_portrait:
-                rotated = pygame.transform.rotate(base_surface, 90)
-                rect = rotated.get_rect(center=screen.get_rect().center)
-                screen.fill((0,0,0))
-                screen.blit(rotated, rect)
-            else:
-                # Center the square horizontally in the 700x480 window
-                screen.fill((0,0,0))
-                screen.blit(base_surface, ((700-480)//2, 0))
-            def toggle_screen_orientation():
-                global screen_portrait
-                screen_portrait = not screen_portrait
-                save_state(SCREEN_ORIENTATION_FILE, screen_portrait)
-            pygame.display.flip()
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    sys.exit(0)
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_UP:
-                        selected = (selected - 1) % len(MENU_ITEMS)
-                    elif event.key == pygame.K_DOWN:
-                        selected = (selected + 1) % len(MENU_ITEMS)
-                    elif event.key in (pygame.K_RETURN, pygame.K_SPACE):
-                        if MENU_ITEMS[selected][0] == "Return to Main Menu":
-                            running = False
-                            break
-                        MENU_ITEMS[selected][1]()
-                    elif event.key == pygame.K_ESCAPE:
-                        running = False
+    # Placeholder for launching external apps
+    pass
 
 if __name__ == "__main__":
     main_menu()
-#eof
