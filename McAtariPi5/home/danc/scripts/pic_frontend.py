@@ -39,19 +39,35 @@ screen = pygame.display.set_mode((700, 480))
 pygame.display.set_caption("Arcade Menu")
 font = pygame.font.SysFont(None, 36)
 
-# --- Advanced Config Menu (your current menu) ---
 def panel_menu():
-    global panel
+    global panel, screen_portrait
     options = [("None/Blank", "NA"), ("Atari FS", "MC"), ("UltraStick", "DC")]
     idx = [i for i, (_, code) in enumerate(options) if code == panel]
     idx = idx[0] if idx else 0
     running = True
     while running:
-        screen.fill((0,0,0))
+        # Draw to a square base surface
+        base_surface = pygame.Surface((480, 480))
+        base_surface.fill((0,0,0))
+        # Title
+        title = font.render("Panel Image", True, (0,255,255))
+        title_rect = title.get_rect(center=(240, 40))
+        base_surface.blit(title, title_rect)
+        # Menu options
         for i, (label, code) in enumerate(options):
             color = (255,255,0) if i == idx else (200,200,200)
             text = font.render(label, True, color)
-            screen.blit(text, (100, 100 + i*50))
+            text_rect = text.get_rect(center=(240, 120 + i*70))
+            base_surface.blit(text, text_rect)
+        # Rotate if portrait
+        if screen_portrait:
+            rotated = pygame.transform.rotate(base_surface, 90)
+            rect = rotated.get_rect(center=screen.get_rect().center)
+            screen.fill((0,0,0))
+            screen.blit(rotated, rect)
+        else:
+            screen.fill((0,0,0))
+            screen.blit(base_surface, ((700-480)//2, 0))
         pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -67,7 +83,6 @@ def panel_menu():
                     running = False
                 elif event.key == pygame.K_ESCAPE:
                     running = False
-
 def advanced_menu():
     global dual_display, pi3_present, screen_portrait
     MENU_ITEMS = [
@@ -136,7 +151,7 @@ def toggle_screen_orientation():
     global screen_portrait
     screen_portrait = not screen_portrait
     save_state(SCREEN_ORIENTATION_FILE, screen_portrait)
-    
+
 def toggle_dual_display():
     global dual_display
     dual_display = not dual_display
