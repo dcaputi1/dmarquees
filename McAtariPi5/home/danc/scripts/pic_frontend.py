@@ -110,10 +110,10 @@ def panel_menu():
 def advanced_menu():
     global dual_display, pi3_present, screen_portrait
     MENU_ITEMS = [
-        ("Toggle Pi5 Dual Display", lambda: toggle_dual_display()),
-        ("Toggle Pi3 Present", lambda: toggle_pi3_present()),
-        ("Screen Orientation (Landscape/Portrait)", lambda: toggle_screen_orientation()),
-        ("Panel Image...", lambda: panel_menu()),
+        ("Pi5 Dual Display:", lambda: toggle_dual_display()),
+        ("Pi3 Present:", lambda: toggle_pi3_present()),
+        ("Screen Orientation:", lambda: toggle_screen_orientation()),
+        ("Panel Image:", lambda: panel_menu()),
         ("Return to Main Menu", lambda: None),
         ("Quit", lambda: sys.exit(0)),
     ]
@@ -139,7 +139,7 @@ def advanced_menu():
             elif "Panel Image" in label:
                 suffix = {"DC":"UltraStick/Spinners", "MC":"Atari/FightStick", "NA":"None/Blank"}.get(panel, "None/Blank")
             color = (255,255,0) if i == selected else (200,200,200)
-            text = font.render(f"{label}: {suffix}", True, color)
+            text = font.render(f"{label} {suffix}", True, color)
             text_rect = text.get_rect(center=(240, start_y + i*spacing))
             base_surface.blit(text, text_rect)
         if screen_portrait:
@@ -189,9 +189,9 @@ def main_menu():
     MENU_ITEMS = [
         ("EmulationStation", lambda: launch_emulationstation()),
         ("MAME Standalone", lambda: launch_mame()),
-        ("Advanced Config Initial Setup/Opt", lambda: advanced_menu()),
+        ("Advanced Config Setup/Options", lambda: advanced_menu()),
         ("Command Prompt (Exit to Shell)", lambda: sys.exit(0)),
-        ("Exit to Desktop X/Wayland Desktop", lambda: sys.exit(0)),
+        ("Exit to X/Wayland Desktop", lambda: sys.exit(0)),
     ]
     def launch_emulationstation():
         if screen_portrait:
