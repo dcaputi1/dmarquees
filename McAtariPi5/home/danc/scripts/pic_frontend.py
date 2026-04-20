@@ -7,6 +7,7 @@ HOME = os.path.expanduser("~")
 PI5_DUAL_DISPLAY_FILE = os.path.join(HOME, ".pi5_dual_display")
 PI3_PRESENT_FILE = os.path.join(HOME, ".pi3_present")
 PANEL_FILE = os.path.join(HOME, ".panel")
+SCREEN_ORIENTATION_FILE = os.path.join(HOME, ".screen_orientation")
 
 # Load or initialize state
 def load_state(path, default):
@@ -31,6 +32,7 @@ def save_state(path, value):
 dual_display = load_state(PI5_DUAL_DISPLAY_FILE, True)
 pi3_present = load_state(PI3_PRESENT_FILE, True)
 panel = load_state(PANEL_FILE, "DC")  # DC, MC, NA
+screen_portrait = load_state(SCREEN_ORIENTATION_FILE, False)
 
 pygame.init()
 screen = pygame.display.set_mode((700, 480))
@@ -67,10 +69,11 @@ def panel_menu():
                     running = False
 
 def advanced_menu():
-    global dual_display, pi3_present
+    global dual_display, pi3_present, screen_portrait
     MENU_ITEMS = [
         ("Toggle Pi5 Dual Display", lambda: toggle_dual_display()),
         ("Toggle Pi3 Present", lambda: toggle_pi3_present()),
+        ("Screen Orientation (Landscape/Portrait)", lambda: toggle_screen_orientation()),
         ("Panel Image...", lambda: panel_menu()),
         ("Return to Main Menu", lambda: None),
         ("Quit", lambda: sys.exit(0)),
@@ -85,11 +88,17 @@ def advanced_menu():
                 suffix = "ON" if dual_display else "OFF"
             elif "Pi3 Present" in label:
                 suffix = "ON" if pi3_present else "OFF"
+            elif "Screen Orientation" in label:
+                suffix = "Portrait" if screen_portrait else "Landscape"
             elif "Panel Image" in label:
                 suffix = {"DC":"UltraStick/Spinners", "MC":"Atari/FightStick", "NA":"None/Blank"}.get(panel, "None/Blank")
             color = (255,255,0) if i == selected else (200,200,200)
             text = font.render(f"{label}: {suffix}", True, color)
             screen.blit(text, (60, 80 + i*60))
+        def toggle_screen_orientation():
+            global screen_portrait
+            screen_portrait = not screen_portrait
+            save_state(SCREEN_ORIENTATION_FILE, screen_portrait)
         pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
