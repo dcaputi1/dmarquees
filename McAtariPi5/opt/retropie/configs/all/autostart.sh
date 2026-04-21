@@ -347,10 +347,6 @@ main_menu()
     local DEF_KEY="X"
     if [[ -f $HOME/.def_key ]]; then
         DEF_KEY=$(<"$HOME/.def_key")
-        # Backward compatibility: strip DEF_KEY= and quotes if present
-        DEF_KEY=${DEF_KEY#DEF_KEY=}
-        DEF_KEY=${DEF_KEY%\"}
-        DEF_KEY=${DEF_KEY#\"}
     fi
 
     while true; do
@@ -369,6 +365,8 @@ main_menu()
             C "Command Prompt   Do not launch GUI"
             X "Exit to Desktop  X/Wayland Desktop"
         )
+
+        echo "calling dialog"
 
         # Add XinMo status message to the menu box
         CHOICE=$(dialog --timeout $MENU_TIMEOUT --title "Arcade Menu" --default-item "$DEF_KEY" \

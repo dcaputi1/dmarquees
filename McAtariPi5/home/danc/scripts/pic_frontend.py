@@ -1,14 +1,41 @@
+#!/usr/bin/env python3
 
 import os
 import sys
 
 # --- SDL/Pygame environment setup for console/framebuffer ---
-if not os.environ.get("DISPLAY"):
-    # Try framebuffer console
-    os.environ["SDL_VIDEODRIVER"] = os.environ.get("SDL_VIDEODRIVER", "fbcon")
-    os.environ["SDL_FBDEV"] = os.environ.get("SDL_FBDEV", "/dev/fb0")
-    # Optionally, try KMSDRM for Pi4/Pi5
-    # os.environ["SDL_VIDEODRIVER"] = "kmsdrm"
+
+def try_sdl_drivers():
+    if os.environ.get("DISPLAY"):
+        return True  # X11/Wayland available
+
+    # For Pi 5 Bookworm/Trixie console: try kmsdrm first, then fbcon as fallback
+    drivers = ["kmsdrm", "fbcon"]
+
+    for driver in drivers:
+        os.environ["SDL_VIDEODRIVER"] = driver
+        if driver == "fbcon":
+            os.environ["SDL_FBDEV"] = os.environ.get("SDL_FBDEV", "/dev/fb0")
+        try:
+            import pygame
+            pygame.display.init()
+            pygame.display.quit()
+            print(f"[INFO] Using SDL_VIDEODRIVER={driver}")
+            return True
+        except Exception as e:
+            # If we see a pageflip or DRM error, print and abort immediately
+            if ("pageflip" in str(e).lower() or "drm" in str(e).lower() or "kmsdrm" in str(e).lower() or
+                "crtc" in str(e).lower() or "video mode" in str(e).lower()):
+                print(f"\n[ERROR] Fatal display error with driver '{driver}': {e}\n")
+                return False
+        continue
+
+    print("\n[ERROR] Could not initialize any SDL video driver for console/framebuffer.\n"
+          f"Tried: {', '.join(drivers)}\n")
+    return False
+
+if not try_sdl_drivers():
+    sys.exit(1)
 
 import pygame
 
@@ -67,16 +94,27 @@ def set_screen(fullscreen):
 
 
 pygame.init()
+
+# Try to initialize display, but handle repeated pageflip/DRM errors gracefully
 try:
     set_screen(fullscreen=False)
     pygame.display.set_caption("Arcade Menu")
 except pygame.error as e:
-    print("\n[ERROR] Could not initialize Pygame display.\n" \
-          "If running from console, ensure you are on the Pi and have framebuffer permissions.\n" \
-          f"SDL_VIDEODRIVER={os.environ.get('SDL_VIDEODRIVER')}\n" \
-          f"SDL_FBDEV={os.environ.get('SDL_FBDEV')}\n" \
-          f"Error: {e}\n")
-    sys.exit(1)
+    msg = str(e).lower()
+    if ("pageflip" in msg or "drm" in msg or "kmsdrm" in msg or
+        "crtc" in msg or "video mode" in msg):
+        print("\n[ERROR] Fatal display error during initialization:\n"
+              f"Error: {e}\n"
+              "This is usually caused by another graphical session (X11/Wayland), lack of DRM resources, or unsupported video mode.\n"
+              "Try switching to a real console (Ctrl+Alt+F2) and ensure no other display server is running.\n")
+        sys.exit(2)
+    else:
+        print("\n[ERROR] Could not initialize Pygame display.\n"
+              "If running from console, ensure you are on the Pi and have framebuffer permissions.\n"
+              f"SDL_VIDEODRIVER={os.environ.get('SDL_VIDEODRIVER')}\n"
+              f"SDL_FBDEV={os.environ.get('SDL_FBDEV')}\n"
+              f"Error: {e}\n")
+        sys.exit(1)
 
 font = pygame.font.SysFont(None, 36)
 

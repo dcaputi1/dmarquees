@@ -12,9 +12,7 @@ cmd="$*"
 
 send_remote()
 {
-    {
-        printf '%s\n' "$cmd"
-    } > /dev/tcp/"$REMOTE_HOST"/"$REMOTE_PORT" 2>/dev/null
+    timeout 2 bash -c "printf '%s\\n' \"$cmd\" > /dev/tcp/$REMOTE_HOST/$REMOTE_PORT" 2>/dev/null
 }
 
 send_remote
