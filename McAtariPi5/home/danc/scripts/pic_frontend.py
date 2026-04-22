@@ -5,36 +5,37 @@ import sys
 
 # --- SDL/Pygame environment setup for console/framebuffer ---
 
-def try_sdl_drivers():
+
+# --- Refactored: Only try kmsdrm, improved error handling ---
+def try_sdl_driver():
+    """
+    Attempt to initialize SDL2 with the kmsdrm driver only.
+    Returns True if successful, False otherwise.
+    Provides clear error messages and avoids endless error loops.
+    """
     if os.environ.get("DISPLAY"):
-        return True  # X11/Wayland available
+        print("[INFO] X11/Wayland display detected, skipping kmsdrm.")
+        return True
 
-    # For Pi 5 Bookworm/Trixie console: try kmsdrm first, then fbcon as fallback
-    drivers = ["kmsdrm", "fbcon"]
+    os.environ["SDL_VIDEODRIVER"] = "kmsdrm"
+    # Optionally clear SDL_FBDEV to avoid interference
+    os.environ.pop("SDL_FBDEV", None)
+    try:
+        import pygame
+        pygame.display.init()
+        pygame.display.quit()
+        print("[INFO] Using SDL_VIDEODRIVER=kmsdrm")
+        return True
+    except Exception as e:
+        msg = str(e).lower()
+        print(f"\n[ERROR] Could not initialize SDL2 kmsdrm driver.\nError: {e}\n")
+        if ("pageflip" in msg or "drm" in msg or "kmsdrm" in msg or
+            "crtc" in msg or "video mode" in msg):
+            print("This is usually caused by another graphical session (X11/Wayland), lack of DRM resources, or unsupported video mode.\n"
+                  "Try switching to a real console (Ctrl+Alt+F2) and ensure no other display server is running.\n")
+        return False
 
-    for driver in drivers:
-        os.environ["SDL_VIDEODRIVER"] = driver
-        if driver == "fbcon":
-            os.environ["SDL_FBDEV"] = os.environ.get("SDL_FBDEV", "/dev/fb0")
-        try:
-            import pygame
-            pygame.display.init()
-            pygame.display.quit()
-            print(f"[INFO] Using SDL_VIDEODRIVER={driver}")
-            return True
-        except Exception as e:
-            # If we see a pageflip or DRM error, print and abort immediately
-            if ("pageflip" in str(e).lower() or "drm" in str(e).lower() or "kmsdrm" in str(e).lower() or
-                "crtc" in str(e).lower() or "video mode" in str(e).lower()):
-                print(f"\n[ERROR] Fatal display error with driver '{driver}': {e}\n")
-                return False
-        continue
-
-    print("\n[ERROR] Could not initialize any SDL video driver for console/framebuffer.\n"
-          f"Tried: {', '.join(drivers)}\n")
-    return False
-
-if not try_sdl_drivers():
+if not try_sdl_driver():
     sys.exit(1)
 
 import pygame
