@@ -93,8 +93,9 @@ if not os.environ.get("DISPLAY"):
     os.environ["SDL_VIDEODRIVER"] = "kmsdrm"
     os.environ.pop("SDL_FBDEV", None)
 else:
-    print("[INFO] X11/Wayland display detected.")
+    print("[INFO] X11/Wayland display detected.", file=sys.stderr)
 
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 import pygame
 
 # State file paths

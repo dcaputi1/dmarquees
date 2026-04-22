@@ -21,7 +21,7 @@ PI3_REMOTE_PORT="5533"
 MOUNTED_GAME_ART="marquees" # or "cpanel"
 PANEL="DC"
 
-DEBUG=""  # set to 1 to enable debug_wait
+DEBUG=""  # "1" to enable debug waits, "" disables
 
 debug_wait()
 {
@@ -439,7 +439,7 @@ run_pic_frontend()
         return 1
     fi
     XINMO_STATUS_MSG="$XINMO_STATUS_MSG" \
-        python3 "$HOME/scripts/pic_frontend.py" 2>/tmp/pic_frontend.err
+        python3 "$HOME/scripts/pic_frontend.py" 2> >(tee -a /tmp/pic_frontend.err >&2)
 }
 
 # Main menu: tries pygame pic_frontend first; falls back to dialog on failure
@@ -453,6 +453,9 @@ main_menu()
         local CHOICE
         CHOICE=$(run_pic_frontend)
         local PF_EXIT=$?
+
+        echo "[autostart] pic_frontend exit code: $PF_EXIT, output: '$CHOICE'"
+        debug_wait
 
         if [ $PF_EXIT -ne 0 ] || ! [[ "$CHOICE" =~ ^[EVMPCXevmpcx]$ ]]; then
             echo "[autostart] pic_frontend unavailable (exit=$PF_EXIT output='$CHOICE'), using dialog fallback"
