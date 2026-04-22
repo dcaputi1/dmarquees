@@ -175,6 +175,12 @@ def toggle_fullscreen():
     global FULLSCREEN
     set_screen(not FULLSCREEN)
 
+def _output_choice(choice):
+    """Print a menu choice to stdout and exit cleanly; bash reads this to decide what to launch."""
+    pygame.quit()
+    print(choice, flush=True)
+    sys.exit(0)
+
 def panel_menu():
     global panel, screen_portrait
     options = [("None/Blank", "NA"), ("Atari FS", "MC"), ("UltraStick", "DC")]
@@ -301,20 +307,14 @@ def main_menu():
         ("EmulationStation", lambda: launch_emulationstation()),
         ("MAME Standalone", lambda: launch_mame()),
         ("Advanced Config Setup/Options", lambda: advanced_menu()),
-        ("Command Prompt (Exit to Shell)", lambda: sys.exit(0)),
-        ("Exit to X/Wayland Desktop", lambda: sys.exit(0)),
+        ("Command Prompt (Exit to Shell)", lambda: _output_choice("C")),
+        ("Exit to X/Wayland Desktop", lambda: _output_choice("X")),
     ]
     def launch_emulationstation():
-        if screen_portrait:
-            launch_placeholder("Vertical Arcade Portrait/Vertical")
-        else:
-            launch_placeholder("EmulationStation Normal/Horizontal")
+        _output_choice("V" if screen_portrait else "E")
 
     def launch_mame():
-        if screen_portrait:
-            launch_placeholder("MAME Portrait Portrait/Vertical")
-        else:
-            launch_placeholder("MAME Landscape Normal/Horizontal")
+        _output_choice("P" if screen_portrait else "M")
     selected = 0
     running = True
     while running:

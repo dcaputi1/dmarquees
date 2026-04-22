@@ -127,7 +127,7 @@ launch_desktop()
     sudo systemctl start lightdm
 }
 
-advanced_menu()
+dialog_advanced_menu()
 {
     while true; do
         # Show current boolean states
@@ -341,8 +341,8 @@ persist_frontend_choice()
     echo "$1" > "$HOME/.def_key"
 }
 
-# Main menu logic as a function
-main_menu()
+# Main menu logic as a function (dialog fallback)
+dialog_main_menu()
 {
     local DEF_KEY="X"
     if [[ -f $HOME/.def_key ]]; then
@@ -412,7 +412,7 @@ main_menu()
                 continue
                 ;;
             A)
-                advanced_menu
+                dialog_advanced_menu
                 continue
                 ;;
             C)
@@ -424,6 +424,84 @@ main_menu()
                 ;;
         esac
         break
+    done
+}
+
+# ==========================================
+#  Pygame frontend wrapper + main menu
+# ==========================================
+run_pic_frontend()
+{
+    # Invoke the pygame menu; choice letter (E/V/M/P/C/X) is printed to stdout
+    # and the process exits with code 0.  Stderr goes to a log so SDL/pygame
+    # noise never pollutes the TTY.
+    if [ ! -f "$HOME/scripts/pic_frontend.py" ]; then
+        return 1
+    fi
+    XINMO_STATUS_MSG="$XINMO_STATUS_MSG" \
+        python3 "$HOME/scripts/pic_frontend.py" 2>/tmp/pic_frontend.err
+}
+
+# Main menu: tries pygame pic_frontend first; falls back to dialog on failure
+main_menu()
+{
+    while true; do
+        restore_cfg
+        python3 "$HOME/scripts/leds_off.py"
+        send_dmarquees_cmd "NA"
+
+        local CHOICE
+        CHOICE=$(run_pic_frontend)
+        local PF_EXIT=$?
+
+        if [ $PF_EXIT -ne 0 ] || ! [[ "$CHOICE" =~ ^[EVMPCXevmpcx]$ ]]; then
+            echo "[autostart] pic_frontend unavailable (exit=$PF_EXIT output='$CHOICE'), using dialog fallback"
+            dialog_main_menu
+            return
+        fi
+
+        persist_frontend_choice "$CHOICE"
+        case $CHOICE in
+            E|e)
+                mv $CFG_RA_PATH $CFG_PATH
+                cp "$MAME_INI.ra" "$MAME_INI"
+                echo "ROL_FLAG=\"-norol\"" > $HOME/.rol_flag
+                send_dmarquees_cmd "RA"
+                emulationstation #auto
+                continue
+                ;;
+            V|v)
+                mv $CFG_RA_PATH $CFG_PATH
+                cp "$MAME_INI.ra" "$MAME_INI"
+                echo "ROL_FLAG=\"-rol\"" > $HOME/.rol_flag
+                send_dmarquees_cmd "RA"
+                emulationstation --screenrotate 3 --screensize 1200 1600 #auto
+                continue
+                ;;
+            M|m)
+                send_dmarquees_cmd "SA"
+                mv $CFG_SA_PATH $CFG_PATH
+                cp "$MAME_INI.sa" "$MAME_INI"
+                mame -norol -inipath "/opt/retropie/emulators/mame/ini" -cfg_directory $CFG_PATH -joystickprovider sdljoy
+                continue
+                ;;
+            P|p)
+                send_dmarquees_cmd "SA"
+                mv $CFG_SA_PATH $CFG_PATH
+                cp "$MAME_INI.sa" "$MAME_INI"
+                mame -rol -inipath "/opt/retropie/emulators/mame/ini;/opt/retropie/emulators/mame/ini_horz_ror" -cfg_directory $CFG_PATH -joystickprovider sdljoy
+                continue
+                ;;
+            C|c)
+                # exit to command prompt (do not continue main menu loop)
+                break
+                ;;
+            X|x|*)
+                shutdown_dmarquees
+                launch_desktop
+                break
+                ;;
+        esac
     done
 }
 
