@@ -4,39 +4,96 @@ import os
 import sys
 
 # --- SDL/Pygame environment setup for console/framebuffer ---
+#
+# IMPORTANT: SDL2 DRM/KMS errors such as:
+#   "ERROR: Could not set videomode on CRTC."
+#   "ERROR: Could not queue pageflip: -28"
+# are printed by the SDL2 C library directly to the OS-level stderr fd.
+# They NEVER become Python exceptions, so try/except is blind to them.
+# We must redirect fd 2 at the OS level to catch them.
 
+_FATAL_SDL_ERRORS = [
+    "could not set videomode on crtc",
+    "could not queue pageflip",
+]
 
-# --- Refactored: Only try kmsdrm, improved error handling ---
-def try_sdl_driver():
+def _capture_sdl_stderr(func):
     """
-    Attempt to initialize SDL2 with the kmsdrm driver only.
-    Returns True if successful, False otherwise.
-    Provides clear error messages and avoids endless error loops.
+    Call func() while redirecting the OS-level stderr file descriptor to a pipe,
+    so that SDL2 C-library error messages are captured rather than printed to the TTY.
+    Returns (result, captured_text).
+    Re-raises any Python exception from func() after stderr is restored.
     """
-    if os.environ.get("DISPLAY"):
-        print("[INFO] X11/Wayland display detected, skipping kmsdrm.")
-        return True
-
-    os.environ["SDL_VIDEODRIVER"] = "kmsdrm"
-    # Optionally clear SDL_FBDEV to avoid interference
-    os.environ.pop("SDL_FBDEV", None)
+    import fcntl
     try:
-        import pygame
-        pygame.display.init()
-        pygame.display.quit()
-        print("[INFO] Using SDL_VIDEODRIVER=kmsdrm")
-        return True
-    except Exception as e:
-        msg = str(e).lower()
-        print(f"\n[ERROR] Could not initialize SDL2 kmsdrm driver.\nError: {e}\n")
-        if ("pageflip" in msg or "drm" in msg or "kmsdrm" in msg or
-            "crtc" in msg or "video mode" in msg):
-            print("This is usually caused by another graphical session (X11/Wayland), lack of DRM resources, or unsupported video mode.\n"
-                  "Try switching to a real console (Ctrl+Alt+F2) and ensure no other display server is running.\n")
-        return False
+        real_stderr_fd = sys.stderr.fileno()
+    except Exception:
+        # No real fd (e.g. redirected StringIO); just call normally.
+        return func(), ""
 
-if not try_sdl_driver():
-    sys.exit(1)
+    saved_fd = os.dup(real_stderr_fd)
+    r_fd, w_fd = os.pipe()
+    os.dup2(w_fd, real_stderr_fd)
+    os.close(w_fd)
+
+    result = None
+    exc = None
+    try:
+        result = func()
+    except Exception as e:
+        exc = e
+    finally:
+        try:
+            sys.stderr.flush()
+        except Exception:
+            pass
+        os.dup2(saved_fd, real_stderr_fd)
+        os.close(saved_fd)
+
+    # Drain the pipe (non-blocking so we don't hang)
+    flags = fcntl.fcntl(r_fd, fcntl.F_GETFL)
+    fcntl.fcntl(r_fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+    captured = b""
+    try:
+        while True:
+            chunk = os.read(r_fd, 4096)
+            if not chunk:
+                break
+            captured += chunk
+    except (BlockingIOError, OSError):
+        pass
+    finally:
+        os.close(r_fd)
+
+    if exc is not None:
+        raise exc
+    return result, captured.decode(errors="replace")
+
+
+def _die_on_sdl_errors(captured_text):
+    """
+    If captured SDL2 stderr contains a fatal DRM/CRTC error, print it and
+    hard-exit immediately via os._exit() to avoid a hung/spamming TTY.
+    """
+    lower = captured_text.lower()
+    for msg in _FATAL_SDL_ERRORS:
+        if msg in lower:
+            # Write directly to the real stderr (already restored at this point)
+            print(captured_text.rstrip(), file=sys.stderr)
+            print(f"\n[FATAL] SDL2 DRM error detected: '{msg}'\n"
+                  "Cannot initialize display from console TTY. "
+                  "Ensure no other display server is running and KMS/DRM is available.\n"
+                  "Exiting.", file=sys.stderr)
+            sys.stderr.flush()
+            os._exit(1)  # hard exit — skip all cleanup to avoid further TTY spam
+
+
+# Set SDL video driver for console (kmsdrm) unless running under X11/Wayland
+if not os.environ.get("DISPLAY"):
+    os.environ["SDL_VIDEODRIVER"] = "kmsdrm"
+    os.environ.pop("SDL_FBDEV", None)
+else:
+    print("[INFO] X11/Wayland display detected.")
 
 import pygame
 
@@ -94,28 +151,23 @@ def set_screen(fullscreen):
         WINDOWED = True
 
 
-pygame.init()
-
-# Try to initialize display, but handle repeated pageflip/DRM errors gracefully
+# Initialize pygame and the display surface.
+# Each call is wrapped with OS-level stderr capture so that SDL2 C-library
+# errors (e.g. "Could not set videomode on CRTC") are caught and cause an
+# immediate clean exit before the pageflip spam can start.
 try:
-    set_screen(fullscreen=False)
+    _, _sdl_out = _capture_sdl_stderr(pygame.init)
+    _die_on_sdl_errors(_sdl_out)
+
+    _, _sdl_out = _capture_sdl_stderr(lambda: set_screen(fullscreen=False))
+    _die_on_sdl_errors(_sdl_out)
+
     pygame.display.set_caption("Arcade Menu")
-except pygame.error as e:
-    msg = str(e).lower()
-    if ("pageflip" in msg or "drm" in msg or "kmsdrm" in msg or
-        "crtc" in msg or "video mode" in msg):
-        print("\n[ERROR] Fatal display error during initialization:\n"
-              f"Error: {e}\n"
-              "This is usually caused by another graphical session (X11/Wayland), lack of DRM resources, or unsupported video mode.\n"
-              "Try switching to a real console (Ctrl+Alt+F2) and ensure no other display server is running.\n")
-        sys.exit(2)
-    else:
-        print("\n[ERROR] Could not initialize Pygame display.\n"
-              "If running from console, ensure you are on the Pi and have framebuffer permissions.\n"
-              f"SDL_VIDEODRIVER={os.environ.get('SDL_VIDEODRIVER')}\n"
-              f"SDL_FBDEV={os.environ.get('SDL_FBDEV')}\n"
-              f"Error: {e}\n")
-        sys.exit(1)
+except (pygame.error, OSError) as e:
+    print(f"\n[ERROR] Could not initialize display: {e}\n"
+          f"SDL_VIDEODRIVER={os.environ.get('SDL_VIDEODRIVER')}\n",
+          file=sys.stderr)
+    sys.exit(1)
 
 font = pygame.font.SysFont(None, 36)
 
