@@ -438,8 +438,24 @@ run_pic_frontend()
     if [ ! -f "$HOME/scripts/pic_frontend.py" ]; then
         return 1
     fi
+
+    # Save terminal state before invoking pygame.  SDL2/pygame can leave the
+    # TTY in raw/cbreak mode if it exits abnormally (os._exit skips all Python
+    # cleanup).  Restoring it here ensures the dialog fallback gets a working
+    # keyboard whether pic_frontend succeeded, failed, or crashed.
+    local _saved_tty
+    _saved_tty=$(stty -g 2>/dev/null)
+
     XINMO_STATUS_MSG="$XINMO_STATUS_MSG" \
-        python3 "$HOME/scripts/pic_frontend.py" 2> >(tee -a /tmp/pic_frontend.err >&2)
+        python3 "$HOME/scripts/pic_frontend.py" 2>/tmp/pic_frontend.err
+    local _pf_exit=$?
+
+    if [ -n "$_saved_tty" ]; then
+        stty "$_saved_tty" 2>/dev/null || stty sane 2>/dev/null
+    else
+        stty sane 2>/dev/null
+    fi
+    return $_pf_exit
 }
 
 # Main menu: tries pygame pic_frontend first; falls back to dialog on failure
