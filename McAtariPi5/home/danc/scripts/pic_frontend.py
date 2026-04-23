@@ -92,11 +92,17 @@ def _die_on_sdl_errors(captured_text):
 # On console: try kmsdrm first, fall back to fbdev if kmsdrm can't set a videomode.
 # Under X11/Wayland: honour whatever DISPLAY points to.
 if not os.environ.get("DISPLAY"):
-    _SDL_DRIVERS_TO_TRY = ["kmsdrm", "fbdev"]
+    # On Pi 5 the display may be on DRM device 1 (card1) rather than card0.
+    # Try kmsdrm with each device index before falling back to fbdev.
+    _SDL_DRIVERS_TO_TRY = [
+        ("kmsdrm", "0"),
+        ("kmsdrm", "1"),
+        ("fbdev",  None),
+    ]
     os.environ.pop("SDL_FBDEV", None)
 else:
     print("[INFO] X11/Wayland display detected.", file=sys.stderr)
-    _SDL_DRIVERS_TO_TRY = [os.environ.get("SDL_VIDEODRIVER", "")]
+    _SDL_DRIVERS_TO_TRY = [(os.environ.get("SDL_VIDEODRIVER", ""), None)]
 
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 import pygame
@@ -160,11 +166,16 @@ def set_screen(fullscreen):
 # them at the OS fd level and fall through to the next driver rather than
 # aborting, so that fbdev gets a chance if kmsdrm can't set a videomode.
 _init_ok = False
-for _drv in _SDL_DRIVERS_TO_TRY:
+for _drv, _kmsdrm_dev in _SDL_DRIVERS_TO_TRY:
     if _drv:
         os.environ["SDL_VIDEODRIVER"] = _drv
     else:
         os.environ.pop("SDL_VIDEODRIVER", None)
+    if _kmsdrm_dev is not None:
+        os.environ["SDL_VIDEO_KMSDRM_DEVICE"] = _kmsdrm_dev
+    else:
+        os.environ.pop("SDL_VIDEO_KMSDRM_DEVICE", None)
+    _drv_label = f"{_drv}(dev={_kmsdrm_dev})" if _kmsdrm_dev is not None else _drv
     try:
         pygame.quit()   # reset any partial state from a previous attempt
     except Exception:
@@ -172,27 +183,28 @@ for _drv in _SDL_DRIVERS_TO_TRY:
     try:
         _, _sdl_out = _capture_sdl_stderr(pygame.init)
     except Exception as e:
-        print(f"[WARN] pygame.init failed with driver '{_drv}': {e}", file=sys.stderr)
+        print(f"[WARN] pygame.init failed with driver '{_drv_label}': {e}", file=sys.stderr)
         continue
     if any(msg in _sdl_out.lower() for msg in _FATAL_SDL_ERRORS):
-        print(f"[WARN] SDL2 driver '{_drv}' init error (trying next):\n{_sdl_out.rstrip()}", file=sys.stderr)
+        print(f"[WARN] SDL2 driver '{_drv_label}' init error (trying next):\n{_sdl_out.rstrip()}", file=sys.stderr)
         continue
     try:
         _, _sdl_out2 = _capture_sdl_stderr(lambda: set_screen(fullscreen=False))
     except Exception as e:
-        print(f"[WARN] set_screen failed with driver '{_drv}': {e}", file=sys.stderr)
+        print(f"[WARN] set_screen failed with driver '{_drv_label}': {e}", file=sys.stderr)
         continue
     if any(msg in _sdl_out2.lower() for msg in _FATAL_SDL_ERRORS):
-        print(f"[WARN] SDL2 driver '{_drv}' set_screen error (trying next):\n{_sdl_out2.rstrip()}", file=sys.stderr)
+        print(f"[WARN] SDL2 driver '{_drv_label}' set_screen error (trying next):\n{_sdl_out2.rstrip()}", file=sys.stderr)
         continue
     pygame.display.set_caption("Arcade Menu")
-    print(f"[INFO] Display initialized with SDL_VIDEODRIVER={_drv}", file=sys.stderr)
+    print(f"[INFO] Display initialized with SDL_VIDEODRIVER={_drv_label}", file=sys.stderr)
     _init_ok = True
     break
 
 if not _init_ok:
+    tried = [f"{d}(dev={k})" if k is not None else d for d, k in _SDL_DRIVERS_TO_TRY]
     print(f"\n[ERROR] Could not initialize display with any SDL driver.\n"
-          f"Tried: {_SDL_DRIVERS_TO_TRY}\n",
+          f"Tried: {tried}\n",
           file=sys.stderr)
     sys.exit(1)
 
