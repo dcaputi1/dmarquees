@@ -117,7 +117,7 @@ HOME = os.path.expanduser("~")
 PI5_DUAL_DISPLAY_FILE = os.path.join(HOME, ".pi5_dual_display")
 PI3_PRESENT_FILE = os.path.join(HOME, ".pi3_present")
 PANEL_FILE = os.path.join(HOME, ".panel")
-SCREEN_ORIENTATION_FILE = os.path.join(HOME, ".screen_orientation")
+SCREEN_ORIENTATION_FILE = os.path.join(HOME, ".horizontal")
 
 # Load or initialize state
 def load_state(path, default):
@@ -136,22 +136,22 @@ def load_state(path, default):
 
 def save_state(path, value):
     with open(path, "w") as f:
-        f.write(str(value))
+        f.write(str(value).lower() if isinstance(value, bool) else str(value))
 
 # Initial state
 dual_display = load_state(PI5_DUAL_DISPLAY_FILE, True)
 pi3_present = load_state(PI3_PRESENT_FILE, True)
 panel = load_state(PANEL_FILE, "DC")  # DC, MC, NA
-screen_portrait = load_state(SCREEN_ORIENTATION_FILE, False)
+screen_horizontal = load_state(SCREEN_ORIENTATION_FILE, True)
 
 # --- NEW: Window/fullscreen mode and dynamic sizing ---
 WINDOWED = True
 FULLSCREEN = False
 def get_screen_size():
-    if screen_portrait:
-        return (480, 640)
-    else:
+    if screen_horizontal:
         return (640, 480)
+    else:
+        return (480, 640)
 
 def set_screen(fullscreen):
     global screen, WINDOWED, FULLSCREEN
@@ -226,7 +226,7 @@ def _output_choice(choice):
     sys.exit(0)
 
 def panel_menu():
-    global panel, screen_portrait
+    global panel, screen_horizontal
     options = [("None/Blank", "NA"), ("Atari FS", "MC"), ("UltraStick", "DC")]
     idx = [i for i, (_, code) in enumerate(options) if code == panel]
     idx = idx[0] if idx else 0
@@ -242,14 +242,14 @@ def panel_menu():
             text = font.render(label, True, color)
             text_rect = text.get_rect(center=(240, 120 + i*70))
             base_surface.blit(text, text_rect)
-        if screen_portrait:
+        if screen_horizontal:
+            screen.fill((0,0,0))
+            screen.blit(base_surface, ((screen.get_width()-480)//2, (screen.get_height()-480)//2))
+        else:
             rotated = pygame.transform.rotate(base_surface, 90)
             rect = rotated.get_rect(center=screen.get_rect().center)
             screen.fill((0,0,0))
             screen.blit(rotated, rect)
-        else:
-            screen.fill((0,0,0))
-            screen.blit(base_surface, ((screen.get_width()-480)//2, (screen.get_height()-480)//2))
         pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -269,7 +269,7 @@ def panel_menu():
                     toggle_fullscreen()
 
 def advanced_menu():
-    global dual_display, pi3_present, screen_portrait
+    global dual_display, pi3_present, screen_horizontal
     MENU_ITEMS = [
         ("Pi5 Dual Display:", lambda: toggle_dual_display()),
         ("Pi3 Present:", lambda: toggle_pi3_present()),
@@ -296,21 +296,21 @@ def advanced_menu():
             elif "Pi3 Present" in label:
                 suffix = "ON" if pi3_present else "OFF"
             elif "Screen Orientation" in label:
-                suffix = "Portrait" if screen_portrait else "Landscape"
+                suffix = "Landscape" if screen_horizontal else "Portrait"
             elif "Panel Image" in label:
                 suffix = {"DC":"UltraStick/Spinners", "MC":"Atari/FightStick", "NA":"None/Blank"}.get(panel, "None/Blank")
             color = (255,255,0) if i == selected else (200,200,200)
             text = font.render(f"{label} {suffix}", True, color)
             text_rect = text.get_rect(center=(240, start_y + i*spacing))
             base_surface.blit(text, text_rect)
-        if screen_portrait:
+        if screen_horizontal:
+            screen.fill((0,0,0))
+            screen.blit(base_surface, ((screen.get_width()-480)//2, (screen.get_height()-480)//2))
+        else:
             rotated = pygame.transform.rotate(base_surface, 90)
             rect = rotated.get_rect(center=screen.get_rect().center)
             screen.fill((0,0,0))
             screen.blit(rotated, rect)
-        else:
-            screen.fill((0,0,0))
-            screen.blit(base_surface, ((screen.get_width()-480)//2, (screen.get_height()-480)//2))
         pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -331,9 +331,9 @@ def advanced_menu():
                     toggle_fullscreen()
 
 def toggle_screen_orientation():
-    global screen_portrait
-    screen_portrait = not screen_portrait
-    save_state(SCREEN_ORIENTATION_FILE, screen_portrait)
+    global screen_horizontal
+    screen_horizontal = not screen_horizontal
+    save_state(SCREEN_ORIENTATION_FILE, screen_horizontal)
     set_screen(FULLSCREEN)
 
 def toggle_dual_display():
@@ -355,10 +355,10 @@ def main_menu():
         ("Exit to X/Wayland Desktop", lambda: _output_choice("X")),
     ]
     def launch_emulationstation():
-        _output_choice("V" if screen_portrait else "E")
+        _output_choice("E" if screen_horizontal else "V")
 
     def launch_mame():
-        _output_choice("P" if screen_portrait else "M")
+        _output_choice("M" if screen_horizontal else "P")
     selected = 0
     running = True
     while running:
@@ -375,14 +375,14 @@ def main_menu():
             text = font.render(label, True, color)
             text_rect = text.get_rect(center=(240, start_y + i*spacing))
             base_surface.blit(text, text_rect)
-        if screen_portrait:
+        if screen_horizontal:
+            screen.fill((0,0,0))
+            screen.blit(base_surface, ((screen.get_width()-480)//2, (screen.get_height()-480)//2))
+        else:
             rotated = pygame.transform.rotate(base_surface, 90)
             rect = rotated.get_rect(center=screen.get_rect().center)
             screen.fill((0,0,0))
             screen.blit(rotated, rect)
-        else:
-            screen.fill((0,0,0))
-            screen.blit(base_surface, ((screen.get_width()-480)//2, (screen.get_height()-480)//2))
         pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
