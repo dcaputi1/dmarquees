@@ -93,7 +93,12 @@ def _die_on_sdl_errors(captured_text):
 # Under X11/Wayland: honour whatever DISPLAY points to.
 if not os.environ.get("DISPLAY"):
     # On Pi 5 the display may be on DRM device 1 (card1) rather than card0.
+    # SDL2 hint for device index is SDL_KMSDRM_DEVICE_INDEX (not SDL_VIDEO_KMSDRM_DEVICE).
     # Try kmsdrm with each device index before falling back to fbdev.
+    _drm_cards = sorted(
+        e.name for e in os.scandir("/dev/dri") if e.name.startswith("card")
+    ) if os.path.isdir("/dev/dri") else []
+    print(f"[INFO] DRM devices found: {_drm_cards}", file=sys.stderr)
     _SDL_DRIVERS_TO_TRY = [
         ("kmsdrm", "0"),
         ("kmsdrm", "1"),
@@ -172,9 +177,9 @@ for _drv, _kmsdrm_dev in _SDL_DRIVERS_TO_TRY:
     else:
         os.environ.pop("SDL_VIDEODRIVER", None)
     if _kmsdrm_dev is not None:
-        os.environ["SDL_VIDEO_KMSDRM_DEVICE"] = _kmsdrm_dev
+        os.environ["SDL_KMSDRM_DEVICE_INDEX"] = _kmsdrm_dev
     else:
-        os.environ.pop("SDL_VIDEO_KMSDRM_DEVICE", None)
+        os.environ.pop("SDL_KMSDRM_DEVICE_INDEX", None)
     _drv_label = f"{_drv}(dev={_kmsdrm_dev})" if _kmsdrm_dev is not None else _drv
     try:
         pygame.quit()   # reset any partial state from a previous attempt
