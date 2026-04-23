@@ -118,6 +118,7 @@ PI5_DUAL_DISPLAY_FILE = os.path.join(HOME, ".pi5_dual_display")
 PI3_PRESENT_FILE = os.path.join(HOME, ".pi3_present")
 PANEL_FILE = os.path.join(HOME, ".panel")
 SCREEN_ORIENTATION_FILE = os.path.join(HOME, ".horizontal")
+DEF_KEY_FILE = os.path.join(HOME, ".def_key")
 
 # Load or initialize state
 def load_state(path, default):
@@ -219,8 +220,43 @@ def toggle_fullscreen():
     global FULLSCREEN
     set_screen(not FULLSCREEN)
 
+# Map .def_key values back to main_menu selected index
+_DEF_KEY_TO_IDX = {"E": 0, "V": 0, "M": 1, "P": 1, "A": 2, "C": 3, "X": 4}
+
+def _load_def_key_index():
+    """Return the main_menu index corresponding to the persisted .def_key, or 0 if absent/unknown."""
+    if os.path.exists(DEF_KEY_FILE):
+        with open(DEF_KEY_FILE, "r") as f:
+            key = f.read().strip().upper()
+        return _DEF_KEY_TO_IDX.get(key, 0)
+    return 0
+
+def _sync_orientation_from_def_key():
+    """
+    Give .def_key priority over .horizontal when the stored key implies an
+    orientation (E/M → landscape, V/P → portrait).  If orientation changes,
+    save the new state and resize the screen to match.
+    Keys A, C, X carry no orientation information and are ignored.
+    """
+    global screen_horizontal
+    if not os.path.exists(DEF_KEY_FILE):
+        return
+    with open(DEF_KEY_FILE, "r") as f:
+        key = f.read().strip().upper()
+    if key in ("E", "M"):
+        implied = True
+    elif key in ("V", "P"):
+        implied = False
+    else:
+        return  # A, C, X — no orientation implied
+    if screen_horizontal != implied:
+        screen_horizontal = implied
+        save_state(SCREEN_ORIENTATION_FILE, screen_horizontal)
+        set_screen(FULLSCREEN)
+
 def _output_choice(choice):
-    """Print a menu choice to stdout and exit cleanly; bash reads this to decide what to launch."""
+    """Persist choice to .def_key, print to stdout, and exit cleanly; bash reads this to decide what to launch."""
+    save_state(DEF_KEY_FILE, choice)
     pygame.quit()
     print(choice, flush=True)
     sys.exit(0)
@@ -276,7 +312,6 @@ def advanced_menu():
         ("Screen Orientation:", lambda: toggle_screen_orientation()),
         ("Panel Image:", lambda: panel_menu()),
         ("Return to Main Menu", lambda: None),
-        ("Quit", lambda: sys.exit(0)),
     ]
     selected = 0
     running = True
@@ -359,7 +394,8 @@ def main_menu():
 
     def launch_mame():
         _output_choice("M" if screen_horizontal else "P")
-    selected = 0
+    selected = _load_def_key_index()
+    _sync_orientation_from_def_key()
     running = True
     while running:
         base_surface = pygame.Surface((480, 480))
@@ -393,6 +429,8 @@ def main_menu():
                 elif event.key == pygame.K_DOWN:
                     selected = (selected + 1) % len(MENU_ITEMS)
                 elif event.key in (pygame.K_RETURN, pygame.K_SPACE):
+                    if MENU_ITEMS[selected][0] == "Advanced Config Setup/Options":
+                        save_state(DEF_KEY_FILE, "A")
                     MENU_ITEMS[selected][1]()
                 elif event.key == pygame.K_ESCAPE:
                     sys.exit(0)
