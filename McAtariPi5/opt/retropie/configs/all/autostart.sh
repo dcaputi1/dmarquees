@@ -366,7 +366,7 @@ dialog_main_menu()
             X "Exit to Desktop  X/Wayland Desktop"
         )
 
-        echo "calling dialog"
+        local CHOICE
 
         # Add XinMo status message to the menu box
         CHOICE=$(dialog --timeout $MENU_TIMEOUT --title "Arcade Menu" --default-item "$DEF_KEY" \
@@ -472,9 +472,9 @@ main_menu()
             send_dmarquees_cmd "NA"
         fi
 
-        local CHOICE
-        CHOICE=$(run_pic_frontend)
-        local PF_EXIT=$?
+#       local CHOICE="X"
+#       CHOICE=$(run_pic_frontend)
+#       local PF_EXIT=$?
 
         # Start dmarquees now that pic_frontend has had its chance at the display
         if [ "$_dmarquees_started" = false ]; then
@@ -487,14 +487,14 @@ main_menu()
             send_dmarquees_cmd "NA"
         fi
 
-        echo "[autostart] pic_frontend exit code: $PF_EXIT, output: '$CHOICE'"
-        debug_wait
+#       echo "[autostart] pic_frontend exit code: $PF_EXIT, output: '$CHOICE'"
+#       debug_wait
 
-        if [ $PF_EXIT -ne 0 ] || ! [[ "$CHOICE" =~ ^[EVMPCXevmpcx]$ ]]; then
-            echo "[autostart] pic_frontend unavailable (exit=$PF_EXIT output='$CHOICE'), using dialog fallback"
+#       if [ $PF_EXIT -ne 0 ] || ! [[ "$CHOICE" =~ ^[EVMPCXevmpcx]$ ]]; then
+#           echo "[autostart] pic_frontend unavailable (exit=$PF_EXIT output='$CHOICE'), using dialog fallback"
             dialog_main_menu
             return
-        fi
+#       fi
 
         persist_frontend_choice "$CHOICE"
         case $CHOICE in
