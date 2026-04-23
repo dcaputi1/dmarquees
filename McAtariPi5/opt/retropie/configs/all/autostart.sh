@@ -461,14 +461,31 @@ run_pic_frontend()
 # Main menu: tries pygame pic_frontend first; falls back to dialog on failure
 main_menu()
 {
+    local _dmarquees_started=false
+
     while true; do
         restore_cfg
         python3 "$HOME/scripts/leds_off.py"
-        send_dmarquees_cmd "NA"
+
+        # Only send NA once dmarquees is actually running
+        if [ "$_dmarquees_started" = true ]; then
+            send_dmarquees_cmd "NA"
+        fi
 
         local CHOICE
         CHOICE=$(run_pic_frontend)
         local PF_EXIT=$?
+
+        # Start dmarquees now that pic_frontend has had its chance at the display
+        if [ "$_dmarquees_started" = false ]; then
+            if [ "$THIS_IS_PI5" != true ] || [ "$PI5_DUAL_DISPLAY" = true ]; then
+                echo "[autostart] calling setup_dmarquees (deferred until after pic_frontend)"
+                debug_wait
+                setup_dmarquees
+            fi
+            _dmarquees_started=true
+            send_dmarquees_cmd "NA"
+        fi
 
         echo "[autostart] pic_frontend exit code: $PF_EXIT, output: '$CHOICE'"
         debug_wait
@@ -542,12 +559,6 @@ start_netbridge()
 # ---------------------------------------------------
 
 load_persisted_options
-
-if [ "$THIS_IS_PI5" != true ] || [ "$PI5_DUAL_DISPLAY" = true ]; then
-    echo "[autostart] calling setup_dmatquees"
-    debug_wait
-    setup_dmarquees
-fi
 
 if [ "$THIS_IS_PI5" = true ]; then
 
