@@ -20,6 +20,7 @@ PI3_REMOTE_HOST="10.77.77.3"
 PI3_REMOTE_PORT="5533"
 MOUNTED_GAME_ART="marquees" # or "cpanel"
 PANEL="DC"
+SCREEN_HORIZONTAL=true
 
 DEBUG=""  # "1" to enable debug waits, "" disables
 
@@ -63,6 +64,14 @@ load_persisted_options()
         PANEL=$(<"$HOME/.panel")
     else
         echo "$PANEL" > "$HOME/.panel"
+    fi
+
+    SCREEN_HORIZONTAL_FILE="$HOME/.horizontal"
+    if [ -f "$SCREEN_HORIZONTAL_FILE" ]; then
+        SCREEN_HORIZONTAL=$(<"$SCREEN_HORIZONTAL_FILE")
+    else
+        SCREEN_HORIZONTAL=true
+        echo "$SCREEN_HORIZONTAL" > "$SCREEN_HORIZONTAL_FILE"
     fi
 
     # Debug: Show all three variables and wait for user
@@ -131,7 +140,7 @@ advanced_menu()
 {
     while true; do
         # Show current boolean states
-        local dual_display_state pi3_present_state
+        local dual_display_state pi3_present_state screen_orient_state
         if [ "$PI5_DUAL_DISPLAY" = true ]; then
             dual_display_state="ON"
         else
@@ -141,6 +150,11 @@ advanced_menu()
             pi3_present_state="ON"
         else
             pi3_present_state="OFF"
+        fi
+        if [ "$SCREEN_HORIZONTAL" = true ]; then
+            screen_orient_state="Landscape"
+        else
+            screen_orient_state="Portrait"
         fi
 
         local PANEL_IMAGE
@@ -155,6 +169,7 @@ advanced_menu()
         local ADV_ITEMS=(
             D "Toggle Pi5 Dual Display:   $dual_display_state"
             P "Toggle Pi3 Present:        $pi3_present_state"
+            O "Toggle Screen Orientation: $screen_orient_state"
             S "Swap Xin-Mo Player 1 & 2"
             I "Panel Image...             $PANEL_IMAGE"
             Q "Return to Main Menu"
@@ -162,7 +177,7 @@ advanced_menu()
 
         local ADV_CHOICE
 
-        ADV_CHOICE=$(dialog --title "Advanced Config Initial Setup/Options" --menu "Advanced options:" 16 60 5 \
+        ADV_CHOICE=$(dialog --title "Advanced Config Initial Setup/Options" --menu "Advanced options:" 18 60 6 \
             "${ADV_ITEMS[@]}" \
             2>&1 > /dev/tty)
 
@@ -174,8 +189,7 @@ advanced_menu()
                 else
                     PI5_DUAL_DISPLAY=true
                 fi
-                # Persist change in file
-                sed -i "s/^PI5_DUAL_DISPLAY=.*/PI5_DUAL_DISPLAY=$PI5_DUAL_DISPLAY/" "$0"
+                echo "$PI5_DUAL_DISPLAY" > "$HOME/.pi5_dual_display"
                 ;;
             P)
                 # Toggle PI3_PRESENT
@@ -184,8 +198,16 @@ advanced_menu()
                 else
                     PI3_PRESENT=true
                 fi
-                # Persist change in file
-                sed -i "s/^PI3_PRESENT=.*/PI3_PRESENT=$PI3_PRESENT/" "$0"
+                echo "$PI3_PRESENT" > "$HOME/.pi3_present"
+                ;;
+            O)
+                # Toggle screen orientation
+                if [ "$SCREEN_HORIZONTAL" = true ]; then
+                    SCREEN_HORIZONTAL=false
+                else
+                    SCREEN_HORIZONTAL=true
+                fi
+                echo "$SCREEN_HORIZONTAL" > "$HOME/.horizontal"
                 ;;
             S)
                 $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_ra 1
@@ -344,10 +366,14 @@ persist_frontend_choice()
 # Main menu logic as a function
 main_menu()
 {
-    local DEF_KEY="X"
+    local DEF_KEY="E"
     if [[ -f $HOME/.def_key ]]; then
         DEF_KEY=$(<"$HOME/.def_key")
     fi
+    # Remap legacy portrait/vertical keys to their landscape equivalents
+    case $DEF_KEY in
+        P|p|V|v) DEF_KEY=M ;;
+    esac
 
     while true; do
         restore_cfg
@@ -357,14 +383,14 @@ main_menu()
         # Use global XINMO_STATUS_CODE and XINMO_STATUS_MSG set at startup or after swap
 
         MENU_ITEMS=(
-            E "EmulationStation Normal/Horizontal"
-            V "Vertical Arcade  Portrait/Vertical"
-            M "MAME Landscape   Normal/Horizontal"
-            P "MAME Portrait    Portrait/Vertical"
+            E "EmulationStation"
+            M "MAME Standalone"
             A "Advanced Config  Initial Setup/Opt"
             C "Command Prompt   Do not launch GUI"
             X "Exit to Desktop  X/Wayland Desktop"
         )
+
+        local CHOICE
 
         # Add XinMo status message to the menu box
         CHOICE=$(dialog --timeout $MENU_TIMEOUT --title "Arcade Menu" --default-item "$DEF_KEY" \
@@ -377,36 +403,31 @@ main_menu()
         if [[ "$CHOICE" == "" ]]; then
             CHOICE=$DEF_KEY
         fi
-        persist_frontend_choice "$CHOICE"
         case $CHOICE in
             E)
+                persist_frontend_choice "E"
                 mv $CFG_RA_PATH $CFG_PATH
                 cp "$MAME_INI.ra" "$MAME_INI"
-                echo "ROL_FLAG=\"-norol\"" > $HOME/.rol_flag
                 send_dmarquees_cmd "RA"
-                emulationstation #auto
-                continue
-                ;;
-            V)
-                mv $CFG_RA_PATH $CFG_PATH
-                cp "$MAME_INI.ra" "$MAME_INI"
-                echo "ROL_FLAG=\"-rol\"" > $HOME/.rol_flag
-                send_dmarquees_cmd "RA"
-                emulationstation --screenrotate 3 --screensize 1200 1600 #auto
+                if [ "$SCREEN_HORIZONTAL" = false ]; then
+                    echo "ROL_FLAG=\"-rol\"" > $HOME/.rol_flag
+                    emulationstation --screenrotate 3 --screensize 1200 1600 #auto
+                else
+                    echo "ROL_FLAG=\"-norol\"" > $HOME/.rol_flag
+                    emulationstation #auto
+                fi
                 continue
                 ;;
             M)
+                persist_frontend_choice "M"
                 send_dmarquees_cmd "SA"
                 mv $CFG_SA_PATH $CFG_PATH
                 cp "$MAME_INI.sa" "$MAME_INI"
-                mame -norol -inipath "/opt/retropie/emulators/mame/ini" -cfg_directory $CFG_PATH -joystickprovider sdljoy
-                continue
-                ;;
-            P)
-                send_dmarquees_cmd "SA"
-                mv $CFG_SA_PATH $CFG_PATH
-                cp "$MAME_INI.sa" "$MAME_INI"
-                mame -rol -inipath "/opt/retropie/emulators/mame/ini;/opt/retropie/emulators/mame/ini_horz_ror" -cfg_directory $CFG_PATH -joystickprovider sdljoy
+                if [ "$SCREEN_HORIZONTAL" = false ]; then
+                    mame -rol -inipath "/opt/retropie/emulators/mame/ini;/opt/retropie/emulators/mame/ini_horz_ror" -cfg_directory $CFG_PATH -joystickprovider sdljoy
+                else
+                    mame -norol -inipath "/opt/retropie/emulators/mame/ini" -cfg_directory $CFG_PATH -joystickprovider sdljoy
+                fi
                 continue
                 ;;
             A)

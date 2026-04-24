@@ -232,7 +232,7 @@ def toggle_fullscreen():
     set_screen(not FULLSCREEN)
 
 # Map .def_key values back to main_menu selected index
-_DEF_KEY_TO_IDX = {"E": 0, "V": 0, "M": 1, "P": 1, "A": 2, "C": 3, "X": 4}
+_DEF_KEY_TO_IDX = {"E": 0, "M": 1, "A": 2, "C": 3, "X": 4}
 
 def _load_def_key_index():
     """Return the main_menu index corresponding to the persisted .def_key, or 0 if absent/unknown."""
@@ -243,10 +243,9 @@ def _load_def_key_index():
     return 0
 
 def _output_choice(choice):
-    """Persist choice to .def_key, print to stdout, and exit cleanly; bash reads this to decide what to launch."""
+    """Persist choice to .def_key and exit cleanly; bash reloads all state and reads .def_key to decide what to launch."""
     save_state(DEF_KEY_FILE, choice)
     pygame.quit()
-    print(choice, flush=True)
     sys.exit(0)
 
 def panel_menu():
@@ -382,6 +381,12 @@ def main_menu():
 
     def launch_mame():
         _output_choice("M")
+
+    TIMEOUT_SECS = 60
+    TICK_EVENT = pygame.USEREVENT + 1
+    pygame.time.set_timer(TICK_EVENT, 1000)  # fire every 1 second
+    countdown = TIMEOUT_SECS
+
     selected = _load_def_key_index()
     running = True
     while running:
@@ -398,6 +403,9 @@ def main_menu():
             text = font.render(label, True, color)
             text_rect = text.get_rect(center=(240, start_y + i*spacing))
             base_surface.blit(text, text_rect)
+        timer_text = font.render(f"Auto-launch in {countdown}s", True, (128, 128, 128))
+        timer_rect = timer_text.get_rect(center=(240, 460))
+        base_surface.blit(timer_text, timer_rect)
         if screen_horizontal:
             screen.fill((0,0,0))
             screen.blit(base_surface, ((screen.get_width()-480)//2, (screen.get_height()-480)//2))
@@ -410,12 +418,20 @@ def main_menu():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit(0)
+            elif event.type == TICK_EVENT:
+                countdown -= 1
+                if countdown <= 0:
+                    pygame.time.set_timer(TICK_EVENT, 0)
+                    MENU_ITEMS[selected][1]()
             elif event.type == pygame.KEYDOWN:
+                # Any keypress cancels the timeout
+                countdown = TIMEOUT_SECS
                 if event.key == pygame.K_UP:
                     selected = (selected - 1) % len(MENU_ITEMS)
                 elif event.key == pygame.K_DOWN:
                     selected = (selected + 1) % len(MENU_ITEMS)
                 elif event.key in (pygame.K_RETURN, pygame.K_SPACE):
+                    pygame.time.set_timer(TICK_EVENT, 0)
                     if MENU_ITEMS[selected][0] == "Advanced Config Setup/Options":
                         save_state(DEF_KEY_FILE, "A")
                     MENU_ITEMS[selected][1]()

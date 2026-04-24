@@ -136,122 +136,6 @@ launch_desktop()
     sudo systemctl start lightdm
 }
 
-dialog_advanced_menu()
-{
-    while true; do
-        # Show current boolean states
-        local dual_display_state pi3_present_state screen_orient_state
-        if [ "$PI5_DUAL_DISPLAY" = true ]; then
-            dual_display_state="ON"
-        else
-            dual_display_state="OFF"
-        fi
-        if [ "$PI3_PRESENT" = true ]; then
-            pi3_present_state="ON"
-        else
-            pi3_present_state="OFF"
-        fi
-        if [ "$SCREEN_HORIZONTAL" = true ]; then
-            screen_orient_state="Landscape"
-        else
-            screen_orient_state="Portrait"
-        fi
-
-        local PANEL_IMAGE
-        if [ "$PANEL" = "DC" ]; then
-            PANEL_IMAGE="UltraStick/Spinners"
-        elif [ "$PANEL" = "MC" ]; then
-            PANEL_IMAGE="Atari/FightStick"
-        else
-            PANEL_IMAGE="None/Blank"
-        fi
-
-        local ADV_ITEMS=(
-            D "Toggle Pi5 Dual Display:   $dual_display_state"
-            P "Toggle Pi3 Present:        $pi3_present_state"
-            O "Toggle Screen Orientation: $screen_orient_state"
-            S "Swap Xin-Mo Player 1 & 2"
-            I "Panel Image...             $PANEL_IMAGE"
-            Q "Return to Main Menu"
-        )
-
-        local ADV_CHOICE
-
-        ADV_CHOICE=$(dialog --title "Advanced Config Initial Setup/Options" --menu "Advanced options:" 18 60 6 \
-            "${ADV_ITEMS[@]}" \
-            2>&1 > /dev/tty)
-
-        case $ADV_CHOICE in
-            D)
-                # Toggle PI5_DUAL_DISPLAY
-                if [ "$PI5_DUAL_DISPLAY" = true ]; then
-                    PI5_DUAL_DISPLAY=false
-                else
-                    PI5_DUAL_DISPLAY=true
-                fi
-                # Persist change in file
-                sed -i "s/^PI5_DUAL_DISPLAY=.*/PI5_DUAL_DISPLAY=$PI5_DUAL_DISPLAY/" "$0"
-                ;;
-            P)
-                # Toggle PI3_PRESENT
-                if [ "$PI3_PRESENT" = true ]; then
-                    PI3_PRESENT=false
-                else
-                    PI3_PRESENT=true
-                fi
-                # Persist change in file
-                sed -i "s/^PI3_PRESENT=.*/PI3_PRESENT=$PI3_PRESENT/" "$0"
-                ;;
-            O)
-                # Toggle screen orientation
-                if [ "$SCREEN_HORIZONTAL" = true ]; then
-                    SCREEN_HORIZONTAL=false
-                else
-                    SCREEN_HORIZONTAL=true
-                fi
-                echo "$SCREEN_HORIZONTAL" > "$HOME/.horizontal"
-                ;;
-            S)
-                $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_ra 1
-                $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_sa 1
-                check_xinmo_status
-                continue
-                ;;
-            I)
-                # Panel Image submenu
-                local PANEL_ITEMS=(
-                    N "None/Blank"
-                    A "Atari FS"
-                    U "UltraStick"
-                )
-                local PANEL_CHOICE
-                PANEL_CHOICE=$(dialog --title "Panel Image Selection" --menu "Choose panel image type:" 12 40 3 \
-                    "N" "None/Blank" \
-                    "A" "Atari FS" \
-                    "U" "UltraStick" \
-                    2>&1 > /dev/tty)
-
-                case $PANEL_CHOICE in
-                    N)
-                        PANEL_IMAGE="NA"
-                        ;;
-                    A)
-                        PANEL_IMAGE="MC"
-                        ;;
-                    U)
-                        PANEL_IMAGE="DC"
-                        ;;
-                esac
-                echo "$PANEL_IMAGE" > "$HOME/.panel"
-                continue
-                ;;
-            Q|"" )
-                break
-                ;;
-        esac
-    done
-}
-
 # ==========================================
 #  Marquee setup: mount and daemon launch
 # ==========================================
@@ -360,53 +244,74 @@ send_dmarquees_cmd()
     echo "$cmd" > "$CMD_FIFO"
 }
 
-persist_frontend_choice()
+# ==========================================
+#  Pygame frontend wrapper + main menu
+# ==========================================
+run_pic_frontend()
 {
-    echo "$1" > "$HOME/.def_key"
+    # Invoke the pygame menu; choice letter is persisted to .def_key on exit.
+    # Stderr goes to a log so SDL/pygame noise never pollutes the TTY.
+    if [ ! -f "$HOME/scripts/pic_frontend.py" ]; then
+        return 1
+    fi
+
+    # Save terminal state before invoking pygame.  SDL2/pygame can leave the
+    # TTY in raw/cbreak mode if it exits abnormally (os._exit skips all Python
+    # cleanup).  Restoring it here ensures the dialog fallback gets a working
+    # keyboard whether pic_frontend succeeded, failed, or crashed.
+    local _saved_tty
+    _saved_tty=$(stty -g 2>/dev/null)
+
+    XINMO_STATUS_MSG="$XINMO_STATUS_MSG" \
+        python3 "$HOME/scripts/pic_frontend.py" 2>/tmp/pic_frontend.err
+    local _pf_exit=$?
+
+    if [ -n "$_saved_tty" ]; then
+        stty "$_saved_tty" 2>/dev/null || stty sane 2>/dev/null
+    else
+        stty sane 2>/dev/null
+    fi
+    return $_pf_exit
 }
 
-# Main menu logic as a function (dialog fallback)
-dialog_main_menu()
+# Main menu: pygame pic_frontend only (for dialog/text UI fallback use autostart-nogui.sh)
+main_menu()
 {
-    local DEF_KEY="X"
-    if [[ -f $HOME/.def_key ]]; then
-        DEF_KEY=$(<"$HOME/.def_key")
-    fi
-    # Remap legacy portrait/vertical keys to their landscape equivalents
-    case $DEF_KEY in
-        P|p) DEF_KEY=M ;;
-        V|v) DEF_KEY=E ;;
-    esac
-
     while true; do
         restore_cfg
-        python3 $HOME/scripts/leds_off.py
+        python3 "$HOME/scripts/leds_off.py"
         send_dmarquees_cmd "NA"
 
-        # Use global XINMO_STATUS_CODE and XINMO_STATUS_MSG set at startup or after swap
+        echo "[autostart] calling run_pic_frontend..."
+        debug_wait
 
-        MENU_ITEMS=(
-            E "EmulationStation"
-            M "MAME Standalone"
-            A "Advanced Config  Initial Setup/Opt"
-            C "Command Prompt   Do not launch GUI"
-            X "Exit to Desktop  X/Wayland Desktop"
-        )
+        run_pic_frontend
+        local PF_EXIT=$?
+
+        echo "[autostart] pic_frontend exit code: $PF_EXIT"
+        debug_wait
+
+        if [ $PF_EXIT -ne 0 ]; then
+            echo "[autostart] pic_frontend failed (exit=$PF_EXIT). Check /tmp/pic_frontend.err. Exiting to shell."
+            break
+        fi
+
+        # Reload all persisted options so SCREEN_HORIZONTAL and other state
+        # reflect any changes made inside the pic_frontend advanced menu.
+        load_persisted_options
 
         local CHOICE
+        CHOICE=$(<"$HOME/.def_key" 2>/dev/null || echo "X")
+        CHOICE=$(echo "$CHOICE" | tr '[:lower:]' '[:upper:]')
 
-        # Add XinMo status message to the menu box
-        CHOICE=$(dialog --timeout $MENU_TIMEOUT --title "Arcade Menu" --default-item "$DEF_KEY" \
-            --menu "Choose Fontend: (timeout $MENU_TIMEOUT secs)\n\n$XINMO_STATUS_MSG" 16 50 4 \
-            "${MENU_ITEMS[@]}" \
-            2>&1 > /dev/tty)
+        echo "[autostart] pic_frontend choice from .def_key: '$CHOICE'"
+        debug_wait
 
-###     printf "\033[2J\033[H"  DO NOT USE (was 'clear' which was worse!)
-
-        if [[ "$CHOICE" == "" ]]; then
-            CHOICE=$DEF_KEY
+        if ! [[ "$CHOICE" =~ ^[EMCX]$ ]]; then
+            echo "[autostart] invalid choice '$CHOICE' from .def_key, exiting to shell."
+            break
         fi
-        persist_frontend_choice "$CHOICE"
+
         case $CHOICE in
             E)
                 mv $CFG_RA_PATH $CFG_PATH
@@ -432,110 +337,11 @@ dialog_main_menu()
                 fi
                 continue
                 ;;
-            A)
-                dialog_advanced_menu
-                continue
-                ;;
             C)
-                # exit to command prompt (do not continue main menu loop)
-                ;;
-            *)
-                shutdown_dmarquees
-                launch_desktop
-                ;;
-        esac
-        break
-    done
-}
-
-# ==========================================
-#  Pygame frontend wrapper + main menu
-# ==========================================
-run_pic_frontend()
-{
-    # Invoke the pygame menu; choice letter (E/V/M/P/C/X) is printed to stdout
-    # and the process exits with code 0.  Stderr goes to a log so SDL/pygame
-    # noise never pollutes the TTY.
-    if [ ! -f "$HOME/scripts/pic_frontend.py" ]; then
-        return 1
-    fi
-
-    # Save terminal state before invoking pygame.  SDL2/pygame can leave the
-    # TTY in raw/cbreak mode if it exits abnormally (os._exit skips all Python
-    # cleanup).  Restoring it here ensures the dialog fallback gets a working
-    # keyboard whether pic_frontend succeeded, failed, or crashed.
-    local _saved_tty
-    _saved_tty=$(stty -g 2>/dev/null)
-
-    XINMO_STATUS_MSG="$XINMO_STATUS_MSG" \
-        python3 "$HOME/scripts/pic_frontend.py" 2>/tmp/pic_frontend.err
-    local _pf_exit=$?
-
-    if [ -n "$_saved_tty" ]; then
-        stty "$_saved_tty" 2>/dev/null || stty sane 2>/dev/null
-    else
-        stty sane 2>/dev/null
-    fi
-    return $_pf_exit
-}
-
-# Main menu: tries pygame pic_frontend first; falls back to dialog on failure
-main_menu()
-{
-    while true; do
-        restore_cfg
-        python3 "$HOME/scripts/leds_off.py"
-        send_dmarquees_cmd "NA"
-
-        echo "[autostart] calling run_pic_frontend..."
-        debug_wait
-
-        local CHOICE="X"
-        CHOICE=$(run_pic_frontend)
-        local PF_EXIT=$?
-
-        echo "[autostart] pic_frontend exit code: $PF_EXIT, output: '$CHOICE'"
-        debug_wait
-
-        if [ $PF_EXIT -ne 0 ] || ! [[ "$CHOICE" =~ ^[EMCXemcx]$ ]]; then
-            echo "[autostart] pic_frontend unavailable (exit=$PF_EXIT output='$CHOICE'), using dialog fallback"
-            dialog_main_menu
-            return
-        fi
-
-        persist_frontend_choice "$CHOICE"
-        case $CHOICE in
-            E|e)
-                mv $CFG_RA_PATH $CFG_PATH
-                cp "$MAME_INI.ra" "$MAME_INI"
-                SCREEN_HORIZONTAL=$(<"$HOME/.horizontal" 2>/dev/null || echo true)
-                send_dmarquees_cmd "RA"
-                if [ "$SCREEN_HORIZONTAL" = false ]; then
-                    echo "ROL_FLAG=\"-rol\"" > $HOME/.rol_flag
-                    emulationstation --screenrotate 3 --screensize 1200 1600 #auto
-                else
-                    echo "ROL_FLAG=\"-norol\"" > $HOME/.rol_flag
-                    emulationstation #auto
-                fi
-                continue
-                ;;
-            M|m)
-                send_dmarquees_cmd "SA"
-                mv $CFG_SA_PATH $CFG_PATH
-                cp "$MAME_INI.sa" "$MAME_INI"
-                SCREEN_HORIZONTAL=$(<"$HOME/.horizontal" 2>/dev/null || echo true)
-                if [ "$SCREEN_HORIZONTAL" = false ]; then
-                    mame -rol -inipath "/opt/retropie/emulators/mame/ini;/opt/retropie/emulators/mame/ini_horz_ror" -cfg_directory $CFG_PATH -joystickprovider sdljoy
-                else
-                    mame -norol -inipath "/opt/retropie/emulators/mame/ini" -cfg_directory $CFG_PATH -joystickprovider sdljoy
-                fi
-                continue
-                ;;
-            C|c)
                 # exit to command prompt (do not continue main menu loop)
                 break
                 ;;
-            X|x|*)
+            X|*)
                 shutdown_dmarquees
                 launch_desktop
                 break
