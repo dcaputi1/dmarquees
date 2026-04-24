@@ -22,7 +22,7 @@ MOUNTED_GAME_ART="marquees" # or "cpanel"
 PANEL="DC"
 SCREEN_HORIZONTAL=true
 
-DEBUG=""  # "1" to enable debug waits, "" disables
+DEBUG="1"  # "1" to enable debug waits, "" disables
 
 debug_wait()
 {
@@ -284,10 +284,8 @@ main_menu()
 
         echo "[autostart] calling run_pic_frontend..."
         debug_wait
-
         run_pic_frontend
         local PF_EXIT=$?
-
         echo "[autostart] pic_frontend exit code: $PF_EXIT"
         debug_wait
 
@@ -317,6 +315,8 @@ main_menu()
                 mv $CFG_RA_PATH $CFG_PATH
                 cp "$MAME_INI.ra" "$MAME_INI"
                 send_dmarquees_cmd "RA"
+                echo "Running EmulationStation... .horizontal = $SCREEN_HORIZONTAL
+                debug_wait
                 if [ "$SCREEN_HORIZONTAL" = false ]; then
                     echo "ROL_FLAG=\"-rol\"" > $HOME/.rol_flag
                     emulationstation --screenrotate 3 --screensize 1200 1600 #auto
@@ -330,6 +330,8 @@ main_menu()
                 send_dmarquees_cmd "SA"
                 mv $CFG_SA_PATH $CFG_PATH
                 cp "$MAME_INI.sa" "$MAME_INI"
+                echo "Running MAME... .horizontal = $SCREEN_HORIZONTAL
+                debug_wait
                 if [ "$SCREEN_HORIZONTAL" = false ]; then
                     mame -rol -inipath "/opt/retropie/emulators/mame/ini;/opt/retropie/emulators/mame/ini_horz_ror" -cfg_directory $CFG_PATH -joystickprovider sdljoy
                 else
