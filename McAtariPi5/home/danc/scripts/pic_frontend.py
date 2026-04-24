@@ -141,7 +141,7 @@ def load_state(path, default):
 
 def save_state(path, value):
     with open(path, "w") as f:
-        f.write(str(value).lower() if isinstance(value, bool) else str(value))
+        f.write(str(value).lower() if isinstance(value, bool) else str(value).strip())
 
 # Initial state
 dual_display = load_state(PI5_DUAL_DISPLAY_FILE, True)
