@@ -299,16 +299,10 @@ main_menu()
         load_persisted_options
 
         local CHOICE
-        CHOICE=$(<"$HOME/.def_key" 2>/dev/null || echo "X")
-        CHOICE=$(echo "$CHOICE" | tr '[:lower:]' '[:upper:]')
+        CHOICE=$(<"$HOME/.def_key")
 
         echo "[autostart] pic_frontend choice from .def_key: '$CHOICE'"
         debug_wait
-
-        if ! [[ "$CHOICE" =~ ^[EMCX]$ ]]; then
-            echo "[autostart] invalid choice '$CHOICE' from .def_key, exiting to shell."
-            break
-        fi
 
         case $CHOICE in
             E)
