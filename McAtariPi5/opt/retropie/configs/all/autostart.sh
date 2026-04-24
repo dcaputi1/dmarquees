@@ -309,7 +309,7 @@ main_menu()
                 mv $CFG_RA_PATH $CFG_PATH
                 cp "$MAME_INI.ra" "$MAME_INI"
                 send_dmarquees_cmd "RA"
-                echo "Running EmulationStation... .horizontal = $SCREEN_HORIZONTAL
+                echo "Running EmulationStation... .horizontal = $SCREEN_HORIZONTAL"
                 debug_wait
                 if [ "$SCREEN_HORIZONTAL" = false ]; then
                     echo "ROL_FLAG=\"-rol\"" > $HOME/.rol_flag
@@ -324,7 +324,7 @@ main_menu()
                 send_dmarquees_cmd "SA"
                 mv $CFG_SA_PATH $CFG_PATH
                 cp "$MAME_INI.sa" "$MAME_INI"
-                echo "Running MAME... .horizontal = $SCREEN_HORIZONTAL
+                echo "Running MAME... .horizontal = $SCREEN_HORIZONTAL"
                 debug_wait
                 if [ "$SCREEN_HORIZONTAL" = false ]; then
                     mame -rol -inipath "/opt/retropie/emulators/mame/ini;/opt/retropie/emulators/mame/ini_horz_ror" -cfg_directory $CFG_PATH -joystickprovider sdljoy
