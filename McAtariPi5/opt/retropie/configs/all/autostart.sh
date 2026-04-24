@@ -22,7 +22,7 @@ MOUNTED_GAME_ART="marquees" # or "cpanel"
 PANEL="DC"
 SCREEN_HORIZONTAL=true
 
-DEBUG="1"  # "1" to enable debug waits, "" disables
+DEBUG=""  # "1" to enable debug waits, "" disables
 
 debug_wait()
 {

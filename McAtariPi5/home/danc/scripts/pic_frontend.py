@@ -92,20 +92,24 @@ def _die_on_sdl_errors(captured_text):
 # On console: try kmsdrm first, fall back to fbdev if kmsdrm can't set a videomode.
 # Under X11/Wayland: honour whatever DISPLAY points to.
 if not os.environ.get("DISPLAY"):
-    # On Pi 5 the display may be on DRM device 1 (card1) rather than card0.
-    # SDL2 hint for device index is SDL_KMSDRM_DEVICE_INDEX (not SDL_VIDEO_KMSDRM_DEVICE).
-    # Try kmsdrm with each device index before falling back to fbdev.
+    # Console mode: kmsdrm or fbdev only, no window manager.
+    # On Pi 5, card0 is the RP1 chip (no display connectors); card1 is the
+    # display controller.  Try card1 first, then card0 as a fallback.
+    # kmsdrm REQUIRES fullscreen mode — windowed set_mode() produces
+    # "Could not set videomode on CRTC" from the SDL2 C library.
+    _CONSOLE_DISPLAY = True
     _drm_cards = sorted(
         e.name for e in os.scandir("/dev/dri") if e.name.startswith("card")
     ) if os.path.isdir("/dev/dri") else []
     print(f"[INFO] DRM devices found: {_drm_cards}", file=sys.stderr)
     _SDL_DRIVERS_TO_TRY = [
+        ("kmsdrm", "1"),  # Pi 5: card1 is the display controller
         ("kmsdrm", "0"),
-        ("kmsdrm", "1"),
         ("fbdev",  None),
     ]
     os.environ.pop("SDL_FBDEV", None)
 else:
+    _CONSOLE_DISPLAY = False
     print("[INFO] X11/Wayland display detected.", file=sys.stderr)
     _SDL_DRIVERS_TO_TRY = [(os.environ.get("SDL_VIDEODRIVER", ""), None)]
 
@@ -157,7 +161,14 @@ def get_screen_size():
 def set_screen(fullscreen):
     global screen, WINDOWED, FULLSCREEN
     size = get_screen_size()
-    if fullscreen:
+    if _CONSOLE_DISPLAY:
+        # kmsdrm/fbdev require fullscreen; use native resolution (0,0) to
+        # avoid mode-mismatch failures when the display doesn't support the
+        # hardcoded size.  The rendering code centers content on the surface.
+        screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        FULLSCREEN = True
+        WINDOWED = False
+    elif fullscreen:
         screen = pygame.display.set_mode(size, pygame.FULLSCREEN)
         FULLSCREEN = True
         WINDOWED = False
