@@ -231,6 +231,27 @@ def toggle_fullscreen():
     global FULLSCREEN
     set_screen(not FULLSCREEN)
 
+def _draw_dotted_rect(surface, color, rect, dash=6, gap=4, width=1):
+    """Draw a dashed/dotted rectangle border on surface."""
+    x, y, w, h = rect
+    for axis in range(4):
+        if axis == 0:   # top
+            p1, p2, fixed, along = x, x + w, y, True
+        elif axis == 1: # bottom
+            p1, p2, fixed, along = x, x + w, y + h - 1, True
+        elif axis == 2: # left
+            p1, p2, fixed, along = y, y + h, x, False
+        else:           # right
+            p1, p2, fixed, along = y, y + h, x + w - 1, False
+        pos = p1
+        while pos < p2:
+            end = min(pos + dash, p2)
+            if along:
+                pygame.draw.line(surface, color, (pos, fixed), (end, fixed), width)
+            else:
+                pygame.draw.line(surface, color, (fixed, pos), (fixed, end), width)
+            pos += dash + gap
+
 # Map .def_key values back to main_menu selected index
 _DEF_KEY_TO_IDX = {"E": 0, "M": 1, "A": 2, "C": 3, "X": 4}
 
@@ -395,6 +416,8 @@ def main_menu():
         title = font.render("Arcade Menu", True, (0,255,255))
         title_rect = title.get_rect(center=(240, 40))
         base_surface.blit(title, title_rect)
+        pygame.draw.rect(base_surface, (0, 255, 255), title_rect.inflate(8, 8), 1)
+        pygame.draw.rect(base_surface, (0, 255, 255), title_rect.inflate(16, 16), 1)
         item_count = len(MENU_ITEMS)
         start_y = 100
         spacing = (480 - start_y - 40) // max(item_count, 1)
@@ -403,9 +426,12 @@ def main_menu():
             text = font.render(label, True, color)
             text_rect = text.get_rect(center=(240, start_y + i*spacing))
             base_surface.blit(text, text_rect)
+            if i == selected:
+                pygame.draw.rect(base_surface, (255, 255, 0), text_rect.inflate(10, 6), 2)
         timer_text = font.render(f"Auto-launch in {countdown}s", True, (128, 128, 128))
         timer_rect = timer_text.get_rect(center=(240, 460))
         base_surface.blit(timer_text, timer_rect)
+        _draw_dotted_rect(base_surface, (128, 128, 128), timer_rect.inflate(10, 6))
         if screen_horizontal:
             screen.fill((0,0,0))
             screen.blit(base_surface, ((screen.get_width()-480)//2, (screen.get_height()-480)//2))
