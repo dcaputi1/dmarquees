@@ -466,14 +466,23 @@ def toggle_pi3_present():
     save_state(PI3_PRESENT_FILE, pi3_present)
 
 def _check_xinmo():
-    """Run xinmo-swapcheck.py and return (label, color) for the status bar."""
+    """Run xinmo-swapcheck.py and return (label, color) for the status bar.
+
+    Exit codes from xinmo-swapcheck.py:
+      0 — OK       : hardware normal, cfg normal             → green
+      1 — Swap!    : hw/cfg mismatch, players wrong          → red
+      2 — Err      : fewer than 2 devices or inconclusive    → gray
+      3 — Swapped  : hardware swapped, cfg compensates       → yellow
+    """
     script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "xinmo-swapcheck.py")
     try:
         result = subprocess.run([sys.executable, script], timeout=10)
-        if result.returncode == 1:
-            return "XinMo: Swap!", RED_RGB
-        elif result.returncode == 0:
+        if result.returncode == 0:
             return "XinMo: OK", GREEN_RGB
+        elif result.returncode == 1:
+            return "XinMo: Swap!", RED_RGB
+        elif result.returncode == 3:
+            return "XinMo: Swapped", YELLOW_RGB
         else:
             return "XinMo: Err", LT_GRAY_RGB
     except Exception:
