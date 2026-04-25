@@ -1154,10 +1154,19 @@ static void handle_fifo_command(char *cmd_str)
 
         // if this daemon is driving the spare monitor on pi5 (aka splash mode),
         // check for a panel cheat sheet (instead of just blank screen)
-        if (_splash_mode && _control_panel)
+        if (_splash_mode)
         {
-            show_panel_marquee(cmd_str, _control_panel == eULTRA_DC);
-            break;
+            // Re-read panel setting each time: the user may have changed it in the
+            // frontend after the daemon started (panel file is written by pic_frontend.py
+            // while the daemon keeps running across menu/game cycles).
+            read_token_file(_panel_file, _szPanel, sizeof(_szPanel));
+            _control_panel = toControlPanel(_szPanel);
+
+            if (_control_panel)
+            {
+                show_panel_marquee(cmd_str, _control_panel == eULTRA_DC);
+                break;
+            }
         }
 
         // if we got this far, we're driving the marquee: process rom shortname
