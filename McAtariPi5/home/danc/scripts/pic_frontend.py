@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import subprocess
 import sys
 
 # --- SDL/Pygame environment setup for console/framebuffer ---
@@ -127,6 +128,8 @@ BLACK_RGB      = pygame.Color('black')        # (0, 0, 0)
 WHITE_RGB      = pygame.Color('white')        # (255, 255, 255)
 YELLOW_RGB     = pygame.Color('yellow')       # (255, 255, 0)
 CYAN_RGB       = pygame.Color('cyan')         # (0, 255, 255)
+GREEN_RGB      = pygame.Color('lime')         # (0, 255, 0) — X11 'lime' is pure green
+RED_RGB        = pygame.Color('red')          # (255, 0, 0)
 DK_BLUE_RGB    = pygame.Color('midnightblue') # (25, 25, 112) — exact X11/CSS name
 LT_GRAY_RGB    = (128, 128, 128)              # no exact pygame named color
 UNSEL_ITEM_RGB = (200, 200, 200)              # no exact pygame named color
@@ -360,6 +363,7 @@ def advanced_menu():
         ("Pi5 Dual Display:", lambda: toggle_dual_display()),
         ("Pi3 Present:", lambda: toggle_pi3_present()),
         ("Screen Orientation:", lambda: toggle_screen_orientation()),
+        ("Swap XinMo P1 & P2", lambda: toggle_xinmo_swap()),
         ("Panel Image:", lambda: panel_menu()),
         ("Return to Main Menu", lambda: None),
     ]
@@ -433,6 +437,18 @@ def advanced_menu():
                 elif event.key == pygame.K_F11:
                     toggle_fullscreen()
 
+def toggle_xinmo_swap():
+    """Run xinmo-swap.py on both MAME cfg dirs (RetroArch and standalone), matching autostart-nogui.sh."""
+    scripts_dir = os.path.dirname(os.path.abspath(__file__))
+    swap_script = os.path.join(scripts_dir, "xinmo-swap.py")
+    mame_base   = "/opt/retropie/emulators/mame"
+    for cfg_dir in ("cfg_ra", "cfg_sa"):
+        cfg_path = os.path.join(mame_base, cfg_dir)
+        try:
+            subprocess.run([sys.executable, swap_script, cfg_path, "1"], timeout=10)
+        except Exception as e:
+            print(f"[WARN] xinmo-swap failed for {cfg_path}: {e}", file=sys.stderr)
+
 def toggle_screen_orientation():
     global screen_horizontal
     screen_horizontal = not screen_horizontal
@@ -448,6 +464,20 @@ def toggle_pi3_present():
     global pi3_present
     pi3_present = not pi3_present
     save_state(PI3_PRESENT_FILE, pi3_present)
+
+def _check_xinmo():
+    """Run xinmo-swapcheck.py and return (label, color) for the status bar."""
+    script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "xinmo-swapcheck.py")
+    try:
+        result = subprocess.run([sys.executable, script], timeout=10)
+        if result.returncode == 1:
+            return "XinMo: Swap!", RED_RGB
+        elif result.returncode == 0:
+            return "XinMo: OK", GREEN_RGB
+        else:
+            return "XinMo: Err", LT_GRAY_RGB
+    except Exception:
+        return "XinMo: ?", LT_GRAY_RGB
 
 def main_menu():
     MENU_ITEMS = [
@@ -467,6 +497,8 @@ def main_menu():
     TICK_EVENT = pygame.USEREVENT + 1
     pygame.time.set_timer(TICK_EVENT, 1000)  # fire every 1 second
     countdown = TIMEOUT_SECS
+
+    xinmo_label, xinmo_color = _check_xinmo()
 
     selected = _load_def_key_index()
     running = True
@@ -498,12 +530,20 @@ def main_menu():
             if i == selected:
                 # selection rectangle: yellow outline, inset BORDER_SZ from surface edges, 3px padding above/below item text
                 pygame.draw.rect(base_surface, SELECT_RECT_COLOR, pygame.Rect(BORDER_SZ, text_rect.top - 3, full_w - 2*BORDER_SZ, text_rect.height + 6), BORDER_PX)
-        # timer text: gray countdown label, centered at (x=240, y=460) near the bottom of the menu surface
-        timer_text = font.render(f"Auto-launch in {countdown}s", True, LT_GRAY_RGB)
-        timer_rect = timer_text.get_rect(center=(240, 460))
-        base_surface.blit(timer_text, timer_rect)
-        # timer dotted rectangle: gray dashed outline, inset BORDER_SZ from surface edges
-        _draw_dotted_rect(base_surface, LT_GRAY_RGB, pygame.Rect(BORDER_SZ, timer_rect.top - 3, full_w - 2*BORDER_SZ, timer_rect.height + 6))
+        # status bar: XinMo status on the left, countdown on the right — both share one dotted rectangle
+        xinmo_surf = font.render(xinmo_label, True, xinmo_color)
+        auto_surf  = font.render(f"Auto-select: {countdown}s", True, LT_GRAY_RGB)
+        # anchor both labels vertically at y=460 (baseline center)
+        xinmo_rect = xinmo_surf.get_rect(midleft=(BORDER_SZ + 6, 460))
+        auto_rect  = auto_surf.get_rect(midright=(full_w - BORDER_SZ - 6, 460))
+        base_surface.blit(xinmo_surf, xinmo_rect)
+        base_surface.blit(auto_surf, auto_rect)
+        # derive dotted rect bounds from the taller of the two labels
+        status_top    = min(xinmo_rect.top, auto_rect.top) - 3
+        status_bottom = max(xinmo_rect.bottom, auto_rect.bottom) + 3
+        timer_rect = pygame.Rect(BORDER_SZ, status_top, full_w - 2*BORDER_SZ, status_bottom - status_top)
+        # timer dotted rectangle: gray dashed outline around the whole status bar
+        _draw_dotted_rect(base_surface, LT_GRAY_RGB, timer_rect)
         # menu border: cyan outline drawn at the inner edge of the menu surface
         # (negative coords are clipped by pygame, so draw at (0,0) not (-3,-3))
         pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, 0, full_w, full_h), BORDER_PX)
@@ -537,6 +577,11 @@ def main_menu():
                     if MENU_ITEMS[selected][0] == "Advanced Config Setup/Options":
                         save_state(DEF_KEY_FILE, "A")
                     MENU_ITEMS[selected][1]()
+                    # restart timer after returning from a submenu (e.g. advanced_menu)
+                    countdown = TIMEOUT_SECS
+                    pygame.time.set_timer(TICK_EVENT, 1000)
+                    # refresh xinmo status in case user swapped from advanced_menu
+                    xinmo_label, xinmo_color = _check_xinmo()
                 elif event.key == pygame.K_ESCAPE:
                     sys.exit(0)
                 elif event.key == pygame.K_F11:
