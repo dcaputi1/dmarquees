@@ -134,8 +134,8 @@ UNSEL_ITEM_RGB = (200, 200, 200)              # no exact pygame named color
 MENU_W    = 490   # menu surface width in pixels
 MENU_H    = 490   # menu surface height in pixels
 FONT_SZ   = 36    # system font point size
-BORDER_SZ      = 2   # outline width for the selection rectangle and timer dotted rect
-MENU_BORDER_SZ = 4   # outline width for the cyan border around the entire menu surface
+BORDER_PX = 2     # line thickness for all outline draws (menu border, selection rectangle, title borders)
+BORDER_SZ = 10    # gap in pixels between the menu border and any inner rectangle (title borders, selection rectangle, timer dotted rect)
 
 MENU_BG_COLOR     = BLACK_RGB      # menu surface background fill
 SCREEN_BG_COLOR   = DK_BLUE_RGB   # screen background fill (visible behind centered menu surface)
@@ -311,10 +311,10 @@ def panel_menu():
         title = font.render("Panel Image", True, CYAN_RGB)
         title_rect = title.get_rect(center=(240, 40))
         base_surface.blit(title, title_rect)
-        # title border (inner): full-width cyan rect, 4px padding above and below title text
-        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, title_rect.top - 4, full_w, title_rect.height + 8), 1)
-        # title border (outer): full-width cyan rect, 9px padding above and below title text (5px outside inner border)
-        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, title_rect.top - 9, full_w, title_rect.height + 18), 1)
+        # title border (inner): cyan rect, inset BORDER_SZ+5 horizontally and 4px vertically from title text
+        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(BORDER_SZ + 5, title_rect.top - 4, full_w - 2*(BORDER_SZ + 5), title_rect.height + 8), BORDER_PX)
+        # title border (outer): cyan rect, inset BORDER_SZ horizontally and 9px vertically from title text
+        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(BORDER_SZ, title_rect.top - 9, full_w - 2*BORDER_SZ, title_rect.height + 18), BORDER_PX)
         for i, (label, code) in enumerate(options):
             color = SELECT_RECT_COLOR if i == idx else UNSEL_ITEM_RGB
             # menu item: centered at x=240; y starts at 120 with 70px fixed spacing between items
@@ -322,11 +322,11 @@ def panel_menu():
             text_rect = text.get_rect(center=(240, 120 + i*70))
             base_surface.blit(text, text_rect)
             if i == idx:
-                # selection rectangle: yellow outline, inset 5px from surface edges, 3px padding above/below item text
-                pygame.draw.rect(base_surface, SELECT_RECT_COLOR, pygame.Rect(5, text_rect.top - 3, full_w - 10, text_rect.height + 6), BORDER_SZ)
+                # selection rectangle: yellow outline, inset BORDER_SZ from surface edges, 3px padding above/below item text
+                pygame.draw.rect(base_surface, SELECT_RECT_COLOR, pygame.Rect(BORDER_SZ, text_rect.top - 3, full_w - 2*BORDER_SZ, text_rect.height + 6), BORDER_PX)
         # menu border: cyan outline drawn at the inner edge of the menu surface
         # (negative coords are clipped by pygame, so draw at (0,0) not (-3,-3))
-        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, 0, full_w, full_h), MENU_BORDER_SZ)
+        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, 0, full_w, full_h), BORDER_PX)
         if screen_horizontal:
             screen.fill(SCREEN_BG_COLOR)  # screen background: dark blue, fills the entire display
             # blit menu surface centered on screen: offset = (screen_size - MENU_W/H) // 2 per axis
@@ -376,10 +376,10 @@ def advanced_menu():
         title = font.render("Advanced Config", True, CYAN_RGB)
         title_rect = title.get_rect(center=(240, 40))
         base_surface.blit(title, title_rect)
-        # title border (inner): full-width cyan rect, 4px padding above and below title text
-        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, title_rect.top - 4, full_w, title_rect.height + 8), 1)
-        # title border (outer): full-width cyan rect, 9px padding above and below title text (5px outside inner border)
-        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, title_rect.top - 9, full_w, title_rect.height + 18), 1)
+        # title border (inner): cyan rect, inset BORDER_SZ+5 horizontally and 4px vertically from title text
+        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(BORDER_SZ + 5, title_rect.top - 4, full_w - 2*(BORDER_SZ + 5), title_rect.height + 8), BORDER_PX)
+        # title border (outer): cyan rect, inset BORDER_SZ horizontally and 9px vertically from title text
+        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(BORDER_SZ, title_rect.top - 9, full_w - 2*BORDER_SZ, title_rect.height + 18), BORDER_PX)
         item_count = len(MENU_ITEMS)
         start_y = 100  # y-coordinate of the first menu item on the menu surface
         # spacing: distributes items evenly from start_y to 40px above the bottom of the menu surface
@@ -400,11 +400,11 @@ def advanced_menu():
             text_rect = text.get_rect(center=(240, start_y + i*spacing))
             base_surface.blit(text, text_rect)
             if i == selected:
-                # selection rectangle: yellow outline, inset 5px from surface edges, 3px padding above/below item text
-                pygame.draw.rect(base_surface, SELECT_RECT_COLOR, pygame.Rect(5, text_rect.top - 3, full_w - 10, text_rect.height + 6), BORDER_SZ)
+                # selection rectangle: yellow outline, inset BORDER_SZ from surface edges, 3px padding above/below item text
+                pygame.draw.rect(base_surface, SELECT_RECT_COLOR, pygame.Rect(BORDER_SZ, text_rect.top - 3, full_w - 2*BORDER_SZ, text_rect.height + 6), BORDER_PX)
         # menu border: cyan outline drawn at the inner edge of the menu surface
         # (negative coords are clipped by pygame, so draw at (0,0) not (-3,-3))
-        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, 0, full_w, full_h), MENU_BORDER_SZ)
+        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, 0, full_w, full_h), BORDER_PX)
         if screen_horizontal:
             screen.fill(SCREEN_BG_COLOR)  # screen background: dark blue, fills the entire display
             # blit menu surface centered on screen: offset = (screen_size - MENU_W/H) // 2 per axis
@@ -481,10 +481,10 @@ def main_menu():
         title = font.render("Arcade Menu", True, CYAN_RGB)
         title_rect = title.get_rect(center=(240, 40))
         base_surface.blit(title, title_rect)
-        # title border (inner): full-width cyan rect, 4px padding above and below title text
-        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, title_rect.top - 4, full_w, title_rect.height + 8), 1)
-        # title border (outer): full-width cyan rect, 9px padding above and below title text (5px outside inner border)
-        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, title_rect.top - 9, full_w, title_rect.height + 18), 1)
+        # title border (inner): cyan rect, inset BORDER_SZ+5 horizontally and 4px vertically from title text
+        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(BORDER_SZ + 5, title_rect.top - 4, full_w - 2*(BORDER_SZ + 5), title_rect.height + 8), BORDER_PX)
+        # title border (outer): cyan rect, inset BORDER_SZ horizontally and 9px vertically from title text
+        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(BORDER_SZ, title_rect.top - 9, full_w - 2*BORDER_SZ, title_rect.height + 18), BORDER_PX)
         item_count = len(MENU_ITEMS)
         start_y = 100  # y-coordinate of the first menu item on the menu surface
         # spacing: distributes items evenly from start_y to 40px above the bottom of the menu surface
@@ -496,17 +496,17 @@ def main_menu():
             text_rect = text.get_rect(center=(240, start_y + i*spacing))
             base_surface.blit(text, text_rect)
             if i == selected:
-                # selection rectangle: yellow outline, inset 5px from surface edges, 3px padding above/below item text
-                pygame.draw.rect(base_surface, SELECT_RECT_COLOR, pygame.Rect(5, text_rect.top - 3, full_w - 10, text_rect.height + 6), BORDER_SZ)
+                # selection rectangle: yellow outline, inset BORDER_SZ from surface edges, 3px padding above/below item text
+                pygame.draw.rect(base_surface, SELECT_RECT_COLOR, pygame.Rect(BORDER_SZ, text_rect.top - 3, full_w - 2*BORDER_SZ, text_rect.height + 6), BORDER_PX)
         # timer text: gray countdown label, centered at (x=240, y=460) near the bottom of the menu surface
         timer_text = font.render(f"Auto-launch in {countdown}s", True, LT_GRAY_RGB)
         timer_rect = timer_text.get_rect(center=(240, 460))
         base_surface.blit(timer_text, timer_rect)
-        # timer dotted rectangle: gray dashed outline, same inset as the selection rectangle (5px, full-width minus 10px)
-        _draw_dotted_rect(base_surface, LT_GRAY_RGB, pygame.Rect(5, timer_rect.top - 3, full_w - 10, timer_rect.height + 6))
+        # timer dotted rectangle: gray dashed outline, inset BORDER_SZ from surface edges
+        _draw_dotted_rect(base_surface, LT_GRAY_RGB, pygame.Rect(BORDER_SZ, timer_rect.top - 3, full_w - 2*BORDER_SZ, timer_rect.height + 6))
         # menu border: cyan outline drawn at the inner edge of the menu surface
         # (negative coords are clipped by pygame, so draw at (0,0) not (-3,-3))
-        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, 0, full_w, full_h), MENU_BORDER_SZ)
+        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, 0, full_w, full_h), BORDER_PX)
         if screen_horizontal:
             screen.fill(SCREEN_BG_COLOR)  # screen background: dark blue, fills the entire display
             # blit menu surface centered on screen: offset = (screen_size - MENU_W/H) // 2 per axis
