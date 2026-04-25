@@ -116,6 +116,30 @@ else:
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 import pygame
 
+# ---------------------------------------------------------------------------
+# Visual constants — edit these to restyle all menus globally.
+#
+# pygame.Color() is used where an exact named color exists in pygame's X11
+# color dictionary (no init required; it is a standalone data class).
+# Plain RGB tuples are used where no exact pygame named color exists.
+# ---------------------------------------------------------------------------
+BLACK_RGB      = pygame.Color('black')        # (0, 0, 0)
+WHITE_RGB      = pygame.Color('white')        # (255, 255, 255)
+YELLOW_RGB     = pygame.Color('yellow')       # (255, 255, 0)
+CYAN_RGB       = pygame.Color('cyan')         # (0, 255, 255)
+DK_BLUE_RGB    = pygame.Color('midnightblue') # (25, 25, 112) — exact X11/CSS name
+LT_GRAY_RGB    = (128, 128, 128)              # no exact pygame named color
+UNSEL_ITEM_RGB = (200, 200, 200)              # no exact pygame named color
+
+MENU_W    = 490   # menu surface width in pixels
+MENU_H    = 490   # menu surface height in pixels
+FONT_SZ   = 36    # system font point size
+BORDER_SZ = 2     # outline width for selection rectangle and menu border
+
+MENU_BG_COLOR     = BLACK_RGB      # menu surface background fill
+SCREEN_BG_COLOR   = DK_BLUE_RGB   # screen background fill (visible behind centered menu surface)
+SELECT_RECT_COLOR = YELLOW_RGB    # selection rectangle outline and selected item text color
+
 # State file paths
 HOME = os.path.expanduser("~")
 PI5_DUAL_DISPLAY_FILE = os.path.join(HOME, ".pi5_dual_display")
@@ -225,7 +249,7 @@ if not _init_ok:
           file=sys.stderr)
     sys.exit(1)
 
-font = pygame.font.SysFont(None, 36)
+font = pygame.font.SysFont(None, FONT_SZ)
 
 def toggle_fullscreen():
     global FULLSCREEN
@@ -276,31 +300,40 @@ def panel_menu():
     idx = idx[0] if idx else 0
     running = True
     while running:
-        base_surface = pygame.Surface((490, 490))
-        base_surface.fill((0, 0, 0))
-        full_w = base_surface.get_width()
-        full_h = base_surface.get_height()
-        title = font.render("Panel Image", True, (0,255,255))
+        # menu surface: MENU_W x MENU_H black canvas; all elements are drawn here before blitting to the screen
+        base_surface = pygame.Surface((MENU_W, MENU_H))
+        base_surface.fill(MENU_BG_COLOR)
+        full_w = base_surface.get_width()   # MENU_W — reference width for full-span and inset rects
+        full_h = base_surface.get_height()  # MENU_H — reference height for the menu border rect
+
+        # title text: centered at (x=240, y=40) on the menu surface
+        title = font.render("Panel Image", True, CYAN_RGB)
         title_rect = title.get_rect(center=(240, 40))
         base_surface.blit(title, title_rect)
-        pygame.draw.rect(base_surface, (0, 255, 255), pygame.Rect(0, title_rect.top - 4, full_w, title_rect.height + 8), 1)
-        pygame.draw.rect(base_surface, (0, 255, 255), pygame.Rect(0, title_rect.top - 9, full_w, title_rect.height + 18), 1)
+        # title border (inner): full-width cyan rect, 4px padding above and below title text
+        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, title_rect.top - 4, full_w, title_rect.height + 8), 1)
+        # title border (outer): full-width cyan rect, 9px padding above and below title text (5px outside inner border)
+        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, title_rect.top - 9, full_w, title_rect.height + 18), 1)
         for i, (label, code) in enumerate(options):
-            color = (255,255,0) if i == idx else (200,200,200)
+            color = SELECT_RECT_COLOR if i == idx else UNSEL_ITEM_RGB
+            # menu item: centered at x=240; y starts at 120 with 70px fixed spacing between items
             text = font.render(label, True, color)
             text_rect = text.get_rect(center=(240, 120 + i*70))
             base_surface.blit(text, text_rect)
             if i == idx:
-                pygame.draw.rect(base_surface, (255, 255, 0), pygame.Rect(5, text_rect.top - 3, full_w - 10, text_rect.height + 6), 2)
-        pygame.draw.rect(base_surface, (0, 255, 255), pygame.Rect(-3, -3, full_w + 6, full_h + 6), 2)
+                # selection rectangle: yellow outline, inset 5px from surface edges, 3px padding above/below item text
+                pygame.draw.rect(base_surface, SELECT_RECT_COLOR, pygame.Rect(5, text_rect.top - 3, full_w - 10, text_rect.height + 6), BORDER_SZ)
+        # menu border: cyan outline starting 3px outside the menu surface edges
+        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(-3, -3, full_w + 6, full_h + 6), BORDER_SZ)
         if screen_horizontal:
-            screen.fill((25, 25, 112))
-            screen.blit(base_surface, ((screen.get_width()-490)//2, (screen.get_height()-490)//2))
+            screen.fill(SCREEN_BG_COLOR)  # screen background: dark blue, fills the entire display
+            # blit menu surface centered on screen: offset = (screen_size - MENU_W/H) // 2 per axis
+            screen.blit(base_surface, ((screen.get_width()-MENU_W)//2, (screen.get_height()-MENU_H)//2))
         else:
             rotated = pygame.transform.rotate(base_surface, 90)
             rect = rotated.get_rect(center=screen.get_rect().center)
-            screen.fill((25, 25, 112))
-            screen.blit(rotated, rect)
+            screen.fill(SCREEN_BG_COLOR)  # screen background: dark blue, fills the entire display
+            screen.blit(rotated, rect)  # rotated menu surface centered on screen
         pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -331,17 +364,23 @@ def advanced_menu():
     selected = 0
     running = True
     while running:
-        base_surface = pygame.Surface((490, 490))
-        base_surface.fill((0, 0, 0))
-        full_w = base_surface.get_width()
-        full_h = base_surface.get_height()
-        title = font.render("Advanced Config", True, (0,255,255))
+        # menu surface: MENU_W x MENU_H black canvas; all elements are drawn here before blitting to the screen
+        base_surface = pygame.Surface((MENU_W, MENU_H))
+        base_surface.fill(MENU_BG_COLOR)
+        full_w = base_surface.get_width()   # MENU_W — reference width for full-span and inset rects
+        full_h = base_surface.get_height()  # MENU_H — reference height for the menu border rect
+
+        # title text: centered at (x=240, y=40) on the menu surface
+        title = font.render("Advanced Config", True, CYAN_RGB)
         title_rect = title.get_rect(center=(240, 40))
         base_surface.blit(title, title_rect)
-        pygame.draw.rect(base_surface, (0, 255, 255), pygame.Rect(0, title_rect.top - 4, full_w, title_rect.height + 8), 1)
-        pygame.draw.rect(base_surface, (0, 255, 255), pygame.Rect(0, title_rect.top - 9, full_w, title_rect.height + 18), 1)
+        # title border (inner): full-width cyan rect, 4px padding above and below title text
+        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, title_rect.top - 4, full_w, title_rect.height + 8), 1)
+        # title border (outer): full-width cyan rect, 9px padding above and below title text (5px outside inner border)
+        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, title_rect.top - 9, full_w, title_rect.height + 18), 1)
         item_count = len(MENU_ITEMS)
-        start_y = 100
+        start_y = 100  # y-coordinate of the first menu item on the menu surface
+        # spacing: distributes items evenly from start_y to 40px above the bottom of the menu surface
         spacing = (480 - start_y - 40) // max(item_count, 1)
         for i, (label, _) in enumerate(MENU_ITEMS):
             suffix = ""
@@ -353,21 +392,25 @@ def advanced_menu():
                 suffix = "Landscape" if screen_horizontal else "Portrait"
             elif "Panel Image" in label:
                 suffix = {"DC":"UltraStick/Spinners", "MC":"Atari/FightStick", "NA":"None/Blank"}.get(panel, "None/Blank")
-            color = (255,255,0) if i == selected else (200,200,200)
+            color = SELECT_RECT_COLOR if i == selected else UNSEL_ITEM_RGB
+            # menu item: centered at x=240; y = start_y + i * spacing (evenly distributed)
             text = font.render(f"{label} {suffix}", True, color)
             text_rect = text.get_rect(center=(240, start_y + i*spacing))
             base_surface.blit(text, text_rect)
             if i == selected:
-                pygame.draw.rect(base_surface, (255, 255, 0), pygame.Rect(5, text_rect.top - 3, full_w - 10, text_rect.height + 6), 2)
-        pygame.draw.rect(base_surface, (0, 255, 255), pygame.Rect(-3, -3, full_w + 6, full_h + 6), 2)
+                # selection rectangle: yellow outline, inset 5px from surface edges, 3px padding above/below item text
+                pygame.draw.rect(base_surface, SELECT_RECT_COLOR, pygame.Rect(5, text_rect.top - 3, full_w - 10, text_rect.height + 6), BORDER_SZ)
+        # menu border: cyan outline starting 3px outside the menu surface edges
+        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(-3, -3, full_w + 6, full_h + 6), BORDER_SZ)
         if screen_horizontal:
-            screen.fill((25, 25, 112))
-            screen.blit(base_surface, ((screen.get_width()-490)//2, (screen.get_height()-490)//2))
+            screen.fill(SCREEN_BG_COLOR)  # screen background: dark blue, fills the entire display
+            # blit menu surface centered on screen: offset = (screen_size - MENU_W/H) // 2 per axis
+            screen.blit(base_surface, ((screen.get_width()-MENU_W)//2, (screen.get_height()-MENU_H)//2))
         else:
             rotated = pygame.transform.rotate(base_surface, 90)
             rect = rotated.get_rect(center=screen.get_rect().center)
-            screen.fill((25, 25, 112))
-            screen.blit(rotated, rect)
+            screen.fill(SCREEN_BG_COLOR)  # screen background: dark blue, fills the entire display
+            screen.blit(rotated, rect)  # rotated menu surface centered on screen
         pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -425,38 +468,50 @@ def main_menu():
     selected = _load_def_key_index()
     running = True
     while running:
-        base_surface = pygame.Surface((490, 490))
-        base_surface.fill((0, 0, 0))
-        full_w = base_surface.get_width()
-        full_h = base_surface.get_height()
-        title = font.render("Arcade Menu", True, (0,255,255))
+        # menu surface: MENU_W x MENU_H black canvas; all elements are drawn here before blitting to the screen
+        base_surface = pygame.Surface((MENU_W, MENU_H))
+        base_surface.fill(MENU_BG_COLOR)
+        full_w = base_surface.get_width()   # MENU_W — reference width for full-span and inset rects
+        full_h = base_surface.get_height()  # MENU_H — reference height for the menu border rect
+
+        # title text: centered at (x=240, y=40) on the menu surface
+        title = font.render("Arcade Menu", True, CYAN_RGB)
         title_rect = title.get_rect(center=(240, 40))
         base_surface.blit(title, title_rect)
-        pygame.draw.rect(base_surface, (0, 255, 255), pygame.Rect(0, title_rect.top - 4, full_w, title_rect.height + 8), 1)
-        pygame.draw.rect(base_surface, (0, 255, 255), pygame.Rect(0, title_rect.top - 9, full_w, title_rect.height + 18), 1)
+        # title border (inner): full-width cyan rect, 4px padding above and below title text
+        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, title_rect.top - 4, full_w, title_rect.height + 8), 1)
+        # title border (outer): full-width cyan rect, 9px padding above and below title text (5px outside inner border)
+        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, title_rect.top - 9, full_w, title_rect.height + 18), 1)
         item_count = len(MENU_ITEMS)
-        start_y = 100
+        start_y = 100  # y-coordinate of the first menu item on the menu surface
+        # spacing: distributes items evenly from start_y to 40px above the bottom of the menu surface
         spacing = (480 - start_y - 40) // max(item_count, 1)
         for i, (label, _) in enumerate(MENU_ITEMS):
-            color = (255,255,0) if i == selected else (200,200,200)
+            color = SELECT_RECT_COLOR if i == selected else UNSEL_ITEM_RGB
+            # menu item: centered at x=240; y = start_y + i * spacing (evenly distributed)
             text = font.render(label, True, color)
             text_rect = text.get_rect(center=(240, start_y + i*spacing))
             base_surface.blit(text, text_rect)
             if i == selected:
-                pygame.draw.rect(base_surface, (255, 255, 0), pygame.Rect(5, text_rect.top - 3, full_w - 10, text_rect.height + 6), 2)
-        timer_text = font.render(f"Auto-launch in {countdown}s", True, (128, 128, 128))
+                # selection rectangle: yellow outline, inset 5px from surface edges, 3px padding above/below item text
+                pygame.draw.rect(base_surface, SELECT_RECT_COLOR, pygame.Rect(5, text_rect.top - 3, full_w - 10, text_rect.height + 6), BORDER_SZ)
+        # timer text: gray countdown label, centered at (x=240, y=460) near the bottom of the menu surface
+        timer_text = font.render(f"Auto-launch in {countdown}s", True, LT_GRAY_RGB)
         timer_rect = timer_text.get_rect(center=(240, 460))
         base_surface.blit(timer_text, timer_rect)
-        _draw_dotted_rect(base_surface, (128, 128, 128), pygame.Rect(5, timer_rect.top - 3, full_w - 10, timer_rect.height + 6))
-        pygame.draw.rect(base_surface, (0, 255, 255), pygame.Rect(-3, -3, full_w + 6, full_h + 6), 2)
+        # timer dotted rectangle: gray dashed outline, same inset as the selection rectangle (5px, full-width minus 10px)
+        _draw_dotted_rect(base_surface, LT_GRAY_RGB, pygame.Rect(5, timer_rect.top - 3, full_w - 10, timer_rect.height + 6))
+        # menu border: cyan outline starting 3px outside the menu surface edges
+        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(-3, -3, full_w + 6, full_h + 6), BORDER_SZ)
         if screen_horizontal:
-            screen.fill((25, 25, 112))
-            screen.blit(base_surface, ((screen.get_width()-490)//2, (screen.get_height()-490)//2))
+            screen.fill(SCREEN_BG_COLOR)  # screen background: dark blue, fills the entire display
+            # blit menu surface centered on screen: offset = (screen_size - MENU_W/H) // 2 per axis
+            screen.blit(base_surface, ((screen.get_width()-MENU_W)//2, (screen.get_height()-MENU_H)//2))
         else:
             rotated = pygame.transform.rotate(base_surface, 90)
             rect = rotated.get_rect(center=screen.get_rect().center)
-            screen.fill((25, 25, 112))
-            screen.blit(rotated, rect)
+            screen.fill(SCREEN_BG_COLOR)  # screen background: dark blue, fills the entire display
+            screen.blit(rotated, rect)  # rotated menu surface centered on screen
         pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
