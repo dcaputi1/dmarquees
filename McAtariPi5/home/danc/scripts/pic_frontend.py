@@ -277,7 +277,7 @@ def panel_menu():
     running = True
     while running:
         base_surface = pygame.Surface((480, 480))
-        base_surface.fill((25, 25, 112))
+        base_surface.fill((0, 0, 0))
         full_w = base_surface.get_width()
         full_h = base_surface.get_height()
         title = font.render("Panel Image", True, (0,255,255))
@@ -292,7 +292,7 @@ def panel_menu():
             base_surface.blit(text, text_rect)
             if i == idx:
                 pygame.draw.rect(base_surface, (255, 255, 0), pygame.Rect(0, text_rect.top - 3, full_w, text_rect.height + 6), 2)
-        pygame.draw.rect(base_surface, (0, 255, 255), pygame.Rect(2, 2, full_w - 4, full_h - 4), 2)
+        pygame.draw.rect(base_surface, (0, 255, 255), pygame.Rect(-3, -3, full_w + 6, full_h + 6), 2)
         if screen_horizontal:
             screen.fill((25, 25, 112))
             screen.blit(base_surface, ((screen.get_width()-480)//2, (screen.get_height()-480)//2))
@@ -332,7 +332,7 @@ def advanced_menu():
     running = True
     while running:
         base_surface = pygame.Surface((480, 480))
-        base_surface.fill((25, 25, 112))
+        base_surface.fill((0, 0, 0))
         full_w = base_surface.get_width()
         full_h = base_surface.get_height()
         title = font.render("Advanced Config", True, (0,255,255))
@@ -359,7 +359,7 @@ def advanced_menu():
             base_surface.blit(text, text_rect)
             if i == selected:
                 pygame.draw.rect(base_surface, (255, 255, 0), pygame.Rect(0, text_rect.top - 3, full_w, text_rect.height + 6), 2)
-        pygame.draw.rect(base_surface, (0, 255, 255), pygame.Rect(2, 2, full_w - 4, full_h - 4), 2)
+        pygame.draw.rect(base_surface, (0, 255, 255), pygame.Rect(-3, -3, full_w + 6, full_h + 6), 2)
         if screen_horizontal:
             screen.fill((25, 25, 112))
             screen.blit(base_surface, ((screen.get_width()-480)//2, (screen.get_height()-480)//2))
@@ -426,7 +426,7 @@ def main_menu():
     running = True
     while running:
         base_surface = pygame.Surface((480, 480))
-        base_surface.fill((25, 25, 112))
+        base_surface.fill((0, 0, 0))
         full_w = base_surface.get_width()
         full_h = base_surface.get_height()
         title = font.render("Arcade Menu", True, (0,255,255))
@@ -448,7 +448,7 @@ def main_menu():
         timer_rect = timer_text.get_rect(center=(240, 460))
         base_surface.blit(timer_text, timer_rect)
         _draw_dotted_rect(base_surface, (128, 128, 128), pygame.Rect(0, timer_rect.top - 3, full_w, timer_rect.height + 6))
-        pygame.draw.rect(base_surface, (0, 255, 255), pygame.Rect(2, 2, full_w - 4, full_h - 4), 2)
+        pygame.draw.rect(base_surface, (0, 255, 255), pygame.Rect(-3, -3, full_w + 6, full_h + 6), 2)
         if screen_horizontal:
             screen.fill((25, 25, 112))
             screen.blit(base_surface, ((screen.get_width()-480)//2, (screen.get_height()-480)//2))
