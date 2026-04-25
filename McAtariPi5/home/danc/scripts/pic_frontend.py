@@ -369,6 +369,7 @@ def advanced_menu():
     ]
     selected = 0
     running = True
+    xinmo_label, xinmo_color = _check_xinmo()
     while running:
         # menu surface: MENU_W x MENU_H black canvas; all elements are drawn here before blitting to the screen
         base_surface = pygame.Surface((MENU_W, MENU_H))
@@ -406,6 +407,17 @@ def advanced_menu():
             if i == selected:
                 # selection rectangle: yellow outline, inset BORDER_SZ from surface edges, 3px padding above/below item text
                 pygame.draw.rect(base_surface, SELECT_RECT_COLOR, pygame.Rect(BORDER_SZ, text_rect.top - 3, full_w - 2*BORDER_SZ, text_rect.height + 6), BORDER_PX)
+        # status bar: XinMo status on the left, auto-select indicator on the right
+        xinmo_surf = font.render(xinmo_label, True, xinmo_color)
+        auto_surf  = font.render("Auto-select: OFF", True, LT_GRAY_RGB)
+        xinmo_rect = xinmo_surf.get_rect(midleft=(BORDER_SZ + 6, 460))
+        auto_rect  = auto_surf.get_rect(midright=(full_w - BORDER_SZ - 6, 460))
+        base_surface.blit(xinmo_surf, xinmo_rect)
+        base_surface.blit(auto_surf, auto_rect)
+        status_top    = min(xinmo_rect.top, auto_rect.top) - 3
+        status_bottom = max(xinmo_rect.bottom, auto_rect.bottom) + 3
+        timer_rect = pygame.Rect(BORDER_SZ, status_top, full_w - 2*BORDER_SZ, status_bottom - status_top)
+        _draw_dotted_rect(base_surface, LT_GRAY_RGB, timer_rect)
         # menu border: cyan outline drawn at the inner edge of the menu surface
         # (negative coords are clipped by pygame, so draw at (0,0) not (-3,-3))
         pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, 0, full_w, full_h), BORDER_PX)
@@ -432,6 +444,8 @@ def advanced_menu():
                         running = False
                         break
                     MENU_ITEMS[selected][1]()
+                    # refresh xinmo status after any action (e.g. swap)
+                    xinmo_label, xinmo_color = _check_xinmo()
                 elif event.key == pygame.K_ESCAPE:
                     running = False
                 elif event.key == pygame.K_F11:
