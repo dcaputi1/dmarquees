@@ -280,6 +280,17 @@ def _draw_dotted_rect(surface, color, rect, dash=6, gap=4, width=1):
                 pygame.draw.line(surface, color, (fixed, pos), (fixed, end), width)
             pos += dash + gap
 
+def _hit_index(screen_pos, item_rects, off_x, off_y, rotated=False):
+    """Return index of menu item rect under screen_pos, or -1."""
+    px, py = screen_pos[0] - off_x, screen_pos[1] - off_y
+    if rotated:
+        # Inverse of pygame.transform.rotate(surface, 90) CCW for MENU_W x MENU_H
+        px, py = MENU_W - 1 - py, px
+    for i, r in enumerate(item_rects):
+        if r.collidepoint(px, py):
+            return i
+    return -1
+
 # Map .def_key values back to main_menu selected index
 _DEF_KEY_TO_IDX = {"E": 0, "M": 1, "A": 2, "C": 3, "X": 4}
 
@@ -318,15 +329,18 @@ def panel_menu():
         pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(BORDER_SZ + 5, title_rect.top - 4, full_w - 2*(BORDER_SZ + 5), title_rect.height + 8), BORDER_PX)
         # title border (outer): cyan rect, inset BORDER_SZ horizontally and 9px vertically from title text
         pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(BORDER_SZ, title_rect.top - 9, full_w - 2*BORDER_SZ, title_rect.height + 18), BORDER_PX)
+        item_rects = []
         for i, (label, code) in enumerate(options):
             color = SELECT_RECT_COLOR if i == idx else UNSEL_ITEM_RGB
             # menu item: centered at x=240; y starts at 120 with 70px fixed spacing between items
             text = font.render(label, True, color)
             text_rect = text.get_rect(center=(240, 120 + i*70))
             base_surface.blit(text, text_rect)
+            hit_rect = pygame.Rect(BORDER_SZ, text_rect.top - 3, full_w - 2*BORDER_SZ, text_rect.height + 6)
+            item_rects.append(hit_rect)
             if i == idx:
                 # selection rectangle: yellow outline, inset BORDER_SZ from surface edges, 3px padding above/below item text
-                pygame.draw.rect(base_surface, SELECT_RECT_COLOR, pygame.Rect(BORDER_SZ, text_rect.top - 3, full_w - 2*BORDER_SZ, text_rect.height + 6), BORDER_PX)
+                pygame.draw.rect(base_surface, SELECT_RECT_COLOR, hit_rect, BORDER_PX)
         # menu border: cyan outline drawn at the inner edge of the menu surface
         # (negative coords are clipped by pygame, so draw at (0,0) not (-3,-3))
         pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, 0, full_w, full_h), BORDER_PX)
@@ -343,6 +357,15 @@ def panel_menu():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit(0)
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                off_x = (screen.get_width() - MENU_W) // 2
+                off_y = (screen.get_height() - MENU_H) // 2
+                hit = _hit_index(event.pos, item_rects, off_x, off_y, not screen_horizontal)
+                if hit >= 0:
+                    idx = hit
+                    panel = options[idx][1]
+                    save_state(PANEL_FILE, panel)
+                    running = False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
                     idx = (idx - 1) % len(options)
@@ -389,6 +412,7 @@ def advanced_menu():
         start_y = 100  # y-coordinate of the first menu item on the menu surface
         # spacing: distributes items evenly from start_y to 40px above the bottom of the menu surface
         spacing = (480 - start_y - 40) // max(item_count, 1)
+        item_rects = []
         for i, (label, _) in enumerate(MENU_ITEMS):
             suffix = ""
             if "Dual Display" in label:
@@ -404,9 +428,11 @@ def advanced_menu():
             text = font.render(f"{label} {suffix}", True, color)
             text_rect = text.get_rect(center=(240, start_y + i*spacing))
             base_surface.blit(text, text_rect)
+            hit_rect = pygame.Rect(BORDER_SZ, text_rect.top - 3, full_w - 2*BORDER_SZ, text_rect.height + 6)
+            item_rects.append(hit_rect)
             if i == selected:
                 # selection rectangle: yellow outline, inset BORDER_SZ from surface edges, 3px padding above/below item text
-                pygame.draw.rect(base_surface, SELECT_RECT_COLOR, pygame.Rect(BORDER_SZ, text_rect.top - 3, full_w - 2*BORDER_SZ, text_rect.height + 6), BORDER_PX)
+                pygame.draw.rect(base_surface, SELECT_RECT_COLOR, hit_rect, BORDER_PX)
         # status bar: XinMo status on the left, auto-select indicator on the right
         xinmo_surf = font.render(xinmo_label, True, xinmo_color)
         auto_surf  = font.render("Auto-select: OFF", True, LT_GRAY_RGB)
@@ -434,6 +460,17 @@ def advanced_menu():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit(0)
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                off_x = (screen.get_width() - MENU_W) // 2
+                off_y = (screen.get_height() - MENU_H) // 2
+                hit = _hit_index(event.pos, item_rects, off_x, off_y, not screen_horizontal)
+                if hit >= 0:
+                    selected = hit
+                    if MENU_ITEMS[selected][0] == "Return to Main Menu":
+                        running = False
+                    else:
+                        MENU_ITEMS[selected][1]()
+                        xinmo_label, xinmo_color = _check_xinmo()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
                     selected = (selected - 1) % len(MENU_ITEMS)
@@ -544,15 +581,18 @@ def main_menu():
         start_y = 100  # y-coordinate of the first menu item on the menu surface
         # spacing: distributes items evenly from start_y to 40px above the bottom of the menu surface
         spacing = (480 - start_y - 40) // max(item_count, 1)
+        item_rects = []
         for i, (label, _) in enumerate(MENU_ITEMS):
             color = SELECT_RECT_COLOR if i == selected else UNSEL_ITEM_RGB
             # menu item: centered at x=240; y = start_y + i * spacing (evenly distributed)
             text = font.render(label, True, color)
             text_rect = text.get_rect(center=(240, start_y + i*spacing))
             base_surface.blit(text, text_rect)
+            hit_rect = pygame.Rect(BORDER_SZ, text_rect.top - 3, full_w - 2*BORDER_SZ, text_rect.height + 6)
+            item_rects.append(hit_rect)
             if i == selected:
                 # selection rectangle: yellow outline, inset BORDER_SZ from surface edges, 3px padding above/below item text
-                pygame.draw.rect(base_surface, SELECT_RECT_COLOR, pygame.Rect(BORDER_SZ, text_rect.top - 3, full_w - 2*BORDER_SZ, text_rect.height + 6), BORDER_PX)
+                pygame.draw.rect(base_surface, SELECT_RECT_COLOR, hit_rect, BORDER_PX)
         # status bar: XinMo status on the left, countdown on the right — both share one dotted rectangle
         xinmo_surf = font.render(xinmo_label, True, xinmo_color)
         auto_surf  = font.render(f"Auto-select: {countdown}s", True, LT_GRAY_RGB)
@@ -588,6 +628,20 @@ def main_menu():
                 if countdown <= 0:
                     pygame.time.set_timer(TICK_EVENT, 0)
                     MENU_ITEMS[selected][1]()
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                countdown = TIMEOUT_SECS
+                off_x = (screen.get_width() - MENU_W) // 2
+                off_y = (screen.get_height() - MENU_H) // 2
+                hit = _hit_index(event.pos, item_rects, off_x, off_y, not screen_horizontal)
+                if hit >= 0:
+                    selected = hit
+                    pygame.time.set_timer(TICK_EVENT, 0)
+                    if MENU_ITEMS[selected][0] == "Advanced Config Setup/Options":
+                        save_state(DEF_KEY_FILE, "A")
+                    MENU_ITEMS[selected][1]()
+                    countdown = TIMEOUT_SECS
+                    pygame.time.set_timer(TICK_EVENT, 1000)
+                    xinmo_label, xinmo_color = _check_xinmo()
             elif event.type == pygame.KEYDOWN:
                 # Any keypress cancels the timeout
                 countdown = TIMEOUT_SECS
