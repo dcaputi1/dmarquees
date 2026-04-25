@@ -452,14 +452,14 @@ def advanced_menu():
                     toggle_fullscreen()
 
 def toggle_xinmo_swap():
-    """Run xinmo-swap.py on both MAME cfg dirs (RetroArch and standalone), matching autostart-nogui.sh."""
+    """Toggle the XinMo P1/P2 cfg mapping unconditionally on both MAME cfg dirs."""
     scripts_dir = os.path.dirname(os.path.abspath(__file__))
     swap_script = os.path.join(scripts_dir, "xinmo-swap.py")
     mame_base   = "/opt/retropie/emulators/mame"
     for cfg_dir in ("cfg_ra", "cfg_sa"):
         cfg_path = os.path.join(mame_base, cfg_dir)
         try:
-            subprocess.run([sys.executable, swap_script, cfg_path, "1"], timeout=10)
+            subprocess.run([sys.executable, swap_script, cfg_path, "toggle"], timeout=10)
         except Exception as e:
             print(f"[WARN] xinmo-swap failed for {cfg_path}: {e}", file=sys.stderr)
 

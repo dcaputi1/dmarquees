@@ -86,11 +86,19 @@ def main():
     if len(sys.argv) != 3:
         print("Usage: swap_joysticks.py <cfg_directory> <swapped_flag>")
         print("  <cfg_directory> - Path to directory containing cfg files (including default.cfg)")
-        print("  <swapped_flag>  - '0' if joysticks are normal, '1' if js4 and js5 are swapped")
+        print("  <swapped_flag>  - '0' normal, '1' swapped (XOR logic), or 'toggle' (always swap)")
         sys.exit(1)
 
     cfg_directory = sys.argv[1]
     swapped_flag = sys.argv[2]
+
+    # 'toggle' mode: unconditionally swap all cfg files, bypassing XOR logic.
+    # Used by the GUI toggle button so it always works regardless of current cfg state.
+    if swapped_flag == "toggle":
+        print("Performing unconditional joystick toggle on all .cfg files...")
+        total_swaps = process_directory(cfg_directory)
+        print(f"\nTotal joystick codes swapped across all files: {total_swaps}")
+        return
 
     default_cfg_path = os.path.join(cfg_directory, "default.cfg")
 
