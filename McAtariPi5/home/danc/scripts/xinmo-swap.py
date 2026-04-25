@@ -3,9 +3,6 @@ import os
 import sys
 import glob
 import xml.etree.ElementTree as ET
-import termios
-import tty
-import select
 
 # Soft-coded joystick code positions
 XIN1_CODE = "JOYCODE_2_"
@@ -113,27 +110,6 @@ def main():
     if not need_swap:
         print("No swap needed. Configuration matches hardware state.")
         sys.exit(0)
-
-    def wait_key():
-        try:
-            # Windows
-            import msvcrt
-            msvcrt.getch()
-        except ImportError:
-            # Unix
-            fd = sys.stdin.fileno()
-            old_settings = termios.tcgetattr(fd)
-            try:
-                tty.setraw(fd)
-                rlist, _, _ = select.select([fd], [], [], 30)
-                if rlist:
-                    sys.stdin.read(1)
-            finally:
-                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-
-    if hardware_swapped:
-        print("WARNING - XinMo controllers swapped! (press any key)")
-        wait_key()
 
     print("Performing joystick swap on all .cfg files...")
     total_swaps = process_directory(cfg_directory)
