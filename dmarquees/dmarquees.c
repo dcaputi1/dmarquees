@@ -1156,15 +1156,17 @@ static void handle_fifo_command(char *cmd_str)
         // check for a panel cheat sheet (instead of just blank screen)
         if (_splash_mode)
         {
-            // Re-read panel setting each time: the user may have changed it in the
-            // frontend after the daemon started (panel file is written by pic_frontend.py
-            // while the daemon keeps running across menu/game cycles).
-            read_token_file(_panel_file, _szPanel, sizeof(_szPanel));
-            _control_panel = toControlPanel(_szPanel);
+            // Read panel setting fresh on every ROM command: avoids stale startup
+            // value if user changed it via pic_frontend after the daemon started.
+            char panel_code[4] = {0};
+            read_token_file(_panel_file, panel_code, sizeof(panel_code));
+            ts_printf("dmarquees: splash ROM '%s', .panel='%s'\n", cmd_str, panel_code);
 
-            if (_control_panel)
+            bool use_dc = (strcmp(panel_code, "DC") == 0);
+            bool use_mc = (strcmp(panel_code, "MC") == 0);
+            if (use_dc || use_mc)
             {
-                show_panel_marquee(cmd_str, _control_panel == eULTRA_DC);
+                show_panel_marquee(cmd_str, use_dc);
                 break;
             }
         }
