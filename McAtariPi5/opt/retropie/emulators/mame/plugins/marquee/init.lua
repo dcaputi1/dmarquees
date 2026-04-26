@@ -41,24 +41,26 @@ local function shell_quote(text)
 end
 
 local function send_marquee_command(text)
+    -- Send to Pi3 via sender script (for marquee display)
     local sender = io.open(SENDER_SCRIPT, "r")
     if sender then
         sender:close()
         local status = os.execute(string.format("%s %s >/dev/null 2>&1", SENDER_SCRIPT, shell_quote(text)))
         if status == true or status == 0 then
-            print(string.format("Marquee plugin: Routed marquee command via sender: '%s'", text))
-            return
+            print(string.format("Marquee plugin: Sent to Pi3 via sender: '%s'", text))
+        else
+            print(string.format("Marquee plugin: Sender failed for '%s'", text))
         end
-        print(string.format("Marquee plugin: Sender failed, falling back to FIFO for '%s'", text))
     end
 
+    -- Always also write to local FIFO so Pi5 dmarquees can show panel art
     local fifo = io.open(MARQUEE_FIFO, "w")
     if fifo then
         fifo:write(text .. "\n")
         fifo:close()
-        print(string.format("Marquee plugin: Sent marquee command to FIFO: '%s'", text))
+        print(string.format("Marquee plugin: Sent to local FIFO: '%s'", text))
     else
-        print(string.format("Marquee plugin: Failed to route command '%s' via sender or FIFO %s", text, MARQUEE_FIFO))
+        print(string.format("Marquee plugin: Failed to write to local FIFO %s for '%s'", MARQUEE_FIFO, text))
     end
 end
 
