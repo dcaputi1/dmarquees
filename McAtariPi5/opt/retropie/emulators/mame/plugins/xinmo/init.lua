@@ -32,6 +32,7 @@ local SWAP_SCRIPT_SA = "python3 /home/danc/scripts/xinmo-swap.py /opt/retropie/e
 
 local pxswap_done    = false   -- true once we've made a decision this session
 local pxswap_applied = false   -- true if we swapped; used to show post-reset message
+local start_notifier = nil     -- held to prevent garbage collection
 
 -----------------------------------------------------------
 -- Input Detection
@@ -90,7 +91,7 @@ local function mame_sees_swap_needed()
     end
 
     for _, d in ipairs(devs) do
-        print(string.format("[PxSwap] %s -> '%s' — %d buttons",
+        print(string.format("[PxSwap] %s -> '%s' -- %d buttons",
               d.joycode_prefix, d.name, d.buttons))
     end
 
@@ -113,7 +114,7 @@ end
 
 function xinmo.startplugin()
 
-    emu.register_start(function()
+    start_notifier = emu.add_machine_start_notifier(function()
 
         -- Post-reset: show confirmation that the fix took effect
         if pxswap_done then
@@ -137,7 +138,7 @@ function xinmo.startplugin()
 
         if needs_swap then
             manager.machine:popmessage(
-                "*** XinMo PxSwap: Swap DETECTED — fixing cfg and restarting... ***")
+                "*** XinMo PxSwap: Swap DETECTED -- fixing cfg and restarting... ***")
             os.execute(SWAP_SCRIPT_RA)
             os.execute(SWAP_SCRIPT_SA)
             pxswap_applied = true
