@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
-xinmo-swapcheck.py — Detect XinMo P1/P2 state and report one of four outcomes:
+xinmo-swapcheck.py — Detect XinMo P1/P2 state and report one of five outcomes:
 
   exit 0 — OK           : hardware normal, cfg normal              → green
   exit 1 — Swap needed  : hw/cfg mismatch, players getting wrong inputs → red
   exit 2 — Error        : fewer than 2 XinMo devices or inconclusive counts
-  exit 3 — Swapped OK   : hardware swapped AND cfg compensates correctly → yellow
+  exit 3 — Swapped OK   : hardware swapped AND cfg compensates (menu swap) → yellow
+  exit 4 — Plugin swap  : hardware swapped AND cfg compensates (plugin auto-swap) → yellow
 
 Hardware detection: button count via JSIOCGBUTTONS ioctl (no user input).
 Cfg detection: P2_BUTTON1 entry in default.cfg (cfg_ra).
@@ -17,7 +18,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 # === Version ===
-VERSION = "6.1"
+VERSION = "6.2"
 
 # === Constants ===
 MAX_DEVICES      = 5
@@ -32,6 +33,9 @@ CFG_RA_DIR = "/opt/retropie/emulators/mame/cfg_ra"
 # After a swap it is mapped to joystick index 2 (JOYCODE_2_).
 CFG_P2_NORMAL_CODE  = "JOYCODE_3_"   # P2_BUTTON1 text in default.cfg when cfg is NOT swapped
 CFG_P2_SWAPPED_CODE = "JOYCODE_2_"   # P2_BUTTON1 text in default.cfg when cfg IS swapped
+
+# Written by the MAME PxSwap plugin when it auto-swaps; removed by xinmo-swap.py (menu path).
+PLUGIN_SWAP_FLAG = os.environ.get("HOME", "/home/danc") + "/.xinmo_plugin_swapped"
 
 
 def get_joystick_info(dev_path):
@@ -127,17 +131,23 @@ def main():
 
     # --- Combined decision ---
     #
-    #  hw_normal  + cfg_normal  → OK           (exit 0, green)
-    #  hw_swapped + cfg_swapped → Swapped OK   (exit 3, yellow) — compensated
-    #  hw_swapped + cfg_normal  → Swap! needed (exit 1, red)    — signals wrong
-    #  hw_normal  + cfg_swapped → Swap! needed (exit 1, red)    — cfg wrongly swapped
+    #  hw_normal  + cfg_normal  → OK             (exit 0, green)
+    #  hw_swapped + cfg_swapped → Swapped OK     (exit 3, yellow) — compensated by menu
+    #  hw_swapped + cfg_swapped → Plugin swap    (exit 4, yellow) — compensated by plugin
+    #  hw_swapped + cfg_normal  → Swap! needed   (exit 1, red)    — signals wrong
+    #  hw_normal  + cfg_swapped → Swap! needed   (exit 1, red)    — cfg wrongly swapped
     #
     if not hw_swapped and not cfg_swapped:
         print("[OK] Hardware normal, cfg normal.", file=sys.stderr)
         sys.exit(0)
     elif hw_swapped and cfg_swapped:
-        print("[SWAPPED OK] Hardware swapped, cfg compensates — playing correctly.", file=sys.stderr)
-        sys.exit(3)
+        plugin_swapped = os.path.exists(PLUGIN_SWAP_FLAG)
+        if plugin_swapped:
+            print("[PLUGIN SWAP] Hardware swapped, cfg compensates — auto-corrected by plugin.", file=sys.stderr)
+            sys.exit(4)
+        else:
+            print("[SWAPPED OK] Hardware swapped, cfg compensates — playing correctly.", file=sys.stderr)
+            sys.exit(3)
     else:
         print("[SWAP!] Mismatch — hardware and cfg states differ, swap needed.", file=sys.stderr)
         sys.exit(1)

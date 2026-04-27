@@ -8,6 +8,10 @@ import xml.etree.ElementTree as ET
 XIN1_CODE = "JOYCODE_2_"
 XIN2_CODE = "JOYCODE_3_"
 
+# Flag file written by the MAME PxSwap plugin when it auto-swaps.
+# Removed here whenever the user takes manual control via this script.
+PLUGIN_SWAP_FLAG = os.environ.get("HOME", "/home/danc") + "/.xinmo_plugin_swapped"
+
 def check_default_cfg(cfg_path):
     """
     Check if default.cfg has XIN2_CODE for P2_BUTTON1.
@@ -91,6 +95,13 @@ def main():
 
     cfg_directory = sys.argv[1]
     swapped_flag = sys.argv[2]
+
+    # User is taking manual control — clear any plugin-swap flag so xinmo-swapcheck
+    # reports "menu swap" rather than "plugin swap" after this operation.
+    try:
+        os.remove(PLUGIN_SWAP_FLAG)
+    except FileNotFoundError:
+        pass
 
     # 'toggle' mode: unconditionally swap all cfg files, bypassing XOR logic.
     # Used by the GUI toggle button so it always works regardless of current cfg state.
