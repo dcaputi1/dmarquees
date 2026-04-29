@@ -489,14 +489,36 @@ def advanced_menu():
                     toggle_fullscreen()
 
 def toggle_xinmo_swap():
-    """Toggle the XinMo P1/P2 cfg mapping unconditionally on both MAME cfg dirs."""
+    """Toggle the XinMo P1/P2 cfg mapping on both MAME cfg dirs.
+
+    Uses XOR-convergence flags ('0'/'1') rather than 'toggle' so that if the
+    dirs are already out of sync, both are driven to the same new target
+    instead of mirroring the mismatch on every press.
+
+    Flag '1' → xinmo-swap.py converges each dir to swapped state.
+    Flag '0' → xinmo-swap.py converges each dir to normal state.
+    """
+    import re
     scripts_dir = os.path.dirname(os.path.abspath(__file__))
     swap_script = os.path.join(scripts_dir, "xinmo-swap.py")
     mame_base   = "/opt/retropie/emulators/mame"
+
+    # Read current swap state from cfg_ra (canonical source) to pick the target.
+    cfg_ra_default = os.path.join(mame_base, "cfg_ra", "default.cfg")
+    try:
+        with open(cfg_ra_default, "r", encoding="utf-8") as f:
+            content = f.read()
+        m = re.search(r'<port[^>]+type="P2_BUTTON1"[^>]*>(.*?)</port>', content, re.DOTALL)
+        currently_swapped = bool(m and "JOYCODE_2_" in m.group(1))
+    except Exception as e:
+        print(f"[WARN] xinmo-swap: could not read {cfg_ra_default}: {e}", file=sys.stderr)
+        return
+
+    target_flag = "0" if currently_swapped else "1"
     for cfg_dir in ("cfg_ra", "cfg_sa"):
         cfg_path = os.path.join(mame_base, cfg_dir)
         try:
-            subprocess.run([sys.executable, swap_script, cfg_path, "toggle"], timeout=10)
+            subprocess.run([sys.executable, swap_script, cfg_path, target_flag], timeout=10)
         except Exception as e:
             print(f"[WARN] xinmo-swap failed for {cfg_path}: {e}", file=sys.stderr)
 

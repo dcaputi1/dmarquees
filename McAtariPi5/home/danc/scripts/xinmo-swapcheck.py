@@ -13,6 +13,7 @@ Cfg detection: P2_BUTTON1 entry in default.cfg (cfg_ra).
 """
 import array
 import fcntl
+import json
 import os
 import sys
 import xml.etree.ElementTree as ET
@@ -25,9 +26,15 @@ MAX_DEVICES      = 5
 EXPECTED_P1_BTNS = 15  # js0 should have 15 buttons when mapping is correct
 EXPECTED_P2_BTNS = 13  # js1 should have 13 buttons when mapping is correct
 
-# MAME cfg directory used to determine whether the cfg has been swapped already.
-# cfg_ra and cfg_sa are always swapped together, so checking one is sufficient.
-CFG_RA_DIR = "/opt/retropie/emulators/mame/cfg_ra"
+# All cfg directories are checked. They must agree on swap state.
+# cfg_ra and cfg_sa are expected to always exist; cfg is optional (absent in normal state).
+CFG_REQUIRED_DIRS = [
+    "/opt/retropie/emulators/mame/cfg_ra",
+    "/opt/retropie/emulators/mame/cfg_sa",
+]
+CFG_OPTIONAL_DIRS = [
+    "/opt/retropie/emulators/mame/cfg",
+]
 
 # In a normal (unswapped) cfg, P2_BUTTON1 is mapped to joystick index 3 (JOYCODE_3_).
 # After a swap it is mapped to joystick index 2 (JOYCODE_2_).
@@ -36,6 +43,27 @@ CFG_P2_SWAPPED_CODE = "JOYCODE_2_"   # P2_BUTTON1 text in default.cfg when cfg I
 
 # Written by the MAME PxSwap plugin when it auto-swaps; removed by xinmo-swap.py (menu path).
 PLUGIN_SWAP_FLAG = os.environ.get("HOME", "/home/danc") + "/.xinmo_plugin_swapped"
+
+# Persistent stats file tracking OS-level swap detection history.
+OS_STATS_FILE = os.path.join(os.environ.get("HOME", "/home/danc"), "IvarArcade", "json", "xinmo_os_stats.json")
+
+
+def update_os_stats(hw_swapped):
+    """Increment persistent counters for total checks and hw-swapped occurrences."""
+    try:
+        with open(OS_STATS_FILE, "r") as f:
+            stats = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        stats = {"checks": 0, "hw_swapped": 0}
+    stats["checks"] = stats.get("checks", 0) + 1
+    if hw_swapped:
+        stats["hw_swapped"] = stats.get("hw_swapped", 0) + 1
+    try:
+        os.makedirs(os.path.dirname(OS_STATS_FILE), exist_ok=True)
+        with open(OS_STATS_FILE, "w") as f:
+            json.dump(stats, f)
+    except Exception as e:
+        print(f"[WARN] Could not update OS stats: {e}", file=sys.stderr)
 
 
 def get_joystick_info(dev_path):
@@ -120,13 +148,33 @@ def main():
         print(f"[ERROR] Inconclusive button counts: {p1_path}={p1_btns}, {p2_path}={p2_btns}.", file=sys.stderr)
         sys.exit(2)
 
+    update_os_stats(hw_swapped)
+
     # --- Cfg state ---
-    cfg_swapped = check_cfg_swapped(CFG_RA_DIR)
-    if cfg_swapped is None:
-        # Can't read cfg — fall back to hardware-only result
-        print("[WARN] Cfg state unknown; falling back to hardware-only check.", file=sys.stderr)
+    cfg_states = {}
+    for cfg_dir in CFG_REQUIRED_DIRS:
+        if not os.path.isdir(cfg_dir):
+            print(f"[WARN] Cfg directory not found: {cfg_dir}", file=sys.stderr)
+            continue
+        state = check_cfg_swapped(cfg_dir)
+        cfg_states[cfg_dir] = state
+    for cfg_dir in CFG_OPTIONAL_DIRS:
+        if not os.path.isdir(cfg_dir):
+            continue
+        state = check_cfg_swapped(cfg_dir)
+        cfg_states[cfg_dir] = state
+
+    known_states = [s for s in cfg_states.values() if s is not None]
+
+    if not known_states:
+        print("[WARN] Cfg state unknown in all directories; falling back to hardware-only check.", file=sys.stderr)
         sys.exit(1 if hw_swapped else 0)
 
+    if len(set(known_states)) > 1:
+        print("[ERROR] Cfg directories disagree on swap state — manual inspection required.", file=sys.stderr)
+        sys.exit(2)
+
+    cfg_swapped = known_states[0]
     print(f"[CFG] {'Swapped' if cfg_swapped else 'Normal'}", file=sys.stderr)
 
     # --- Combined decision ---

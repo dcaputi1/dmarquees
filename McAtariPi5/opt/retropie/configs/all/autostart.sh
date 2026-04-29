@@ -262,8 +262,7 @@ run_pic_frontend()
     local _saved_tty
     _saved_tty=$(stty -g 2>/dev/null)
 
-    XINMO_STATUS_MSG="$XINMO_STATUS_MSG" \
-        python3 "$HOME/scripts/pic_frontend.py" 2>/tmp/pic_frontend.err
+    python3 "$HOME/scripts/pic_frontend.py" 2>/tmp/pic_frontend.err
     local _pf_exit=$?
 
     if [ -n "$_saved_tty" ]; then

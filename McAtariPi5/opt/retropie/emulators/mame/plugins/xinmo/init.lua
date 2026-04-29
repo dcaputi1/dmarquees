@@ -35,6 +35,32 @@ local SWAP_SCRIPT = "python3 /home/danc/scripts/xinmo-swap.py /opt/retropie/emul
 -- Allows xinmo-swapcheck.py to distinguish "plugin swap" from "menu swap".
 local PLUGIN_SWAP_FLAG  = (os.getenv("HOME") or "/home/danc") .. "/.xinmo_plugin_swapped"
 
+-- Persistent stats file tracking MAME-level swap detection history.
+local MAME_STATS_FILE = (os.getenv("HOME") or "/home/danc") .. "/IvarArcade/json/xinmo_mame_stats.json"
+
+-----------------------------------------------------------
+-- Stats Tracking
+-----------------------------------------------------------
+
+local function update_mame_stats(swap_needed)
+    local checks = 0
+    local swapped = 0
+    local f = io.open(MAME_STATS_FILE, "r")
+    if f then
+        local content = f:read("*a")
+        f:close()
+        checks  = tonumber(content:match('"checks"%s*:%s*(%d+)'))      or 0
+        swapped = tonumber(content:match('"swap_needed"%s*:%s*(%d+)')) or 0
+    end
+    checks = checks + 1
+    if swap_needed then swapped = swapped + 1 end
+    local out = io.open(MAME_STATS_FILE, "w")
+    if out then
+        out:write(string.format('{"checks":%d,"swap_needed":%d}\n', checks, swapped))
+        out:close()
+    end
+end
+
 -----------------------------------------------------------
 -- Plugin State (survives soft_reset within a session)
 -----------------------------------------------------------
@@ -187,6 +213,10 @@ function xinmo.startplugin()
         -- First start: detect MAME's input order vs cfg state
         local needs_swap = check_swap_needed()
         pxswap_done = true
+
+        if needs_swap ~= nil then
+            update_mame_stats(needs_swap)
+        end
 
         if needs_swap == nil then
             return
