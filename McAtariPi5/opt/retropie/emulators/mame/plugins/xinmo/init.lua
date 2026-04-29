@@ -41,7 +41,7 @@ local PLUGIN_SWAP_FLAG  = (os.getenv("HOME") or "/home/danc") .. "/.xinmo_plugin
 
 local pxswap_done    = false   -- true once we've made a decision this session
 local pxswap_applied = false   -- true if we swapped; used to show post-reset message
-local start_notifier = nil     -- held to prevent garbage collection
+local reset_notifier = nil     -- held to prevent garbage collection
 
 -----------------------------------------------------------
 -- Cfg State Detection
@@ -166,19 +166,19 @@ local function check_swap_needed()
     return false
 end
 
+
 -----------------------------------------------------------
 -- Plugin Entry Point
 -----------------------------------------------------------
 
 function xinmo.startplugin()
 
-    start_notifier = emu.add_machine_start_notifier(function()
+    reset_notifier = emu.add_machine_reset_notifier(function()
 
         -- Post-reset: show confirmation that the fix took effect
         if pxswap_done then
             if pxswap_applied then
-                manager.machine:popmessage(
-                    "*** XinMo PxSwap: Controllers corrected! P1=P1, P2=P2 ***")
+                manager.machine:popmessage("XinMo p1-P2 fixed")
                 pxswap_applied = false
             end
             return
@@ -189,22 +189,17 @@ function xinmo.startplugin()
         pxswap_done = true
 
         if needs_swap == nil then
-            manager.machine:popmessage(
-                "[PxSwap] WARNING: Could not determine XinMo controller order!")
             return
         end
 
         if needs_swap then
-            manager.machine:popmessage(
-                "*** XinMo PxSwap: Swap DETECTED -- fixing cfg and restarting... ***")
+            manager.machine:popmessage("XinMo Swap: restart...")
             os.execute(SWAP_SCRIPT)
             -- Write flag so xinmo-swapcheck.py can report "plugin swap" vs "menu swap"
             local flag = io.open(PLUGIN_SWAP_FLAG, "w")
             if flag then flag:write("1\n") flag:close() end
             pxswap_applied = true
             manager.machine:soft_reset()
-        else
-            manager.machine:popmessage("[PxSwap] XinMo order OK")
         end
 
     end)
