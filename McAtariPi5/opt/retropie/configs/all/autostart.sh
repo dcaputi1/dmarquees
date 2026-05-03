@@ -12,7 +12,6 @@ MENU_TIMEOUT=60
 BASE_PATH="/opt/retropie/emulators/mame"
 CFG_PATH="$BASE_PATH/cfg"
 INI_PATH="$BASE_PATH/ini"
-MAME_INI="$INI_PATH/mame.ini"
 CFG_SA_PATH="$BASE_PATH/cfg_sa"
 CFG_RA_PATH="$BASE_PATH/cfg_ra"
 CMD_FIFO="/tmp/dmarquees_cmd"
@@ -306,7 +305,6 @@ main_menu()
         case $CHOICE in
             E)
                 mv $CFG_RA_PATH $CFG_PATH
-                cp "$MAME_INI.ra" "$MAME_INI"
                 send_dmarquees_cmd "RA"
                 echo "Running EmulationStation... .horizontal = $SCREEN_HORIZONTAL"
                 debug_wait
@@ -322,7 +320,6 @@ main_menu()
             M)
                 send_dmarquees_cmd "SA"
                 mv $CFG_SA_PATH $CFG_PATH
-                cp "$MAME_INI.sa" "$MAME_INI"
                 echo "Running MAME... .horizontal = $SCREEN_HORIZONTAL"
                 debug_wait
                 if [ "$SCREEN_HORIZONTAL" = false ]; then
