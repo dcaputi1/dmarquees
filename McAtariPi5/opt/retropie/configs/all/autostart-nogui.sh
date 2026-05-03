@@ -407,7 +407,6 @@ main_menu()
             E)
                 persist_frontend_choice "E"
                 mv $CFG_RA_PATH $CFG_PATH
-                cp "$MAME_INI.ra" "$MAME_INI"
                 send_dmarquees_cmd "RA"
                 if [ "$SCREEN_HORIZONTAL" = false ]; then
                     echo "ROL_FLAG=\"-rol\"" > $HOME/.rol_flag
