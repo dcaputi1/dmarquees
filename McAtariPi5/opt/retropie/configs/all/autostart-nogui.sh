@@ -12,7 +12,6 @@ MENU_TIMEOUT=60
 BASE_PATH="/opt/retropie/emulators/mame"
 CFG_PATH="$BASE_PATH/cfg"
 INI_PATH="$BASE_PATH/ini"
-MAME_INI="$INI_PATH/mame.ini"
 CFG_SA_PATH="$BASE_PATH/cfg_sa"
 CFG_RA_PATH="$BASE_PATH/cfg_ra"
 CMD_FIFO="/tmp/dmarquees_cmd"
@@ -421,7 +420,6 @@ main_menu()
                 persist_frontend_choice "M"
                 send_dmarquees_cmd "SA"
                 mv $CFG_SA_PATH $CFG_PATH
-                cp "$MAME_INI.sa" "$MAME_INI"
                 if [ "$SCREEN_HORIZONTAL" = false ]; then
                     mame -rol -inipath "/opt/retropie/emulators/mame/ini;/opt/retropie/emulators/mame/ini_horz_ror" -cfg_directory $CFG_PATH -joystickprovider sdljoy
                 else
