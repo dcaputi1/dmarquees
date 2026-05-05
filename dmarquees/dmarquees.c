@@ -1221,7 +1221,7 @@ static void handle_fifo_command(char *cmd_str)
             bool use_mk = (strcmp(panel_code, "MK") == 0);
             if (use_dc || use_mc || use_mk)
             {
-                ControlPanel pt = use_dc ? eULTRA_DC : (use_mc ? eATARI_MC : eMK_WHEEL);
+                ControlPanel pt = use_dc ? eULTRA_DC : (use_mc ? eATARI_MC : eWHEEL_MK);
                 show_panel_marquee(cmd_str, pt);
                 break;
             }

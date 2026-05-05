@@ -49,7 +49,7 @@ install: all
 	@# Install panel label mappings
 	@if [ -d labels ]; then \
 		mkdir -p $(INSTALL_DIR)/labels; \
-		rsync -a --info=NAME labels/ $(INSTALL_DIR)/labels/ && echo "Synced: $(INSTALL_DIR)/labels"; \
+		rsync -a --info=NAME labels/ $(INSTALL_DIR)/labels/ | sed '/^[.][/]$$/d'; echo "Synced: $(INSTALL_DIR)/labels"; \
 	fi
 	
 	@# Install plugins to local directory

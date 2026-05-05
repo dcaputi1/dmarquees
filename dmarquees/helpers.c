@@ -229,7 +229,7 @@ ControlPanel toControlPanel(const char *s)
         if (strcmp(s, "DC") == 0)
             return eULTRA_DC;
         if (strcmp(s, "MK") == 0)
-            return eMK_WHEEL;
+            return eWHEEL_MK;
     }
     return ePANEL_NA;
 }
