@@ -53,7 +53,7 @@
 #include <xf86drmMode.h>
 #include <sys/utsname.h>
 
-#define VERSION "1.8.2"
+#define VERSION "1.9.0"
 #define CMD_FIFO "/tmp/dmarquees_cmd"
 #define DEF_MARQUEE_NAME "RetroPieMarquee"
 #define DEF_RA_MARQUEE_NAME "RetroArch_logo"
@@ -66,6 +66,8 @@
 #define PANEL_TMP_DC_PNG "/tmp/dmarquees_dcpanel.png"
 #define PANEL_TMP_MC_SVG "/tmp/dmarquees_mcpanel.svg"
 #define PANEL_TMP_MC_PNG "/tmp/dmarquees_mcpanel.png"
+#define PANEL_TMP_MKW_SVG "/tmp/dmarquees_mkwheel.svg"
+#define PANEL_TMP_MKW_PNG "/tmp/dmarquees_mkwheel.png"
 #define HOME_PATH "/home/danc"
 #define MAX_TOKEN 128
 
@@ -101,6 +103,7 @@ static const char* _image_dir_alt = HOME_PATH "/RetroPie/roms/mame/media/marquee
 static const char* _default_marquee_dir = HOME_PATH "/IvarArcade/images";
 static const char* _dcpanel_template = HOME_PATH "/IvarArcade/images/dcpanel-1-labels.svg";
 static const char* _mcpanel_template = HOME_PATH "/IvarArcade/images/mcpanel-1-labels.svg";
+static const char* _mkwheel_template = HOME_PATH "/IvarArcade/images/mkwheel-1-labels.svg";
 static const char* _labels_dir = HOME_PATH "/IvarArcade/labels";
 static const char* _PI5_HOSTNAME = "McAtariPi5";
 static const char* _pi5_dual_display_file = HOME_PATH "/.pi5_dual_display";
@@ -894,14 +897,22 @@ static int apply_substitutions_from_csv(char **svg_buf, const char *csv_path)
     return applied;
 }
 
-static bool find_panel_map(const char *shortname, bool dc_panel, char *out_path, size_t out_size)
+static bool find_panel_map(const char *shortname, ControlPanel panel_type, char *out_path, size_t out_size)
 {
     if (!shortname || !out_path || out_size == 0)
         return false;
 
     struct stat st;
+    const char *ext;
+    switch (panel_type)
+    {
+        case eULTRA_DC: ext = ".dcp"; break;
+        case eATARI_MC: ext = ".mcp"; break;
+        case eWHEEL_MK: ext = ".mkw"; break;
+        default: return false;
+    }
+
     char file_name[256];
-    const char *ext = dc_panel ? ".dcp" : ".mcp";
     size_t short_len = strlen(shortname);
     size_t ext_len = strlen(ext);
     if (short_len + ext_len + 1 > sizeof(file_name))
@@ -933,11 +944,37 @@ static bool convert_svg_to_png(const char *svg_path, const char *png_path)
     return system(cmd) == 0;
 }
 
-static bool show_panel_marquee(const char *shortname, bool dc_panel)
+static bool show_panel_marquee(const char *shortname, ControlPanel panel_type)
 {
-    const char *template_path = dc_panel ? _dcpanel_template : _mcpanel_template;
-    const char *tmp_svg = dc_panel ? PANEL_TMP_DC_SVG : PANEL_TMP_MC_SVG;
-    const char *tmp_png = dc_panel ? PANEL_TMP_DC_PNG : PANEL_TMP_MC_PNG;
+    const char *template_path;
+    const char *tmp_svg;
+    const char *tmp_png;
+    const char *panel_label;
+
+    switch (panel_type)
+    {
+        case eULTRA_DC:
+            template_path = _dcpanel_template;
+            tmp_svg = PANEL_TMP_DC_SVG;
+            tmp_png = PANEL_TMP_DC_PNG;
+            panel_label = "DC";
+            break;
+        case eATARI_MC:
+            template_path = _mcpanel_template;
+            tmp_svg = PANEL_TMP_MC_SVG;
+            tmp_png = PANEL_TMP_MC_PNG;
+            panel_label = "MC";
+            break;
+        case eWHEEL_MK:
+            template_path = _mkwheel_template;
+            tmp_svg = PANEL_TMP_MKW_SVG;
+            tmp_png = PANEL_TMP_MKW_PNG;
+            panel_label = "MK";
+            break;
+        default:
+            ts_fprintf(stderr, "error: unknown panel type %d\n", (int)panel_type);
+            return false;
+    }
 
     char *svg = read_text_file(template_path);
     if (!svg)
@@ -948,7 +985,7 @@ static bool show_panel_marquee(const char *shortname, bool dc_panel)
 
     char map_path[PATH_MAX];
     int applied = 0;
-    if (find_panel_map(shortname, dc_panel, map_path, sizeof(map_path)))
+    if (find_panel_map(shortname, panel_type, map_path, sizeof(map_path)))
     {
         int n = apply_substitutions_from_csv(&svg, map_path);
         if (n >= 0)
@@ -959,7 +996,7 @@ static bool show_panel_marquee(const char *shortname, bool dc_panel)
     }
     else
     {
-        ts_fprintf(stderr, "warning: panel map not found for %s (%s panel)\n", shortname, dc_panel ? "dc" : "mc");
+        ts_fprintf(stderr, "warning: panel map not found for %s (%s panel)\n", shortname, panel_label);
     }
 
     if (!write_text_file(tmp_svg, svg))
@@ -999,13 +1036,15 @@ static bool show_panel_marquee(const char *shortname, bool dc_panel)
         snprintf(last_image_path, sizeof(last_image_path), "%s", tmp_png);
     }
 
-    ts_printf("dmarquees: showing %s panel for %s (%d substitutions)\n", dc_panel ? "DC" : "MC", shortname, applied);
+    ts_printf("dmarquees: showing %s panel for %s (%d substitutions)\n", panel_label, shortname, applied);
     return true;
 }
 
-static bool toggle_panel_display(bool dc_panel, bool panel_on)
+static bool toggle_panel_display(ControlPanel panel_type, bool panel_on)
 {
-    const char *panel_name = dc_panel ? "DCPANEL" : "MCPANEL";
+    const char *panel_name = fromCommandType(
+        panel_type == eULTRA_DC ? CMD_DCPANEL :
+        panel_type == eATARI_MC ? CMD_MCPANEL : CMD_MKWHEEL);
     if (current_rom_shortname[0] == '\0')
     {
         ts_fprintf(stderr, "warning: %s ignored - no tracked ROM yet\n", panel_name);
@@ -1013,7 +1052,7 @@ static bool toggle_panel_display(bool dc_panel, bool panel_on)
     }
 
     if (panel_on)
-        return show_panel_marquee(current_rom_shortname, dc_panel);
+        return show_panel_marquee(current_rom_shortname, panel_type);
 
     return show_game_marquee(current_rom_shortname);
 }
@@ -1117,7 +1156,7 @@ static void handle_fifo_command(char *cmd_str)
             ts_fprintf(stderr, "warning: DCPANEL requires 0 or 1 (e.g. DCPANEL 1)\n");
             break;
         }
-        if (!toggle_panel_display(true, strcmp(arg, "1") == 0))
+        if (!toggle_panel_display(eULTRA_DC, strcmp(arg, "1") == 0))
             show_default_marquee();
         break;
 
@@ -1132,7 +1171,22 @@ static void handle_fifo_command(char *cmd_str)
             ts_fprintf(stderr, "warning: MCPANEL requires 0 or 1 (e.g. MCPANEL 1)\n");
             break;
         }
-        if (!toggle_panel_display(false, strcmp(arg, "1") == 0))
+        if (!toggle_panel_display(eATARI_MC, strcmp(arg, "1") == 0))
+            show_default_marquee();
+        break;
+
+    case CMD_MKWHEEL:
+        if (_splash_mode)
+        {
+            ts_printf("dmarquees: splash mode - MKWHEEL ignored\n");
+            break;
+        }
+        if (parsed < 2 || (strcmp(arg, "0") != 0 && strcmp(arg, "1") != 0))
+        {
+            ts_fprintf(stderr, "warning: MKWHEEL requires 0 or 1 (e.g. MKWHEEL 1)\n");
+            break;
+        }
+        if (!toggle_panel_display(eWHEEL_MK, strcmp(arg, "1") == 0))
             show_default_marquee();
         break;
 
@@ -1164,9 +1218,11 @@ static void handle_fifo_command(char *cmd_str)
 
             bool use_dc = (strcmp(panel_code, "DC") == 0);
             bool use_mc = (strcmp(panel_code, "MC") == 0);
-            if (use_dc || use_mc)
+            bool use_mk = (strcmp(panel_code, "MK") == 0);
+            if (use_dc || use_mc || use_mk)
             {
-                show_panel_marquee(cmd_str, use_dc);
+                ControlPanel pt = use_dc ? eULTRA_DC : (use_mc ? eATARI_MC : eMK_WHEEL);
+                show_panel_marquee(cmd_str, pt);
                 break;
             }
         }

@@ -26,7 +26,8 @@ typedef enum
 {
     ePANEL_NA = 0,  // no panel selected
     eATARI_MC = 1,  // Atari MicroCenter
-    eULTRA_DC = 2   // UltraStick, 2x spinners
+    eULTRA_DC = 2,  // UltraStick, 2x spinners
+    eWHEEL_MK = 3   // MarioKart wheel controller
 } ControlPanel;
 
 ControlPanel toControlPanel(const char* s);
@@ -44,7 +45,8 @@ typedef enum
     CMD_REFRESH = 6,
     CMD_ROM = 7,
     CMD_DCPANEL = 8,
-    CMD_MCPANEL = 9
+    CMD_MCPANEL = 9,
+    CMD_MKWHEEL = 10
 } CommandType;
 
 CommandType toCommandType(const char *s);

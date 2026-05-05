@@ -161,6 +161,8 @@ advanced_menu()
             PANEL_IMAGE="UltraStick/Spinners"
         elif [ "$PANEL" = "MC" ]; then
             PANEL_IMAGE="Atari/FightStick"
+        elif [ "$PANEL" = "MK" ]; then
+            PANEL_IMAGE="MarioKart/Wheel"
         else
             PANEL_IMAGE="None/Blank"
         fi
@@ -222,10 +224,11 @@ advanced_menu()
                     U "UltraStick"
                 )
                 local PANEL_CHOICE
-                PANEL_CHOICE=$(dialog --title "Panel Image Selection" --menu "Choose panel image type:" 12 40 3 \
+                PANEL_CHOICE=$(dialog --title "Panel Image Selection" --menu "Choose panel image type:" 13 40 4 \
                     "N" "None/Blank" \
                     "A" "Atari FS" \
                     "U" "UltraStick" \
+                    "M" "MarioKart Wheel" \
                     2>&1 > /dev/tty)
 
                 case $PANEL_CHOICE in
@@ -237,6 +240,9 @@ advanced_menu()
                         ;;
                     U)
                         PANEL_IMAGE="DC"
+                        ;;
+                    M)
+                        PANEL_IMAGE="MK"
                         ;;
                 esac
                 echo "$PANEL_IMAGE" > "$HOME/.panel"

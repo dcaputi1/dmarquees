@@ -228,6 +228,8 @@ ControlPanel toControlPanel(const char *s)
             return eATARI_MC;
         if (strcmp(s, "DC") == 0)
             return eULTRA_DC;
+        if (strcmp(s, "MK") == 0)
+            return eMK_WHEEL;
     }
     return ePANEL_NA;
 }
@@ -254,6 +256,8 @@ CommandType toCommandType(const char *s)
         return CMD_DCPANEL;
     if (strcmp(s, "MCPANEL") == 0)
         return CMD_MCPANEL;
+    if (strcmp(s, "MKWHEEL") == 0)
+        return CMD_MKWHEEL;
     // If not a known command, treat as ROM
     return CMD_ROM;
 }
@@ -278,6 +282,8 @@ const char *fromCommandType(CommandType c)
         return "DCPANEL";
     case CMD_MCPANEL:
         return "MCPANEL";
+    case CMD_MKWHEEL:
+        return "MKWHEEL";
     case CMD_ROM:
     default:
         return "ROM";

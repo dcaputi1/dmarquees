@@ -310,7 +310,7 @@ def _output_choice(choice):
 
 def panel_menu():
     global panel, screen_horizontal
-    options = [("None/Blank", "NA"), ("Atari FS", "MC"), ("UltraStick", "DC")]
+    options = [("None/Blank", "NA"), ("Atari FS", "MC"), ("UltraStick", "DC"), ("MK Wheel", "MK")]
     idx = [i for i, (_, code) in enumerate(options) if code == panel]
     idx = idx[0] if idx else 0
     running = True
@@ -422,7 +422,7 @@ def advanced_menu():
             elif "Screen Orientation" in label:
                 suffix = "Landscape" if screen_horizontal else "Portrait"
             elif "Panel Image" in label:
-                suffix = {"DC":"UltraStick/Spinners", "MC":"Atari/FightStick", "NA":"None/Blank"}.get(panel, "None/Blank")
+                suffix = {"DC":"UltraStick/Spinners", "MC":"Atari/FightStick", "MK":"MarioKart/Wheel", "NA":"None/Blank"}.get(panel, "None/Blank")
             color = SELECT_RECT_COLOR if i == selected else UNSEL_ITEM_RGB
             # menu item: centered at x=240; y = start_y + i * spacing (evenly distributed)
             text = font.render(f"{label} {suffix}", True, color)
