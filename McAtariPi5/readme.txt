@@ -194,6 +194,9 @@ i. Configure direct wired link static IPs (NetworkManager):
 4/11/26 [ ] lightgun idea: House of the Dead (hotd) fail - try skipframes 1
 4/12/26 [ ] Atari 2600 paddles will NOT work with DC-Panel1 hub
         [ ] pong is still garbage even with Atari paddles
-5/3/26  [ ] Mario Kart Wheel doesn't work in RA/ES. Can't map analog.
-        [ ] use 'mame' with runcommand for all games? (no more lr-mame at all!)
+5/3/26  [X] Mario Kart Wheel doesn't work in RA/ES. Can't map analog.
+        [X] use 'mame' with runcommand for all games? (no more lr-mame at all!)
+5/6/26  [ ] XinMo swap screw up again! Does it work when mame is run from within ES?
+            Also feals like the self-correction feature is foo-bar
+            default.cfg got restored (unswaped) but many (all?) cfgs in cfg_sa were left backwards!
 
