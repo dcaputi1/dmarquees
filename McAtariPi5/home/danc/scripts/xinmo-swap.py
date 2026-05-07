@@ -2,7 +2,6 @@
 import os
 import sys
 import glob
-import xml.etree.ElementTree as ET
 
 # Soft-coded joystick code positions
 XIN1_CODE = "JOYCODE_2_"
@@ -12,27 +11,32 @@ XIN2_CODE = "JOYCODE_3_"
 # Removed here whenever the user takes manual control via this script.
 PLUGIN_SWAP_FLAG = os.environ.get("HOME", "/home/danc") + "/.xinmo_plugin_swapped"
 
-def check_default_cfg(cfg_path):
-    """
-    Check if default.cfg has XIN2_CODE for P2_BUTTON1.
-    Returns True if config is in normal order (P2_BUTTON1 is XIN2_CODE), False if swapped.
-    """
-    try:
-        tree = ET.parse(cfg_path)
-        root = tree.getroot()
+# Flag file written inside each cfg dir to track swap state.
+# Named with a leading dot so MAME ignores it (only reads *.cfg).
+SWAP_STATE_FLAG = ".xinmo_swapped"
 
-        # Look for P2_BUTTON1 port
-        for port in root.findall(".//port[@type='P2_BUTTON1']"):
-            for newseq in port.findall("newseq[@type='standard']"):
-                if XIN2_CODE in (newseq.text or ""):
-                    return True  # Normal order
-        return False  # Swapped order
-    except ET.ParseError as e:
-        print(f"ERROR: Failed to parse {cfg_path}: {e}")
-        return False
-    except FileNotFoundError:
-        print(f"ERROR: {cfg_path} not found.")
-        return False
+
+def is_dir_swapped(cfg_directory):
+    """Return True if cfg_directory contains the swap-state flag file."""
+    return os.path.exists(os.path.join(cfg_directory, SWAP_STATE_FLAG))
+
+
+def set_dir_swapped(cfg_directory, swapped):
+    """Write or remove the swap-state flag file in cfg_directory."""
+    flag = os.path.join(cfg_directory, SWAP_STATE_FLAG)
+    if swapped:
+        try:
+            with open(flag, "w") as f:
+                f.write("1\n")
+        except Exception as e:
+            print(f"ERROR: could not write {flag}: {e}")
+    else:
+        try:
+            os.remove(flag)
+        except FileNotFoundError:
+            pass
+        except Exception as e:
+            print(f"ERROR: could not remove {flag}: {e}")
 
 
 def swap_joysticks_in_file(file_path):
@@ -103,28 +107,24 @@ def main():
     except FileNotFoundError:
         pass
 
-    # 'toggle' mode: unconditionally swap all cfg files, bypassing XOR logic.
-    # Used by the GUI toggle button so it always works regardless of current cfg state.
+    # 'toggle' mode: unconditionally swap all cfg files regardless of current state.
+    # Not used by normal callers but kept for manual/debug use.
     if swapped_flag == "toggle":
         print("Performing unconditional joystick toggle on all .cfg files...")
         total_swaps = process_directory(cfg_directory)
+        new_state = not is_dir_swapped(cfg_directory)
+        set_dir_swapped(cfg_directory, new_state)
         print(f"\nTotal joystick codes swapped across all files: {total_swaps}")
         return
 
-    default_cfg_path = os.path.join(cfg_directory, "default.cfg")
+    config_swapped = is_dir_swapped(cfg_directory)
+    hardware_swapped = (swapped_flag == "1")
 
-    print(f"Checking default.cfg at: {default_cfg_path}")
-    default_is_normal = check_default_cfg(default_cfg_path)
-
-    print(f"Default.cfg joystick order is {'normal' if default_is_normal else 'swapped'}")
+    print(f"Cfg dir '{cfg_directory}' state: {'swapped' if config_swapped else 'normal'}")
     print(f"Detected swapped_flag = {swapped_flag}")
 
-    hardware_swapped = (swapped_flag == "1")
- 
-    # Determine if a swap is needed:
     # Swap if hardware swapped XOR config swapped
-    config_swapped = not default_is_normal
-    need_swap = hardware_swapped ^ config_swapped  # XOR logic
+    need_swap = hardware_swapped ^ config_swapped
 
     if not need_swap:
         print("No swap needed. Configuration matches hardware state.")
@@ -132,6 +132,7 @@ def main():
 
     print("Performing joystick swap on all .cfg files...")
     total_swaps = process_directory(cfg_directory)
+    set_dir_swapped(cfg_directory, hardware_swapped)
 
     print(f"\nTotal joystick codes swapped across all files: {total_swaps}")
 

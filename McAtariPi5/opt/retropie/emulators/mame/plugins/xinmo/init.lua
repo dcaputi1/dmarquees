@@ -23,13 +23,11 @@ local xinmo = exports
 local EXPECTED_P1_BTNS = 15   -- first XinMo device (JOYCODE_N_) should have 15 buttons
 local EXPECTED_P2_BTNS = 13   -- second XinMo device should have 13 buttons
 
-local CFG_ACTIVE         = "/opt/retropie/emulators/mame/cfg/default.cfg"
-local CFG_P2_NORMAL     = "JOYCODE_3_"   -- P2_BUTTON1 text when cfg is NOT swapped
-local CFG_P2_SWAPPED    = "JOYCODE_2_"   -- P2_BUTTON1 text when cfg IS swapped
-
 -- At plugin runtime cfg_ra/cfg_sa has already been renamed to cfg/ by the launch
 -- wrapper, so we only need to swap the one active directory.
-local SWAP_SCRIPT = "python3 /home/danc/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg toggle"
+-- Pass '1' (hw-swapped) so xinmo-swap.py reads default.cfg itself and applies
+-- XOR logic — same contract as the menu button and autostart.sh.
+local SWAP_SCRIPT = "python3 /home/danc/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg 1"
 
 -- Written by this plugin when it performs a swap; cleared by xinmo-swap.py (menu path).
 -- Allows xinmo-swapcheck.py to distinguish "plugin swap" from "menu swap".
@@ -68,39 +66,6 @@ end
 local pxswap_done    = false   -- true once we've made a decision this session
 local pxswap_applied = false   -- true if we swapped; used to show post-reset message
 local reset_notifier = nil     -- held to prevent garbage collection
-
------------------------------------------------------------
--- Cfg State Detection
------------------------------------------------------------
-
--- Returns true  = cfg has been swapped  (P2_BUTTON1 uses JOYCODE_2_)
---         false = cfg is normal          (P2_BUTTON1 uses JOYCODE_3_)
---         nil   = file missing or P2_BUTTON1 not found
-local function read_cfg_swapped()
-    local f = io.open(CFG_ACTIVE, "r")
-    if not f then
-        print("[PxSwap] WARN: " .. CFG_ACTIVE .. " not found -- cfg state unknown")
-        return nil
-    end
-    local content = f:read("*a")
-    f:close()
-
-    -- Find the P2_BUTTON1 port block and check which JOYCODE it contains
-    local p2_block = content:match('<port[^>]+type="P2_BUTTON1"[^>]*>(.-)</port>')
-    if not p2_block then
-        print("[PxSwap] WARN: P2_BUTTON1 entry not found in default.cfg")
-        return nil
-    end
-
-    if p2_block:find(CFG_P2_SWAPPED, 1, true) then
-        return true
-    elseif p2_block:find(CFG_P2_NORMAL, 1, true) then
-        return false
-    end
-
-    print("[PxSwap] WARN: Could not determine cfg state from P2_BUTTON1 block")
-    return nil
-end
 
 -----------------------------------------------------------
 -- Input Detection
@@ -147,9 +112,9 @@ local function find_xinmo_devices()
     return found
 end
 
--- Returns true  = swap needed   (hw and cfg are mismatched)
---         false = all correct   (hw normal+cfg normal, OR hw swapped+cfg compensates)
---         nil   = inconclusive
+-- Returns true  = hw is swapped  (xinmo-swap.py will XOR against cfg and act if needed)
+--         false = hw is normal   (xinmo-swap.py will XOR against cfg and no-op if already normal)
+--         nil   = inconclusive (fewer than 2 devices or unexpected button counts)
 local function check_swap_needed()
     local devs = find_xinmo_devices()
 
@@ -163,33 +128,17 @@ local function check_swap_needed()
               d.joycode_prefix, d.name, d.buttons))
     end
 
-    local hw_swapped
     if devs[1].buttons == EXPECTED_P1_BTNS and devs[2].buttons == EXPECTED_P2_BTNS then
-        hw_swapped = false
         print("[PxSwap] HW order: Normal (P1 first)")
+        return false
     elseif devs[1].buttons == EXPECTED_P2_BTNS and devs[2].buttons == EXPECTED_P1_BTNS then
-        hw_swapped = true
         print("[PxSwap] HW order: SWAPPED (P2 enumerated first)")
+        return true
     else
         print(string.format("[PxSwap] Inconclusive button counts: %d / %d",
               devs[1].buttons, devs[2].buttons))
         return nil
     end
-
-    local cfg_swapped = read_cfg_swapped()
-    if cfg_swapped == nil then
-        -- Can't read cfg: fall back to hardware-only decision
-        print("[PxSwap] WARN: Falling back to hardware-only check")
-        return hw_swapped
-    end
-
-    print(string.format("[PxSwap] CFG state: %s", cfg_swapped and "Swapped" or "Normal"))
-
-    -- Mismatch means players are getting wrong inputs
-    if hw_swapped ~= cfg_swapped then
-        return true
-    end
-    return false
 end
 
 

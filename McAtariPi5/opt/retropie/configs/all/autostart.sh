@@ -90,21 +90,6 @@ echo_error_and_wait()
 #   read -r _
 }
 
-# XinMo status check function
-check_xinmo_status()
-{
-    python3 "$HOME/scripts/xinmo-swapcheck.py"
-    status=$?
-
-    if [ $status -eq 1 ]; then
-        XINMO_STATUS_MSG="XinMo: Swap Required"
-    else
-        XINMO_STATUS_MSG="XinMo: OK"
-    fi
-
-    XINMO_STATUS_CODE=$status
-}
-
 # Function to restore existing cfg directory to original name
 restore_cfg()
 {
@@ -368,11 +353,12 @@ if [ "$THIS_IS_PI5" != true ] || [ "$PI5_DUAL_DISPLAY" = true ]; then
 fi
 
 if [ "$THIS_IS_PI5" = true ]; then
-    echo "[autostart] calling check_xinmo_status..."
-    debug_wait
-    check_xinmo_status
-
     main_menu
+
+    # Restore both cfg dirs to normal (unswapped) state on exit so the next
+    # boot starts clean regardless of how the session left them.
+    python3 "$HOME/scripts/xinmo-swap.py" /opt/retropie/emulators/mame/cfg_ra 0
+    python3 "$HOME/scripts/xinmo-swap.py" /opt/retropie/emulators/mame/cfg_sa 0
 
 else # This is Pi3...
 

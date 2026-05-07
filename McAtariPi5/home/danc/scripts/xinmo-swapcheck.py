@@ -9,14 +9,13 @@ xinmo-swapcheck.py — Detect XinMo P1/P2 state and report one of five outcomes:
   exit 4 — Plugin swap  : hardware swapped AND cfg compensates (plugin auto-swap) → yellow
 
 Hardware detection: button count via JSIOCGBUTTONS ioctl (no user input).
-Cfg detection: P2_BUTTON1 entry in default.cfg (cfg_ra).
+Cfg detection: .xinmo_swapped flag file inside each cfg dir (written by xinmo-swap.py).
 """
 import array
 import fcntl
 import json
 import os
 import sys
-import xml.etree.ElementTree as ET
 
 # === Version ===
 VERSION = "6.2"
@@ -36,10 +35,9 @@ CFG_OPTIONAL_DIRS = [
     "/opt/retropie/emulators/mame/cfg",
 ]
 
-# In a normal (unswapped) cfg, P2_BUTTON1 is mapped to joystick index 3 (JOYCODE_3_).
-# After a swap it is mapped to joystick index 2 (JOYCODE_2_).
-CFG_P2_NORMAL_CODE  = "JOYCODE_3_"   # P2_BUTTON1 text in default.cfg when cfg is NOT swapped
-CFG_P2_SWAPPED_CODE = "JOYCODE_2_"   # P2_BUTTON1 text in default.cfg when cfg IS swapped
+# Flag file written by xinmo-swap.py inside each cfg dir to record swap state.
+# MAME ignores non-*.cfg files, so this survives MAME regenerating default.cfg.
+SWAP_STATE_FLAG = ".xinmo_swapped"
 
 # Written by the MAME PxSwap plugin when it auto-swaps; removed by xinmo-swap.py (menu path).
 PLUGIN_SWAP_FLAG = os.environ.get("HOME", "/home/danc") + "/.xinmo_plugin_swapped"
@@ -96,30 +94,15 @@ def find_xin_devices():
 
 def check_cfg_swapped(cfg_dir):
     """
-    Read default.cfg in cfg_dir and return:
-      False  — cfg is in normal state  (P2_BUTTON1 uses JOYCODE_3_)
-      True   — cfg has been swapped    (P2_BUTTON1 uses JOYCODE_2_)
-      None   — file missing, parse error, or P2_BUTTON1 entry not found
+    Return True if cfg_dir contains the .xinmo_swapped flag file, False if not,
+    None if the directory does not exist.
+    The flag is written/removed exclusively by xinmo-swap.py so MAME regenerating
+    default.cfg cannot corrupt the recorded state.
     """
-    default_cfg = os.path.join(cfg_dir, "default.cfg")
-    try:
-        tree = ET.parse(default_cfg)
-        root = tree.getroot()
-        for port in root.findall(".//port[@type='P2_BUTTON1']"):
-            for newseq in port.findall("newseq[@type='standard']"):
-                text = newseq.text or ""
-                if CFG_P2_SWAPPED_CODE in text:
-                    return True
-                if CFG_P2_NORMAL_CODE in text:
-                    return False
-        print(f"[WARN] P2_BUTTON1 entry not found in {default_cfg}", file=sys.stderr)
+    if not os.path.isdir(cfg_dir):
+        print(f"[WARN] {cfg_dir} not found — cfg state unknown.", file=sys.stderr)
         return None
-    except FileNotFoundError:
-        print(f"[WARN] {default_cfg} not found — cfg state unknown.", file=sys.stderr)
-        return None
-    except ET.ParseError as e:
-        print(f"[WARN] Failed to parse {default_cfg}: {e}", file=sys.stderr)
-        return None
+    return os.path.exists(os.path.join(cfg_dir, SWAP_STATE_FLAG))
 
 
 def main():
