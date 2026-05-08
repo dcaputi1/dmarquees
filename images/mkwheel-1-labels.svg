@@ -383,12 +383,10 @@
     <text
        xml:space="preserve"
        id="txt-rsb"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:26.6667px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect18);display:inline;opacity:1;fill:#0eff18;stroke-width:2.66667"
-       x="66.466232"
-       y="0"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:26.6667px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-anchor:end;writing-mode:lr-tb;direction:ltr;display:inline;opacity:1;fill:#0eff18;stroke-width:2.66667"
        transform="translate(-6.4393307,-20.228853)"
        inkscape:label=""><tspan
-         x="488.77537"
+         x="514.47252"
          y="289.30726"
          id="tspan9">R</tspan></text>
     <text
@@ -402,11 +400,9 @@
     <text
        xml:space="preserve"
        id="txt-y"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:26.6667px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect11);display:inline;opacity:1;fill:#0eff18;fill-opacity:1;stroke-width:2.66667"
-       x="115.01548"
-       y="0"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:26.6667px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-anchor:end;writing-mode:lr-tb;direction:ltr;display:inline;opacity:1;fill:#0eff18;fill-opacity:1;stroke-width:2.66667"
        transform="translate(-38,-52)"><tspan
-         x="583.87758"
+         x="639.66389"
          y="361.55335"
          id="tspan16">Y</tspan></text>
     <text
@@ -451,10 +447,8 @@
     <text
        xml:space="preserve"
        id="txt-zr"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:26.6667px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect12);display:inline;opacity:1;fill:#0eff18;fill-opacity:1;stroke-width:2.66667"
-       x="102.98851"
-       y="0"><tspan
-         x="698.22914"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:26.6667px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-anchor:end;writing-mode:lr-tb;direction:ltr;display:inline;opacity:1;fill:#0eff18;fill-opacity:1;stroke-width:2.66667"><tspan
+         x="716.01533"
          y="132.73109"
          id="tspan17">X</tspan></text>
     <text
