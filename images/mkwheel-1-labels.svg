@@ -123,15 +123,15 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="1.7302019"
-     inkscape:cx="393.3067"
-     inkscape:cy="291.87345"
-     inkscape:window-width="1904"
-     inkscape:window-height="1344"
-     inkscape:window-x="4962"
-     inkscape:window-y="90"
+     inkscape:zoom="1.2234375"
+     inkscape:cx="405.41507"
+     inkscape:cy="302.01788"
+     inkscape:window-width="1631"
+     inkscape:window-height="959"
+     inkscape:window-x="86"
+     inkscape:window-y="44"
      inkscape:window-maximized="0"
-     inkscape:current-layer="layer1" />
+     inkscape:current-layer="layer3" />
   <g
      inkscape:groupmode="layer"
      inkscape:label="Image"
@@ -160,20 +160,20 @@
      style="display:inline">
     <ellipse
        style="display:inline;fill:none;stroke:#0eff18;stroke-width:3;stroke-dasharray:none;stroke-opacity:1"
-       id="path4-1"
+       id="vct-trig-r"
        ry="20.94791"
-       rx="19.208488"
+       rx="19.208"
        cy="441.15405"
        cx="626.97662"
        inkscape:label="path4-1" />
     <ellipse
        style="display:inline;fill:none;stroke:#0eff18;stroke-width:3;stroke-dasharray:none;stroke-opacity:1"
-       id="vct-left-pull"
+       id="vct-trig-l"
        ry="20.94791"
-       rx="19.208488"
+       rx="19.208"
        cy="452.42664"
        cx="195.52748"
-       inkscape:label="vct-left-pull" />
+       inkscape:label="" />
     <circle
        style="fill:none;stroke:#0eff18;stroke-width:3;stroke-dasharray:none;stroke-opacity:1"
        id="path1"
@@ -244,12 +244,6 @@
        d="m 285.6705,254.81482 32.49042,-6.13027 -8.78672,26.76884 -35.14687,4.90421 z"
        sodipodi:nodetypes="ccccc"
        inkscape:label="LSB" />
-    <path
-       id="rect3-4"
-       style="fill:none;stroke:#0eff18;stroke-width:3;stroke-dasharray:none;stroke-opacity:1"
-       d="m 301.97509,217.24724 33.10345,-10.6258 -8.78672,27.17752 -33.92082,8.78672 z"
-       sodipodi:nodetypes="ccccc"
-       inkscape:label="item" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -356,6 +350,12 @@
          id="tspan5"
          x="116.06641"
          y="304.47">left</tspan></text>
+    <path
+       id="rect3-4"
+       style="display:inline;fill:none;stroke:#0eff18;stroke-width:3;stroke-dasharray:none;stroke-opacity:1"
+       d="m 301.97509,217.24724 33.10345,-10.6258 -8.78672,27.17752 -33.92082,8.78672 z"
+       sodipodi:nodetypes="ccccc"
+       inkscape:label="item" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -367,8 +367,8 @@
        style="display:inline;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:26.6667px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;fill:#00ff00;stroke-width:2.66667"
        x="589.19287"
        y="489.83908"
-       id="txt-pull-r"
-       inkscape:label="txt-trig-r"><tspan
+       id="txt-trig-r"
+       inkscape:label=""><tspan
          sodipodi:role="line"
          id="tspan15">Trig-R</tspan></text>
     <text
@@ -376,21 +376,21 @@
        style="display:inline;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:26.6667px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;fill:#00ff00;stroke-width:2.66667"
        x="159.24219"
        y="503.08856"
-       id="txt-pull-l"
-       inkscape:label="txt-trig-l"><tspan
+       id="txt-trig-l"
+       inkscape:label=""><tspan
          sodipodi:role="line"
          id="tspan22">Trig-L</tspan></text>
     <text
        xml:space="preserve"
-       id="text16"
+       id="txt-rsb"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:26.6667px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect18);display:inline;opacity:1;fill:#0eff18;stroke-width:2.66667"
        x="66.466232"
        y="0"
        transform="translate(-6.4393307,-20.228853)"
-       inkscape:label="txt-rsb"><tspan
+       inkscape:label=""><tspan
          x="488.77537"
          y="289.30726"
-         id="tspan1">R</tspan></text>
+         id="tspan9">R</tspan></text>
     <text
        xml:space="preserve"
        id="txt-lsb"
@@ -398,7 +398,7 @@
        transform="translate(-2,-18)"><tspan
          x="334.06445"
          y="291.04163"
-         id="tspan2">L</tspan></text>
+         id="tspan13">L</tspan></text>
     <text
        xml:space="preserve"
        id="txt-y"
@@ -408,7 +408,7 @@
        transform="translate(-38,-52)"><tspan
          x="583.87758"
          y="361.55335"
-         id="tspan8">Y</tspan></text>
+         id="tspan16">Y</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:26.6667px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;display:inline;fill:#00ff00;stroke:none;stroke-width:2.66667;stroke-dasharray:none;stroke-opacity:1"
@@ -456,7 +456,7 @@
        y="0"><tspan
          x="698.22914"
          y="132.73109"
-         id="tspan9">X</tspan></text>
+         id="tspan17">X</tspan></text>
     <text
        xml:space="preserve"
        id="txt-home"
@@ -466,7 +466,7 @@
        inkscape:transform-center-y="-64.73233"><tspan
          x="368.16602"
          y="247.11585"
-         id="tspan10">Home</tspan></text>
+         id="tspan21">Home</tspan></text>
     <text
        xml:space="preserve"
        id="txt-start"
@@ -474,7 +474,7 @@
        transform="translate(12,48)"><tspan
          x="420.18164"
          y="126.32093"
-         id="tspan11">Start</tspan></text>
+         id="tspan23">Start</tspan></text>
     <text
        xml:space="preserve"
        id="txt-sel"
@@ -482,14 +482,14 @@
        transform="translate(7.513574,-0.3576395)"><tspan
          x="325.97266"
          y="175.44788"
-         id="tspan12">Coin</tspan></text>
+         id="tspan24">Coin</tspan></text>
     <text
        xml:space="preserve"
-       id="text1"
+       id="txt-d-pad"
        style="font-size:26.6667px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect7);display:inline;opacity:1;fill:#0eff18;stroke-width:2.66667"
-       inkscape:label="txt-d-pad"><tspan
+       inkscape:label=""><tspan
          x="157.78516"
          y="303.75648"
-         id="tspan14">D-Pad</tspan></text>
+         id="tspan25">D-Pad</tspan></text>
   </g>
 </svg>
