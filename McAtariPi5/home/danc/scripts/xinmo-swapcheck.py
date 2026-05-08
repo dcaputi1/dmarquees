@@ -12,6 +12,7 @@ Hardware detection: button count via JSIOCGBUTTONS ioctl (no user input).
 Cfg detection: .xinmo_swapped flag file inside each cfg dir (written by xinmo-swap.py).
 """
 import array
+import datetime
 import fcntl
 import json
 import os
@@ -52,10 +53,11 @@ def update_os_stats(hw_swapped):
         with open(OS_STATS_FILE, "r") as f:
             stats = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
-        stats = {"checks": 0, "hw_swapped": 0}
+        stats = {"checks": 0, "swaps": 0, "last_swap": None}
     stats["checks"] = stats.get("checks", 0) + 1
     if hw_swapped:
-        stats["hw_swapped"] = stats.get("hw_swapped", 0) + 1
+        stats["swaps"] = stats.get("swaps", 0) + 1
+        stats["last_swap"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     try:
         os.makedirs(os.path.dirname(OS_STATS_FILE), exist_ok=True)
         with open(OS_STATS_FILE, "w") as f:

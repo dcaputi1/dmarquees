@@ -43,18 +43,24 @@ local MAME_STATS_FILE = (os.getenv("HOME") or "/home/danc") .. "/IvarArcade/json
 local function update_mame_stats(swap_needed)
     local checks = 0
     local swapped = 0
+    local last_swap = "null"
     local f = io.open(MAME_STATS_FILE, "r")
     if f then
         local content = f:read("*a")
         f:close()
-        checks  = tonumber(content:match('"checks"%s*:%s*(%d+)'))      or 0
-        swapped = tonumber(content:match('"swap_needed"%s*:%s*(%d+)')) or 0
+        checks    = tonumber(content:match('"checks"%s*:%s*(%d+)')) or 0
+        swapped   = tonumber(content:match('"swaps"%s*:%s*(%d+)'))  or 0
+        local ls  = content:match('"last_swap"%s*:%s*"([^"]+)"')
+        if ls then last_swap = '"' .. ls .. '"' end
     end
     checks = checks + 1
-    if swap_needed then swapped = swapped + 1 end
+    if swap_needed then
+        swapped = swapped + 1
+        last_swap = '"' .. os.date("!%Y-%m-%dT%H:%M:%SZ") .. '"'
+    end
     local out = io.open(MAME_STATS_FILE, "w")
     if out then
-        out:write(string.format('{"checks":%d,"swap_needed":%d}\n', checks, swapped))
+        out:write(string.format('{"checks":%d,"swaps":%d,"last_swap":%s}\n', checks, swapped, last_swap))
         out:close()
     end
 end
