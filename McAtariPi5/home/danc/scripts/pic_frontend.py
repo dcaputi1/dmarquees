@@ -545,7 +545,18 @@ def _check_xinmo():
     except Exception:
         return "XinMo: ?", LT_GRAY_RGB
 
-def main_menu():
+def _xinmo_label_color(rc):
+    """Convert a xinmo-swapcheck.py exit code to (label, color)."""
+    if rc == 0:
+        return "XinMo: OK", GREEN_RGB
+    elif rc == 1:
+        return "XinMo: Swap!", RED_RGB
+    elif rc == 3:
+        return "XinMo: Swapped", YELLOW_RGB
+    else:
+        return "XinMo: Err", LT_GRAY_RGB
+
+def main_menu(xinmo_rc=None):
     MENU_ITEMS = [
         ("EmulationStation", lambda: launch_emulationstation()),
         ("MAME Standalone", lambda: launch_mame()),
@@ -564,7 +575,10 @@ def main_menu():
     pygame.time.set_timer(TICK_EVENT, 1000)  # fire every 1 second
     countdown = TIMEOUT_SECS
 
-    xinmo_label, xinmo_color = _check_xinmo()
+    if xinmo_rc is not None:
+        xinmo_label, xinmo_color = _xinmo_label_color(xinmo_rc)
+    else:
+        xinmo_label, xinmo_color = _check_xinmo()
 
     selected = _load_def_key_index()
     running = True
@@ -675,4 +689,5 @@ def launch_placeholder(name):
     pass
 
 if __name__ == "__main__":
-    main_menu()
+    _rc = int(sys.argv[1]) if len(sys.argv) > 1 else None
+    main_menu(xinmo_rc=_rc)
