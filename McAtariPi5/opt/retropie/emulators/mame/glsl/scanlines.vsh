@@ -1,12 +1,9 @@
-#version 120
-
-attribute vec4 a_position;
-attribute vec2 a_texcoord0;
-
-varying vec2 v_texcoord0;
+//
+// Minimal passthrough vertex shader for MAME GLSL
+//
 
 void main()
 {
-    gl_Position = a_position;
-    v_texcoord0 = a_texcoord0;
+    gl_Position = ftransform();
+    gl_TexCoord[0] = gl_MultiTexCoord0;
 }
