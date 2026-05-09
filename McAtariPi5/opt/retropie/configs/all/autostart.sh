@@ -311,9 +311,9 @@ main_menu()
                 echo "Running MAME... .horizontal = $SCREEN_HORIZONTAL"
                 debug_wait
                 if [ "$SCREEN_HORIZONTAL" = false ]; then
-                    mame -rol -inipath "/opt/retropie/emulators/mame/ini;/opt/retropie/emulators/mame/ini_horz_ror" -cfg_directory $CFG_PATH -joystickprovider sdljoy
+                    mame -rol -inipath "/opt/retropie/emulators/mame/ini;/opt/retropie/emulators/mame/ini_horz_ror" -cfg_directory $CFG_PATH -verbose > $HOME/mame.log 2>&1
                 else
-                    mame -norol -inipath "/opt/retropie/emulators/mame/ini" -cfg_directory $CFG_PATH -joystickprovider sdljoy
+                    mame -norol -inipath "/opt/retropie/emulators/mame/ini" -cfg_directory $CFG_PATH -verbose > $HOME/mame.log 2>&1
                 fi
                 continue
                 ;;
