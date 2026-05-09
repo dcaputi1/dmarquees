@@ -196,7 +196,10 @@ i. Configure direct wired link static IPs (NetworkManager):
         [ ] pong is still garbage even with Atari paddles
 5/3/26  [X] Mario Kart Wheel doesn't work in RA/ES. Can't map analog.
         [X] use 'mame' with runcommand for all games? (no more lr-mame at all!)
-5/6/26  [ ] XinMo swap screw up again! Does it work when mame is run from within ES?
+5/6/26  [X] XinMo swap screw up again! Does it work when mame is run from within ES?
             Also feals like the self-correction feature is foo-bar
             default.cfg got restored (unswaped) but many (all?) cfgs in cfg_sa were left backwards!
-
+5/7/26  [X] AI broke it (5/6/26) and AI fixed it
+5/8/26  [ ] effect scanlines woefully insufficient - simply can't get it working for spyhunt
+            to do: revisit shaders in MAME SA - got to be a way!
+        [X] turning off scanlines in spyhunt - AI can't figure it out
