@@ -33,3 +33,6 @@ cmake_install.cmake
 *.vcxproj*
 # Ignore vendorized UltrastikCmd source/build tree
 tools/linux/UltrastikCmd/
+
+# Runtime-generated JSON stats (always local, never committed)
+json/*.json

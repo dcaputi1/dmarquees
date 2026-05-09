@@ -526,10 +526,11 @@ def _check_xinmo():
     """Run xinmo-swapcheck.py and return (label, color) for the status bar.
 
     Exit codes from xinmo-swapcheck.py:
-      0 — OK       : hardware normal, cfg normal             → green
-      1 — Swap!    : hw/cfg mismatch, players wrong          → red
-      2 — Err      : fewer than 2 devices or inconclusive    → gray
-      3 — Swapped  : hardware swapped, cfg compensates       → yellow
+      0 — OK          : hardware normal, cfg normal          → green
+      1 — Swap!       : hw/cfg mismatch, players wrong       → red
+      2 — Error       : fewer than 2 devices or inconclusive → gray
+      3 — Swapped     : OS/SDL swapped, cfg compensates      → yellow
+      4 — Plugin swap : plugin swapped, cfg compensates      → yellow
     """
     script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "xinmo-swapcheck.py")
     try:
@@ -540,8 +541,10 @@ def _check_xinmo():
             return "XinMo: Swap!", RED_RGB
         elif result.returncode == 3:
             return "XinMo: Swapped", YELLOW_RGB
+        elif result.returncode == 4:
+            return "XinMo: Swapped", YELLOW_RGB
         else:
-            return "XinMo: Err", LT_GRAY_RGB
+            return "XinMo: Error", LT_GRAY_RGB
     except Exception:
         return "XinMo: ?", LT_GRAY_RGB
 
@@ -551,10 +554,10 @@ def _xinmo_label_color(rc):
         return "XinMo: OK", GREEN_RGB
     elif rc == 1:
         return "XinMo: Swap!", RED_RGB
-    elif rc == 3:
+    elif rc in (3, 4):
         return "XinMo: Swapped", YELLOW_RGB
     else:
-        return "XinMo: Err", LT_GRAY_RGB
+        return "XinMo: Error", LT_GRAY_RGB
 
 def main_menu(xinmo_rc=None):
     MENU_ITEMS = [

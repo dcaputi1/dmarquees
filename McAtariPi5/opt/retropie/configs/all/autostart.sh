@@ -22,6 +22,7 @@ PANEL="DC"
 SCREEN_HORIZONTAL=true
 
 DEBUG=""  # "1" to enable debug waits, "" disables
+AUTOSTART_LOG="$HOME/autostart.log"
 
 debug_wait()
 {
@@ -246,9 +247,9 @@ run_pic_frontend()
     local _saved_tty
     _saved_tty=$(stty -g 2>/dev/null)
 
-    python3 "$HOME/scripts/xinmo-swapcheck.py" > /dev/null 2>&1
+    python3 "$HOME/scripts/xinmo-swapcheck.py" > /dev/null
     local _xinmo_rc=$?
-    python3 "$HOME/scripts/pic_frontend.py" $_xinmo_rc 2>/tmp/pic_frontend.err
+    python3 "$HOME/scripts/pic_frontend.py" $_xinmo_rc 2> >(tee -a "$AUTOSTART_LOG" >/tmp/pic_frontend.err)
     local _pf_exit=$?
 
     if [ -n "$_saved_tty" ]; then
@@ -345,6 +346,10 @@ start_netbridge()
 # ---------------------------------------------------
 # AUTOSTART.SH MAIN PROCESS
 # ---------------------------------------------------
+
+# Tee all autostart output (stdout+stderr) to a persistent log.
+# The log is truncated on each boot so it only shows the current session.
+exec > >(tee "$AUTOSTART_LOG") 2>&1
 
 load_persisted_options
 
