@@ -1,3 +1,4 @@
+#version 130
 //
 // Minimal passthrough vertex shader for MAME GLSL
 //

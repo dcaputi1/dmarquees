@@ -3,6 +3,15 @@
 Arcade automation suite for Raspberry Pi / RetroPie systems.
 
 
+## Project Structure
+
+This repository contains both source code and deployment assets:
+
+- **Source code** lives in the top-level directories (`dmarquees/`, `analyze_games/`, etc.) and is built in-place.
+- **McAtariPi5/** mirrors the Pi 5 filesystem at exact target paths. These are the deployment assets — scripts, configs, shaders, and data files used at runtime.
+
+To deploy everything to the Pi, clone this repo and follow the readme.txt under the McAtari5 folder.
+
 ## Overview
 
 IvarArcade is a collection of tools designed to enhance your RetroPie arcade experience:
