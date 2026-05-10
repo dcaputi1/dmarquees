@@ -200,6 +200,7 @@ i. Configure direct wired link static IPs (NetworkManager):
             Also feals like the self-correction feature is foo-bar
             default.cfg got restored (unswaped) but many (all?) cfgs in cfg_sa were left backwards!
 5/7/26  [X] AI broke it (5/6/26) and AI fixed it
-5/8/26  [ ] effect scanlines woefully insufficient - simply can't get it working for spyhunt
+5/8/26  [X] effect scanlines woefully insufficient - simply can't get it working for spyhunt
             to do: revisit shaders in MAME SA - got to be a way!
         [X] turning off scanlines in spyhunt - AI can't figure it out
+5/10/26 [ ] try Claude in Co-Pilot for scanlines shader help
