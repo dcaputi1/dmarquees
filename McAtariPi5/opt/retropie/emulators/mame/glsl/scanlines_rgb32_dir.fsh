@@ -1,52 +1,103 @@
 #version 130
-//
-// Scanline shader for MAME GLSL — source-pixel aligned
-//
-// Applies scanlines that are locked to the source (emulated) scanline rows
-// rather than to screen pixels.  This is the correct approach when the game's
-// native resolution does not scale to an exact integer multiple of the display
-// height.  The naive alternative — darkening every other *screen* pixel — works
-// by coincidence for games that happen to scale evenly, but produces a
-// thick/thin banding artifact for games like Spy Hunter whose video geometry
-// results in alternating 4-pixel and 5-pixel output rows per source row.
-//
-// Modulation shape: pow(sin(srcFrac * PI), SCANLINE_POWER)
-//   - sin(srcFrac * PI) is a half-sine: 0 at row boundaries, 1 at centre.
-//   - Raising to SCANLINE_POWER < 1.0 widens the bright plateau and narrows
-//     the dark gap, approximating the MAME "effect scanlines" art overlay.
-//   - Raising to SCANLINE_POWER > 1.0 widens the dark gap (thicker lines).
-//   - PEAK_BRIGHTNESS > 1.0 boosts the phosphor-line centre to mimic the
-//     slight bloom of real CRT phosphor; compensates for the average dimming.
-//   - GAP_FLOOR is the brightness at the darkest point of the inter-line gap.
+/*
+ * scanlines_rgb32_dir.fsh — Source-scanline-aligned scanlines for MAME GLSL
+ *
+ * Ported from crt-pi.glsl by davej (GPLv2+)
+ * https://github.com/libretro/glsl-shaders/blob/master/crt/shaders/crt-pi.glsl
+ *
+ * Retained:  scanlines (parabolic weight), 3-tap anti-moiré, bloom, fake gamma
+ * Omitted:   curvature, shadow mask (MASK_TYPE), SHARPER horizontal filter
+ */
 
 uniform sampler2D color_texture;
 
-const float PI = 3.14159265;
+// ── Scanline shape ────────────────────────────────────────────────────────────
+// Inverse scanline width — higher = narrower bright band / wider dark gap.
+//   3.0 = soft, fat lines     6.0 = crt-pi default     10.0 = thin, crisp
+const float SCANLINE_WEIGHT         = 6.0;
 
-// Tune these to taste:
-//   SCANLINE_POWER: 0.25 = very thin gap / wide bright line (subtle effect)
-//                  0.50 = moderate gap (matches MAME art overlay feel)
-//                  1.50 = thick gap / thinner bright line (heavy effect)
-const float SCANLINE_POWER   = 0.40;   // < 1 = thin gap, > 1 = thick gap
-const float PEAK_BRIGHTNESS  = 1.20;   // boost at phosphor centre (1.0 = no boost)
-const float GAP_FLOOR        = 0.0;    // darkness at gap bottom (0.0 = black)
+// Brightness floor at the darkest point of the inter-line gap.
+//   0.0 = pure black gap     0.12 = dark-grey (less moiré risk)
+const float SCANLINE_GAP_BRIGHTNESS = 0.12;
+
+// Width boost applied to the scanline weight.  > 1.0 widens bright lines,
+// compensating for average dimming.  Try 1.2 if 1.5 looks oversaturated.
+// Set to 1.0 to disable.
+const float BLOOM_FACTOR            = 1.5;
+
+// 3-tap box-filter half-width in source-texel units.  Averages CalcScanLine at
+// dy and dy ± FILTER_WIDTH to suppress moiré on non-integer scale factors.
+// ≈ (src_height / display_height) / 3  →  ~0.074 for 240p @ 1080p.
+const float FILTER_WIDTH            = 0.1;
+
+// ── Gamma correction ──────────────────────────────────────────────────────────
+// Linearise the input before applying the scanline mask (so dark gaps are in
+// linear light), then re-encode the output.
+// FAKE_GAMMA: square/sqrt approximation of γ≈2.0 — much cheaper than pow(),
+// visually indistinguishable for scanlines.  Comment out to use true gamma.
+#define FAKE_GAMMA
+const float INPUT_GAMMA  = 2.4;   // used only without FAKE_GAMMA
+const float OUTPUT_GAMMA = 2.2;   // used only without FAKE_GAMMA
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Parabolic falloff from texel-row centre.  Cheaper than sin+pow, same feel.
+float CalcScanLineWeight(float dist)
+{
+    return max(1.0 - dist * dist * SCANLINE_WEIGHT, SCANLINE_GAP_BRIGHTNESS);
+}
+
+// 3-tap box filter to tame moiré at non-integer scale ratios.
+float CalcScanLine(float dy)
+{
+    float w  = CalcScanLineWeight(dy);
+    w += CalcScanLineWeight(dy - FILTER_WIDTH);
+    w += CalcScanLineWeight(dy + FILTER_WIDTH);
+    return w * 0.3333333;
+}
 
 void main()
 {
-    vec2 uv = gl_TexCoord[0].xy;
-    vec4 color = texture2D(color_texture, uv);
+    vec2 uv      = gl_TexCoord[0].xy;
+    vec2 srcSize = vec2(textureSize(color_texture, 0));
 
-    // Source texture height in pixels (e.g. 240 for Spy Hunter).
-    float srcHeight = float(textureSize(color_texture, 0).y);
+    // Convert UV to source-pixel coordinates.
+    vec2 texcoordInPixels = uv * srcSize;
 
-    // Fractional position within the current source scanline row (0.0–1.0).
-    float srcFrac = fract(uv.y * srcHeight);
+    // Snap to the nearest source-texel row centre.
+    float tempY  = floor(texcoordInPixels.y) + 0.5;
+    float yCoord = tempY / srcSize.y;
 
-    // Half-sine raised to SCANLINE_POWER: 0 at row boundary, 1 at centre.
-    // Power < 1 keeps most of the scanline near full brightness with a narrow
-    // dark notch at the boundary — the characteristic "effect scanlines" look.
-    float scanline = pow(sin(srcFrac * PI), SCANLINE_POWER);
-    color.rgb *= GAP_FLOOR + scanline * (PEAK_BRIGHTNESS - GAP_FLOOR);
+    // Distance from that row centre in source-texel units (−0.5 … +0.5).
+    float dy = texcoordInPixels.y - tempY;
 
-    gl_FragColor = color;
+    // ── Scanline weight ───────────────────────────────────────────────────────
+    float scanLineWeight = CalcScanLine(dy) * BLOOM_FACTOR;
+
+    // ── Sub-pixel vertical displacement ──────────────────────────────────────
+    // A 4th-power curve that nudges the texture sample toward the texel centre.
+    // Eliminates hard row-boundary aliasing at non-integer scale factors
+    // (e.g. 240p → 1080p) without introducing visible blur.  Very cheap.
+    float signY      = sign(dy);
+    float dyDisplace = dy * dy * dy * dy * 8.0 / srcSize.y * signY;
+
+    // ── Sample ────────────────────────────────────────────────────────────────
+    vec3 colour = texture2D(color_texture, vec2(uv.x, yCoord + dyDisplace)).rgb;
+
+    // ── Gamma / linearise → apply scanline → re-encode ───────────────────────
+#ifdef FAKE_GAMMA
+    colour = colour * colour;           // approx. γ 2.0 → linear
+#else
+    colour = pow(colour, vec3(INPUT_GAMMA));
+#endif
+
+    colour *= scanLineWeight;
+
+#ifdef FAKE_GAMMA
+    colour = sqrt(colour);              // linear → approx. γ 2.0
+#else
+    colour = pow(colour, vec3(1.0 / OUTPUT_GAMMA));
+#endif
+
+    gl_FragColor = vec4(colour, 1.0);
 }
