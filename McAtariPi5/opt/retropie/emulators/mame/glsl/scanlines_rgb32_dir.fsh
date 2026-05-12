@@ -27,7 +27,7 @@ const float BLOOM_FACTOR            = 1.5;
 
 // 3-tap box-filter half-width in source-texel units.  Averages CalcScanLine at
 // dy and dy +/- FILTER_WIDTH to suppress moire on non-integer scale factors.
-// ~ (src_height / display_height) / 3  ->  ~0.074 for 240p @ 1080p.
+// ~ (src_height / display_height) / 3  ->  ~0.067 for 240p @ 1200p.
 const float FILTER_WIDTH            = 0.1;
 
 // -- Gamma correction ---------------------------------------------------------
@@ -56,10 +56,14 @@ float CalcScanLine(float dy)
     return w * 0.3333333;
 }
 
+// Source texture size matching the MAME output surface (1600x1200).
+// Hardcoded so the compiler can fold all divisions into scalar constants,
+// eliminating two runtime GPU divides per fragment vs. textureSize().
+const vec2 srcSize = vec2(1600.0, 1200.0);
+
 void main()
 {
-    vec2 uv      = gl_TexCoord[0].xy;
-    vec2 srcSize = vec2(textureSize(color_texture, 0));
+    vec2 uv = gl_TexCoord[0].xy;
 
     // Convert UV to source-pixel coordinates.
     vec2 texcoordInPixels = uv * srcSize;
@@ -77,7 +81,7 @@ void main()
     // -- Sub-pixel vertical displacement --------------------------------------
     // A 4th-power curve that nudges the texture sample toward the texel centre.
     // Eliminates hard row-boundary aliasing at non-integer scale factors
-    // (e.g. 240p -> 1080p) without introducing visible blur.  Very cheap.
+    // (e.g. 240p -> 1200p) without introducing visible blur.  Very cheap.
     float signY      = sign(dy);
     float dyDisplace = dy * dy * dy * dy * 8.0 / srcSize.y * signY;
 
