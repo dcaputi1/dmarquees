@@ -56,13 +56,14 @@ float CalcScanLine(float dy)
     return w * 0.3333333;
 }
 
-// Source texture size matching the MAME output surface (1600x1200).
-// Hardcoded so the compiler can fold all divisions into scalar constants,
-// eliminating two runtime GPU divides per fragment vs. textureSize().
-const vec2 srcSize = vec2(1600.0, 1200.0);
+// Actual game/source texture dimensions supplied by MAME at draw time.
+// Using u_source_dims (e.g. 256x224 for most arcade games) ensures scanlines
+// snap to real source-pixel rows rather than display-surface rows.
+uniform vec2 u_source_dims;
 
 void main()
 {
+    vec2 srcSize = u_source_dims;
     vec2 uv = gl_TexCoord[0].xy;
 
     // Convert UV to source-pixel coordinates.
