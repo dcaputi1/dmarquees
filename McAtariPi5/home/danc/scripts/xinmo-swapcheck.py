@@ -114,7 +114,7 @@ def main():
     devices = find_xin_devices()
 
     for dev_path, name, btns in devices:
-        print(f"  {dev_path}: '{name}' — {btns} buttons", file=sys.stderr)
+        print(f"  {dev_path}: '{name}' - {btns} buttons", file=sys.stderr)
 
     if len(devices) < 2:
         print("[ERROR] Fewer than 2 XinMo devices found.", file=sys.stderr)
@@ -156,7 +156,7 @@ def main():
         sys.exit(1 if hw_swapped else 0)
 
     if len(set(known_states)) > 1:
-        print("[ERROR] Cfg directories disagree on swap state — manual inspection required.", file=sys.stderr)
+        print("[ERROR] Cfg directories disagree on swap state - manual inspection required.", file=sys.stderr)
         sys.exit(2)
 
     cfg_swapped = known_states[0]
