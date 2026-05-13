@@ -56,14 +56,13 @@ float CalcScanLine(float dy)
     return w * 0.3333333;
 }
 
-// Actual game/source texture dimensions supplied by MAME at draw time.
-// Using u_source_dims (e.g. 256x224 for most arcade games) ensures scanlines
-// snap to real source-pixel rows rather than display-surface rows.
-uniform vec2 u_source_dims;
-
+// Query the actual game/source texture dimensions at runtime.
+// textureSize() (GLSL 1.30+) reads the real pixel dimensions of the bound
+// texture, e.g. 256x224 for most arcade games, so scanlines snap to real
+// source-pixel rows regardless of display resolution.
 void main()
 {
-    vec2 srcSize = u_source_dims;
+    vec2 srcSize = vec2(textureSize(color_texture, 0));
     vec2 uv = gl_TexCoord[0].xy;
 
     // Convert UV to source-pixel coordinates.
