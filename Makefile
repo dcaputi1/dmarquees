@@ -67,9 +67,9 @@ install: all
 		echo "Error: McAtariPi5 source directory missing"; \
 	else \
 		echo "Syncing /opt directory (newer files only)..."; \
-			rsync -a --update --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS --exclude='__pycache__' McAtariPi5/opt/ /opt/; \
+			rsync -a --update --no-perms --no-owner --no-group --omit-dir-times --info=NAME --exclude='__pycache__' McAtariPi5/opt/ /opt/; \
 			echo "Syncing /home directory (newer files only)..."; \
-			rsync -a --update --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS --exclude='__pycache__' McAtariPi5/home/ /home/; \
+			rsync -a --update --no-perms --no-owner --no-group --omit-dir-times --info=NAME --exclude='__pycache__' McAtariPi5/home/ /home/; \
 		# Ensure all scripts in ~/scripts are executable
 		if [ -d "$$HOME/scripts" ]; then \
 			chmod +x $$HOME/scripts/*; \
@@ -107,9 +107,9 @@ install-force: all
 		echo "Error: McAtariPi5 source directory missing"; \
 	else \
 		echo "Syncing /opt directory (forcing overwrites)..."; \
-			rsync -a --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS --exclude='__pycache__' McAtariPi5/opt/ /opt/; \
+			rsync -a --no-perms --no-owner --no-group --omit-dir-times --info=NAME --exclude='__pycache__' McAtariPi5/opt/ /opt/; \
 			echo "Syncing /home directory (forcing overwrites)..."; \
-			rsync -a --no-perms --no-owner --no-group --omit-dir-times --info=NAME,STATS --exclude='__pycache__' McAtariPi5/home/ /home/; \
+			rsync -a --no-perms --no-owner --no-group --omit-dir-times --info=NAME --exclude='__pycache__' McAtariPi5/home/ /home/; \
 		# Ensure autostart.sh is executable
 		if [ -f "/opt/retropie/configs/all/autostart.sh" ]; then \
 			chmod +x /opt/retropie/configs/all/autostart.sh; \
