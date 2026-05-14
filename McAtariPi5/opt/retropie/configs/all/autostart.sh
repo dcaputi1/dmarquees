@@ -372,4 +372,5 @@ else # This is Pi3...
     start_netbridge
     echo "[autostart] Pi3 running dmarquees netbridge (ENTER key will exit autostart.sh)"
     read -r _
+    clear
 fi

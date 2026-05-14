@@ -203,8 +203,9 @@ i. Configure direct wired link static IPs (NetworkManager):
 5/8/26  [X] effect scanlines woefully insufficient - simply can't get it working for spyhunt
             to do: revisit shaders in MAME SA - got to be a way!
         [X] turning off scanlines in spyhunt - AI can't figure it out
-5/9/26  [ ] xinmo still crap: (and logging is inconsistent)
-        [ ] stupid squares between ...Controller' -- 1n buttons (n=5|3) AND state -- manual
-        [ ] "[HW] Normal:" (whats with the brackets?) "[ERROR] Cfg directories disagree..."
-5/10/26 [ ] try Claude in Co-Pilot for scanlines shader help
+5/9/26  [x] xinmo still crap: (and logging is inconsistent)
+        [X] stupid squares between ...Controller' -- 1n buttons (n=5|3) AND state -- manual
+        [X] "[HW] Normal:" (whats with the brackets?) "[ERROR] Cfg directories disagree..."
+5/10/26 [X] try Claude in Co-Pilot for scanlines shader help
 5/12/26 [ ] how to easily switch between effects scanlines and scanlines glsl?
+5/13/26 [ ] need a shutdown option from the frontend menu
