@@ -25,11 +25,6 @@ const float SCANLINE_GAP_BRIGHTNESS = 0.12;
 // Set to 1.0 to disable.
 const float BLOOM_FACTOR            = 1.5;
 
-// 3-tap box-filter half-width in source-texel units.  Averages CalcScanLine at
-// dy and dy +/- FILTER_WIDTH to suppress moire on non-integer scale factors.
-// ~ (src_height / display_height) / 3  ->  ~0.067 for 240p @ 1200p.
-const float FILTER_WIDTH            = 0.1;
-
 // -- Gamma correction ---------------------------------------------------------
 // Linearise the input before applying the scanline mask (so dark gaps are in
 // linear light), then re-encode the output.
@@ -48,11 +43,13 @@ float CalcScanLineWeight(float dist)
 }
 
 // 3-tap box filter to tame moire at non-integer scale ratios.
-float CalcScanLine(float dy)
+// fw is computed dynamically per-frame as (src_pixels_per_display_pixel) / 3,
+// matching the original crt-pi vertex shader: filterWidth = (InputSize.y / OutputSize.y) / 3.
+float CalcScanLine(float dy, float fw)
 {
     float w  = CalcScanLineWeight(dy);
-    w += CalcScanLineWeight(dy - FILTER_WIDTH);
-    w += CalcScanLineWeight(dy + FILTER_WIDTH);
+    w += CalcScanLineWeight(dy - fw);
+    w += CalcScanLineWeight(dy + fw);
     return w * 0.3333333;
 }
 
@@ -75,8 +72,15 @@ void main()
     // Distance from that row centre in source-texel units (-0.5 ... +0.5).
     float dy = texcoordInPixels.y - tempY;
 
+    // -- Anti-moire filter width ---------------------------------------------
+    // dFdy(uv.y) is the UV step per output pixel in Y; multiplying by srcSize.y
+    // converts it to source pixels per display pixel -- exactly (InputSize.y / OutputSize.y)
+    // from the original crt-pi vertex shader.  Dividing by 3 gives the half-width
+    // for the 3-tap box filter, adapting automatically to any game resolution.
+    float filterWidth = abs(dFdy(uv.y) * srcSize.y) / 3.0;
+
     // -- Scanline weight ------------------------------------------------------
-    float scanLineWeight = CalcScanLine(dy) * BLOOM_FACTOR;
+    float scanLineWeight = CalcScanLine(dy, filterWidth) * BLOOM_FACTOR;
 
     // -- Sub-pixel vertical displacement --------------------------------------
     // A 4th-power curve that nudges the texture sample toward the texel centre.
