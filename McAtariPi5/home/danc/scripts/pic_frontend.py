@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
+import json
 import os
-import subprocess
 import sys
 
 # --- SDL/Pygame environment setup for console/framebuffer ---
@@ -146,6 +146,7 @@ SELECT_RECT_COLOR = YELLOW_RGB    # selection rectangle outline and selected ite
 
 # State file paths
 HOME = os.path.expanduser("~")
+XINMO_STATS_FILE = os.path.join(HOME, "IvarArcade", "json", "xinmo_mame_stats.json")
 PI5_DUAL_DISPLAY_FILE = os.path.join(HOME, ".pi5_dual_display")
 PI3_PRESENT_FILE = os.path.join(HOME, ".pi3_present")
 PANEL_FILE = os.path.join(HOME, ".panel")
@@ -386,7 +387,6 @@ def advanced_menu():
         ("Pi5 Dual Display:", lambda: toggle_dual_display()),
         ("Pi3 Present:", lambda: toggle_pi3_present()),
         ("Screen Orientation:", lambda: toggle_screen_orientation()),
-        ("Swap XinMo P1 & P2", lambda: toggle_xinmo_swap()),
         ("Panel Image:", lambda: panel_menu()),
         ("Return to Main Menu", lambda: None),
     ]
@@ -470,7 +470,6 @@ def advanced_menu():
                         running = False
                     else:
                         MENU_ITEMS[selected][1]()
-                        xinmo_label, xinmo_color = _check_xinmo()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
                     selected = (selected - 1) % len(MENU_ITEMS)
@@ -481,30 +480,10 @@ def advanced_menu():
                         running = False
                         break
                     MENU_ITEMS[selected][1]()
-                    # refresh xinmo status after any action (e.g. swap)
-                    xinmo_label, xinmo_color = _check_xinmo()
                 elif event.key == pygame.K_ESCAPE:
                     running = False
                 elif event.key == pygame.K_F11:
                     toggle_fullscreen()
-
-def toggle_xinmo_swap():
-    """Toggle the XinMo P1/P2 cfg mapping on both MAME cfg dirs.
-
-    Passes '1' to xinmo-swap.py for each dir. xinmo-swap.py reads that
-    dir's own default.cfg and uses XOR logic to decide whether a swap is
-    actually needed, making this idempotent (safe to press twice).
-    """
-    scripts_dir = os.path.dirname(os.path.abspath(__file__))
-    swap_script = os.path.join(scripts_dir, "xinmo-swap.py")
-    mame_base   = "/opt/retropie/emulators/mame"
-
-    for cfg_dir in ("cfg_ra", "cfg_sa"):
-        cfg_path = os.path.join(mame_base, cfg_dir)
-        try:
-            subprocess.run([sys.executable, swap_script, cfg_path, "1"], timeout=10)
-        except Exception as e:
-            print(f"[WARN] xinmo-swap failed for {cfg_path}: {e}", file=sys.stderr)
 
 def toggle_screen_orientation():
     global screen_horizontal
@@ -523,43 +502,23 @@ def toggle_pi3_present():
     save_state(PI3_PRESENT_FILE, pi3_present)
 
 def _check_xinmo():
-    """Run xinmo-swapcheck.py and return (label, color) for the status bar.
+    """Read xinmo plugin stats and return (label, color) for the status bar.
 
-    Exit codes from xinmo-swapcheck.py:
-      0 — OK          : hardware normal, cfg normal          → green
-      1 — Swap!       : hw/cfg mismatch, players wrong       → red
-      2 — Error       : fewer than 2 devices or inconclusive → gray
-      3 — Swapped     : OS/SDL swapped, cfg compensates      → yellow
-      4 — Plugin swap : plugin swapped, cfg compensates      → yellow
+    Reads XINMO_STATS_FILE written by the MAME plugin on every game launch.
+    Label format: "XinMo: 5× 05/12" (swap count and last swap mm/dd).
     """
-    script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "xinmo-swapcheck.py")
     try:
-        result = subprocess.run([sys.executable, script], timeout=10)
-        if result.returncode == 0:
-            return "XinMo: OK", GREEN_RGB
-        elif result.returncode == 1:
-            return "XinMo: Swap!", RED_RGB
-        elif result.returncode == 3:
-            return "XinMo: Swapped", YELLOW_RGB
-        elif result.returncode == 4:
-            return "XinMo: Swapped", YELLOW_RGB
-        else:
-            return "XinMo: Error", LT_GRAY_RGB
+        with open(XINMO_STATS_FILE) as f:
+            stats = json.load(f)
+        count = stats.get("swaps", 0)
+        last  = stats.get("last_swap")  # "YYYY-MM-DDTHH:MM:SSZ" or null
+        if last:
+            return f"XinMo: {count}\u00d7 {last[5:7]}/{last[8:10]}", GREEN_RGB
+        return f"XinMo: {count}\u00d7", GREEN_RGB
     except Exception:
-        return "XinMo: ?", LT_GRAY_RGB
+        return "XinMo: --", LT_GRAY_RGB
 
-def _xinmo_label_color(rc):
-    """Convert a xinmo-swapcheck.py exit code to (label, color)."""
-    if rc == 0:
-        return "XinMo: OK", GREEN_RGB
-    elif rc == 1:
-        return "XinMo: Swap!", RED_RGB
-    elif rc in (3, 4):
-        return "XinMo: Swapped", YELLOW_RGB
-    else:
-        return "XinMo: Error", LT_GRAY_RGB
-
-def main_menu(xinmo_rc=None):
+def main_menu():
     MENU_ITEMS = [
         ("EmulationStation", lambda: launch_emulationstation()),
         ("MAME Standalone", lambda: launch_mame()),
@@ -578,10 +537,7 @@ def main_menu(xinmo_rc=None):
     pygame.time.set_timer(TICK_EVENT, 1000)  # fire every 1 second
     countdown = TIMEOUT_SECS
 
-    if xinmo_rc is not None:
-        xinmo_label, xinmo_color = _xinmo_label_color(xinmo_rc)
-    else:
-        xinmo_label, xinmo_color = _check_xinmo()
+    xinmo_label, xinmo_color = _check_xinmo()
 
     selected = _load_def_key_index()
     running = True
@@ -664,7 +620,6 @@ def main_menu(xinmo_rc=None):
                     MENU_ITEMS[selected][1]()
                     countdown = TIMEOUT_SECS
                     pygame.time.set_timer(TICK_EVENT, 1000)
-                    xinmo_label, xinmo_color = _check_xinmo()
             elif event.type == pygame.KEYDOWN:
                 # Any keypress cancels the timeout
                 countdown = TIMEOUT_SECS
@@ -680,8 +635,6 @@ def main_menu(xinmo_rc=None):
                     # restart timer after returning from a submenu (e.g. advanced_menu)
                     countdown = TIMEOUT_SECS
                     pygame.time.set_timer(TICK_EVENT, 1000)
-                    # refresh xinmo status in case user swapped from advanced_menu
-                    xinmo_label, xinmo_color = _check_xinmo()
                 elif event.key == pygame.K_ESCAPE:
                     sys.exit(0)
                 elif event.key == pygame.K_F11:
@@ -692,5 +645,4 @@ def launch_placeholder(name):
     pass
 
 if __name__ == "__main__":
-    _rc = int(sys.argv[1]) if len(sys.argv) > 1 else None
-    main_menu(xinmo_rc=_rc)
+    main_menu()

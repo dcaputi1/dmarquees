@@ -1,5 +1,5 @@
 mame -inipath /opt/retropie/emulators/mame/ini \
-     -cfg_directory /opt/retropie/emulators/mame/cfg_sa \
+     -cfg_directory /opt/retropie/emulators/mame/cfg \
      -numscreens 2 \
      -resolution 320x240 \
      -effect scanlines \

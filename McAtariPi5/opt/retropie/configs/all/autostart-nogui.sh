@@ -12,8 +12,6 @@ MENU_TIMEOUT=60
 BASE_PATH="/opt/retropie/emulators/mame"
 CFG_PATH="$BASE_PATH/cfg"
 INI_PATH="$BASE_PATH/ini"
-CFG_SA_PATH="$BASE_PATH/cfg_sa"
-CFG_RA_PATH="$BASE_PATH/cfg_ra"
 CMD_FIFO="/tmp/dmarquees_cmd"
 PI3_REMOTE_HOST="10.77.77.3"
 PI3_REMOTE_PORT="5533"
@@ -90,36 +88,21 @@ echo_error_and_wait()
 #   read -r _
 }
 
-# XinMo status check function
+# XinMo status — read swap count and last swap date from plugin stats JSON
 check_xinmo_status()
 {
-    python3 "$HOME/scripts/xinmo-swapcheck.py"
-    status=$?
-
-    if [ $status -eq 1 ]; then
-        XINMO_STATUS_MSG="XinMo: Swap Required"
-    else
-        XINMO_STATUS_MSG="XinMo: OK"
-    fi
-
-    XINMO_STATUS_CODE=$status
-}
-
-# Function to restore existing cfg directory to original name
-restore_cfg()
-{
-    if [ -d "$CFG_PATH" ]; then
-        if [ ! -d "$CFG_SA_PATH" ]; then
-            echo "Restoring cfg to cfg_sa"
-            mv "$CFG_PATH" "$CFG_SA_PATH"
-        elif [ ! -d "$CFG_RA_PATH" ]; then
-            echo "Restoring cfg to cfg_ra"
-            mv "$CFG_PATH" "$CFG_RA_PATH"
-        else
-            echo "Removing old 'cfg' directory"
-            rm -rf "$CFG_PATH"
-        fi
-    fi
+    XINMO_STATUS_MSG=$(python3 - <<'EOF'
+import json, os
+try:
+    with open(os.path.expanduser('~/IvarArcade/json/xinmo_mame_stats.json')) as f:
+        s = json.load(f)
+    count = s.get('swaps', 0)
+    last  = s.get('last_swap')
+    print(f"XinMo: {count}\u00d7 {last[5:7]}/{last[8:10]}" if last else f"XinMo: {count}\u00d7")
+except Exception:
+    print('XinMo: --')
+EOF
+)
 }
 
 launch_desktop()
@@ -171,7 +154,6 @@ advanced_menu()
             D "Toggle Pi5 Dual Display:   $dual_display_state"
             P "Toggle Pi3 Present:        $pi3_present_state"
             O "Toggle Screen Orientation: $screen_orient_state"
-            S "Swap Xin-Mo Player 1 & 2"
             I "Panel Image...             $PANEL_IMAGE"
             Q "Return to Main Menu"
         )
@@ -209,12 +191,6 @@ advanced_menu()
                     SCREEN_HORIZONTAL=true
                 fi
                 echo "$SCREEN_HORIZONTAL" > "$HOME/.horizontal"
-                ;;
-            S)
-                $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_ra 1
-                $HOME/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg_sa 1
-                check_xinmo_status
-                continue
                 ;;
             I)
                 # Panel Image submenu
@@ -381,11 +357,10 @@ main_menu()
     esac
 
     while true; do
-        restore_cfg
         python3 $HOME/scripts/leds_off.py
         send_dmarquees_cmd "NA"
 
-        # Use global XINMO_STATUS_CODE and XINMO_STATUS_MSG set at startup or after swap
+        # Use XINMO_STATUS_MSG set at startup by check_xinmo_status()
 
         MENU_ITEMS=(
             E "EmulationStation"
@@ -411,7 +386,6 @@ main_menu()
         case $CHOICE in
             E)
                 persist_frontend_choice "E"
-                mv $CFG_RA_PATH $CFG_PATH
                 send_dmarquees_cmd "RA"
                 if [ "$SCREEN_HORIZONTAL" = false ]; then
                     echo "ROL_FLAG=\"-rol\"" > $HOME/.rol_flag
@@ -425,7 +399,6 @@ main_menu()
             M)
                 persist_frontend_choice "M"
                 send_dmarquees_cmd "SA"
-                mv $CFG_SA_PATH $CFG_PATH
                 if [ "$SCREEN_HORIZONTAL" = false ]; then
                     mame -rol -inipath "/opt/retropie/emulators/mame/ini;/opt/retropie/emulators/mame/ini_horz_ror" -cfg_directory $CFG_PATH -joystickprovider sdljoy
                 else

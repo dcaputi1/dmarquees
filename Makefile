@@ -175,23 +175,16 @@ sync-back:
 	[[ -d "$$SRC" ]] || { echo "ERROR: $$SRC not found"; exit 1; }
 	[[ -d "$$DST" ]] || { echo "ERROR: destination tree not found: $$DST"; exit 1; }
 
-	[[ -d "$$MAME_DIR/cfg_ra" ]] || { echo "ERROR: Missing required folder: $$MAME_DIR/cfg_ra"; exit 1; }
-	[[ -d "$$MAME_DIR/cfg_sa" ]] || { echo "ERROR: Missing required folder: $$MAME_DIR/cfg_sa"; exit 1; }
-	if [[ -d "$$MAME_DIR/cfg" ]]; then
-		echo "ERROR: Forbidden folder exists: $$MAME_DIR/cfg"
-		echo "       (cfg_ra and cfg_sa must exist, and cfg must not.)"
-		exit 1
-	fi
-	bad_cfg="$$(find "$$MAME_DIR" -type d \( -path "*/cfg_ra/cfg" -o -path "*/cfg_sa/cfg" \) -print -quit)"
-	if [[ -n "$$bad_cfg" ]]; then
-		echo "ERROR: Detected nested cfg folder bug: $$bad_cfg"
-		echo "       Fix/move it first; refusing to sync-back."
+	[[ -d "$$MAME_DIR/cfg" ]] || { echo "ERROR: Missing required folder: $$MAME_DIR/cfg"; exit 1; }
+	if [[ -d "$$MAME_DIR/cfg_ra" ]] || [[ -d "$$MAME_DIR/cfg_sa" ]]; then
+		echo "ERROR: Legacy folders detected under $$MAME_DIR (cfg_ra / cfg_sa)."
+		echo "       Remove them from the Pi before running sync-back."
 		exit 1
 	fi
 
 	# --- config knobs you maintain ---
 	# 1) Where NEW files are allowed to be created (relative to $$MAME_DIR)
-	NEW_FILE_DIRS=(cfg_ra cfg_sa)
+	NEW_FILE_DIRS=(cfg)
 	# 2) Useful sections for XML .cfg files
 	USEFUL_CFG_SECTIONS=(input video)
 

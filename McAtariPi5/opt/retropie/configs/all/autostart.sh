@@ -12,8 +12,6 @@ MENU_TIMEOUT=60
 BASE_PATH="/opt/retropie/emulators/mame"
 CFG_PATH="$BASE_PATH/cfg"
 INI_PATH="$BASE_PATH/ini"
-CFG_SA_PATH="$BASE_PATH/cfg_sa"
-CFG_RA_PATH="$BASE_PATH/cfg_ra"
 CMD_FIFO="/tmp/dmarquees_cmd"
 PI3_REMOTE_HOST="10.77.77.3"
 PI3_REMOTE_PORT="5533"
@@ -89,23 +87,6 @@ echo_error_and_wait()
     echo "[autostart] ERROR: $msg (press ENTER to continue)"
     echo
 #   read -r _
-}
-
-# Function to restore existing cfg directory to original name
-restore_cfg()
-{
-    if [ -d "$CFG_PATH" ]; then
-        if [ ! -d "$CFG_SA_PATH" ]; then
-            echo "Restoring cfg to cfg_sa"
-            mv "$CFG_PATH" "$CFG_SA_PATH"
-        elif [ ! -d "$CFG_RA_PATH" ]; then
-            echo "Restoring cfg to cfg_ra"
-            mv "$CFG_PATH" "$CFG_RA_PATH"
-        else
-            echo "Removing old 'cfg' directory"
-            rm -rf "$CFG_PATH"
-        fi
-    fi
 }
 
 launch_desktop()
@@ -247,9 +228,7 @@ run_pic_frontend()
     local _saved_tty
     _saved_tty=$(stty -g 2>/dev/null)
 
-    python3 "$HOME/scripts/xinmo-swapcheck.py" > /dev/null
-    local _xinmo_rc=$?
-    python3 "$HOME/scripts/pic_frontend.py" $_xinmo_rc 2> >(tee -a "$AUTOSTART_LOG" >/tmp/pic_frontend.err)
+    python3 "$HOME/scripts/pic_frontend.py" 2> >(tee -a "$AUTOSTART_LOG" >/tmp/pic_frontend.err)
     local _pf_exit=$?
 
     if [ -n "$_saved_tty" ]; then
@@ -264,7 +243,6 @@ run_pic_frontend()
 main_menu()
 {
     while true; do
-        restore_cfg
         python3 "$HOME/scripts/leds_off.py"
         send_dmarquees_cmd "NA"
 
@@ -292,7 +270,6 @@ main_menu()
 
         case $CHOICE in
             E)
-                mv $CFG_RA_PATH $CFG_PATH
                 send_dmarquees_cmd "RA"
                 echo "Running EmulationStation... .horizontal = $SCREEN_HORIZONTAL"
                 debug_wait
@@ -307,7 +284,6 @@ main_menu()
                 ;;
             M)
                 send_dmarquees_cmd "SA"
-                mv $CFG_SA_PATH $CFG_PATH
                 echo "Running MAME... .horizontal = $SCREEN_HORIZONTAL"
                 debug_wait
                 if [ "$SCREEN_HORIZONTAL" = false ]; then
@@ -361,11 +337,6 @@ fi
 
 if [ "$THIS_IS_PI5" = true ]; then
     main_menu
-
-    # Restore both cfg dirs to normal (unswapped) state on exit so the next
-    # boot starts clean regardless of how the session left them.
-    python3 "$HOME/scripts/xinmo-swap.py" /opt/retropie/emulators/mame/cfg_ra 0
-    python3 "$HOME/scripts/xinmo-swap.py" /opt/retropie/emulators/mame/cfg_sa 0
 
 else # This is Pi3...
 

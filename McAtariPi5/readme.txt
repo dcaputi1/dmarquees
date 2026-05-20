@@ -209,3 +209,5 @@ i. Configure direct wired link static IPs (NetworkManager):
 5/10/26 [X] try Claude in Co-Pilot for scanlines shader help
 5/12/26 [ ] how to easily switch between effects scanlines and scanlines glsl?
 5/13/26 [ ] need a shutdown option from the frontend menu
+5/15/26 [X] xinmo swap still NFG - change unswap to force copy from ~/McAtariPi5/...
+        [ ] pi3 way out of date and NO WIFI! ... WTF!?

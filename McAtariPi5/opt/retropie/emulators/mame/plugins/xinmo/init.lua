@@ -4,7 +4,7 @@
 -- and corrects cfg files + soft-resets if needed.
 -----------------------------------------------------------
 
-local VERSION = "0.2.0"
+local VERSION = "0.3.0"
 
 local exports = {
     name        = "xinmo",
@@ -23,18 +23,14 @@ local xinmo = exports
 local EXPECTED_P1_BTNS = 15   -- first XinMo device (JOYCODE_N_) should have 15 buttons
 local EXPECTED_P2_BTNS = 13   -- second XinMo device should have 13 buttons
 
--- At plugin runtime cfg_ra/cfg_sa has already been renamed to cfg/ by the launch
--- wrapper, so we only need to swap the one active directory.
--- Pass '1' (hw-swapped) so xinmo-swap.py reads default.cfg itself and applies
--- XOR logic — same contract as the menu button and autostart.sh.
-local SWAP_SCRIPT = "python3 /home/danc/scripts/xinmo-swap.py /opt/retropie/emulators/mame/cfg 1"
+local HOME      = os.getenv("HOME") or "/home/danc"
+local MAME_BASE = "/opt/retropie/emulators/mame"
+local REPO_CFG  = HOME .. "/IvarArcade/McAtariPi5/opt/retropie/emulators/mame"
 
--- Written by this plugin when it performs a swap; cleared by xinmo-swap.py (menu path).
--- Allows xinmo-swapcheck.py to distinguish "plugin swap" from "menu swap".
-local PLUGIN_SWAP_FLAG  = (os.getenv("HOME") or "/home/danc") .. "/.xinmo_plugin_swapped"
+local SWAP_SCRIPT = "python3 /home/danc/scripts/xinmo-swap.py"
 
 -- Persistent stats file tracking MAME-level swap detection history.
-local MAME_STATS_FILE = (os.getenv("HOME") or "/home/danc") .. "/IvarArcade/json/xinmo_mame_stats.json"
+local MAME_STATS_FILE = HOME .. "/IvarArcade/json/xinmo_mame_stats.json"
 
 -----------------------------------------------------------
 -- Stats Tracking
@@ -72,6 +68,7 @@ end
 local pxswap_done    = false   -- true once we've made a decision this session
 local pxswap_applied = false   -- true if we swapped; used to show post-reset message
 local reset_notifier = nil     -- held to prevent garbage collection
+local stop_notifier  = nil     -- held to prevent garbage collection
 
 -----------------------------------------------------------
 -- Input Detection
@@ -118,8 +115,8 @@ local function find_xinmo_devices()
     return found
 end
 
--- Returns true  = hw is swapped  (xinmo-swap.py will XOR against cfg and act if needed)
---         false = hw is normal   (xinmo-swap.py will XOR against cfg and no-op if already normal)
+-- Returns true  = hw is swapped  (swap cfg to compensate)
+--         false = hw is normal   (no action needed)
 --         nil   = inconclusive (fewer than 2 devices or unexpected button counts)
 local function check_swap_needed()
     local devs = find_xinmo_devices()
@@ -147,6 +144,18 @@ local function check_swap_needed()
     end
 end
 
+
+-----------------------------------------------------------
+-- Game Stop: restore cfg from repo unconditionally
+-----------------------------------------------------------
+
+local function on_game_stop()
+    -- Always restore cfg from the repo copy so the next launch starts clean,
+    -- regardless of whether a swap was applied this session.
+    print("[PxSwap] Restoring cfg from repo on game stop")
+    os.execute(string.format("cp -f '%s/cfg'/*.cfg '%s/cfg/' 2>/dev/null",
+        REPO_CFG, MAME_BASE))
+end
 
 -----------------------------------------------------------
 -- Plugin Entry Point
@@ -180,15 +189,13 @@ function xinmo.startplugin()
         if needs_swap then
             manager.machine:popmessage("XinMo Swap: restart...")
             os.execute(SWAP_SCRIPT)
-            -- Write flag so xinmo-swapcheck.py can report "plugin swap" vs "menu swap"
-            local flag = io.open(PLUGIN_SWAP_FLAG, "w")
-            if flag then flag:write("1\n") flag:close() end
             pxswap_applied = true
             manager.machine:soft_reset()
         end
 
     end)
 
+    stop_notifier = emu.add_machine_stop_notifier(on_game_stop)
 end
 
 return exports
