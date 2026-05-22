@@ -383,16 +383,23 @@ def panel_menu():
 
 def advanced_menu():
     global dual_display, pi3_present, screen_horizontal
+    selected = 0
+    running = True
+    xinmo_label, xinmo_color = _check_xinmo()
+
+    def _do_reset_xinmo():
+        nonlocal xinmo_label, xinmo_color
+        reset_xinmo_stats()
+        xinmo_label, xinmo_color = _check_xinmo()
+
     MENU_ITEMS = [
         ("Pi5 Dual Display:", lambda: toggle_dual_display()),
         ("Pi3 Present:", lambda: toggle_pi3_present()),
         ("Screen Orientation:", lambda: toggle_screen_orientation()),
         ("Panel Image:", lambda: panel_menu()),
+        ("Reset XinMo Stats", _do_reset_xinmo),
         ("Return to Main Menu", lambda: None),
     ]
-    selected = 0
-    running = True
-    xinmo_label, xinmo_color = _check_xinmo()
     while running:
         # menu surface: MENU_W x MENU_H black canvas; all elements are drawn here before blitting to the screen
         base_surface = pygame.Surface((MENU_W, MENU_H))
@@ -517,6 +524,14 @@ def _check_xinmo():
         return f"XinMo: {count}\u00d7", GREEN_RGB
     except Exception:
         return "XinMo: --", LT_GRAY_RGB
+
+def reset_xinmo_stats():
+    """Reset XinMo swap statistics to zero."""
+    try:
+        with open(XINMO_STATS_FILE, "w") as f:
+            json.dump({"swaps": 0, "last_swap": None}, f)
+    except Exception:
+        pass
 
 def main_menu():
     MENU_ITEMS = [

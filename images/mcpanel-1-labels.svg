@@ -32,9 +32,9 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="1.2976515"
-     inkscape:cx="440.02569"
-     inkscape:cy="258.54399"
+     inkscape:zoom="2.8270035"
+     inkscape:cx="269.01276"
+     inkscape:cy="214.53811"
      inkscape:window-width="1902"
      inkscape:window-height="1033"
      inkscape:window-x="0"
@@ -59,6 +59,116 @@
        y="-110.41728"
        transform="rotate(-90.5)"
        style="fill:#ffffff;stroke:#ffffff" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;dominant-baseline:middle;text-anchor:middle;display:inline;fill:none;stroke:#00ff00"
+       x="169.16148"
+       y="628.7757"
+       id="txt-p1-punch"><tspan
+         sodipodi:role="line"
+         id="tspan11">PUNCH</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;dominant-baseline:middle;text-anchor:middle;display:inline;fill:none;stroke:#00ff00"
+       x="142.16148"
+       y="493.77573"
+       id="txt-p1-kick"><tspan
+         sodipodi:role="line"
+         id="tspan9-6"
+         x="142.16148"
+         y="493.77573">KICK</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;dominant-baseline:middle;text-anchor:middle;display:inline;fill:none;stroke:#00ff00"
+       x="753.12665"
+       y="622.14136"
+       id="txt-p2-punch"><tspan
+         sodipodi:role="line"
+         id="tspan10"
+         x="753.12665"
+         y="622.14136">PUNCH</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;dominant-baseline:middle;text-anchor:middle;display:inline;fill:none;stroke:#00ff00"
+       x="744.38489"
+       y="497.65186"
+       id="txt-p2-kick"><tspan
+         sodipodi:role="line"
+         id="tspan9"
+         x="744.38489"
+         y="497.65186">KICK</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;dominant-baseline:middle;text-anchor:middle;display:inline;fill:none;stroke:#00ff00"
+       x="611.70056"
+       y="598.61749"
+       id="txt-p2-dn-rt"><tspan
+         sodipodi:role="line"
+         id="tspan7"
+         x="611.70056"
+         y="598.61749">DR</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;dominant-baseline:middle;text-anchor:middle;display:inline;fill:none;stroke:#00ff00"
+       x="610.70056"
+       y="569.61755"
+       id="txt-p2-up-rt"><tspan
+         sodipodi:role="line"
+         id="tspan6"
+         x="610.70056"
+         y="569.61755">UR</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;dominant-baseline:middle;text-anchor:middle;display:inline;fill:none;stroke:#00ff00"
+       x="571.70056"
+       y="598.61749"
+       id="txt-p2-dn-lt"><tspan
+         sodipodi:role="line"
+         id="tspan8"
+         x="571.70056"
+         y="598.61749">DL</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;dominant-baseline:middle;text-anchor:middle;display:inline;fill:none;stroke:#00ff00"
+       x="571.70056"
+       y="569.61755"
+       id="txt-p2-up-lt"><tspan
+         sodipodi:role="line"
+         id="tspan5"
+         x="571.70056"
+         y="569.61755">UL</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;dominant-baseline:middle;text-anchor:middle;display:inline;fill:none;stroke:#00ff00"
+       x="31.700527"
+       y="565.61749"
+       id="txt-p1-up-rt"><tspan
+         sodipodi:role="line"
+         id="tspan2">UR</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;dominant-baseline:middle;text-anchor:middle;display:inline;fill:none;stroke:#00ff00"
+       x="31.700529"
+       y="594.61749"
+       id="txt-p1-dn-rt"><tspan
+         sodipodi:role="line"
+         id="tspan4">DR</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;dominant-baseline:middle;text-anchor:middle;display:inline;fill:none;stroke:#00ff00"
+       x="-4.2994671"
+       y="595.61749"
+       id="txt-p1-dn-lt"><tspan
+         sodipodi:role="line"
+         id="tspan3">DL</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;dominant-baseline:middle;text-anchor:middle;display:inline;fill:none;stroke:#00ff00"
+       x="-6.2994671"
+       y="564.61749"
+       id="txt-p1-up-lt"><tspan
+         sodipodi:role="line"
+         id="tspan1">UL</tspan></text>
   </g>
   <g
      inkscape:groupmode="layer"
