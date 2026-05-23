@@ -633,6 +633,7 @@ def main_menu():
                     if MENU_ITEMS[selected][0] == "Advanced Config Setup/Options":
                         save_state(DEF_KEY_FILE, "A")
                     MENU_ITEMS[selected][1]()
+                    xinmo_label, xinmo_color = _check_xinmo()
                     countdown = TIMEOUT_SECS
                     pygame.time.set_timer(TICK_EVENT, 1000)
             elif event.type == pygame.KEYDOWN:
@@ -647,6 +648,7 @@ def main_menu():
                     if MENU_ITEMS[selected][0] == "Advanced Config Setup/Options":
                         save_state(DEF_KEY_FILE, "A")
                     MENU_ITEMS[selected][1]()
+                    xinmo_label, xinmo_color = _check_xinmo()
                     # restart timer after returning from a submenu (e.g. advanced_menu)
                     countdown = TIMEOUT_SECS
                     pygame.time.set_timer(TICK_EVENT, 1000)
