@@ -33,14 +33,14 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:zoom="2.8270035"
-     inkscape:cx="269.01276"
+     inkscape:cx="217.89856"
      inkscape:cy="214.53811"
      inkscape:window-width="1902"
      inkscape:window-height="1033"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="0"
-     inkscape:current-layer="g1"
+     inkscape:current-layer="layer1"
      inkscape:document-units="in"
      inkscape:clip-to-page="true" />
   <g
@@ -62,41 +62,43 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;dominant-baseline:middle;text-anchor:middle;display:inline;fill:none;stroke:#00ff00"
-       x="169.16148"
-       y="628.7757"
+       x="159.16148"
+       y="490.7757"
        id="txt-p1-punch"><tspan
          sodipodi:role="line"
-         id="tspan11">PUNCH</tspan></text>
+         id="tspan11"
+         x="159.16148"
+         y="490.7757">PUNCH</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;dominant-baseline:middle;text-anchor:middle;display:inline;fill:none;stroke:#00ff00"
-       x="142.16148"
-       y="493.77573"
+       x="164.69135"
+       y="631.9071"
        id="txt-p1-kick"><tspan
          sodipodi:role="line"
          id="tspan9-6"
-         x="142.16148"
-         y="493.77573">KICK</tspan></text>
+         x="164.69135"
+         y="631.9071">KICK</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;dominant-baseline:middle;text-anchor:middle;display:inline;fill:none;stroke:#00ff00"
-       x="753.12665"
-       y="622.14136"
+       x="741.12665"
+       y="494.14136"
        id="txt-p2-punch"><tspan
          sodipodi:role="line"
          id="tspan10"
-         x="753.12665"
-         y="622.14136">PUNCH</tspan></text>
+         x="741.12665"
+         y="494.14136">PUNCH</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;dominant-baseline:middle;text-anchor:middle;display:inline;fill:none;stroke:#00ff00"
        x="744.38489"
-       y="497.65186"
+       y="629.65186"
        id="txt-p2-kick"><tspan
          sodipodi:role="line"
          id="tspan9"
          x="744.38489"
-         y="497.65186">KICK</tspan></text>
+         y="629.65186">KICK</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;dominant-baseline:middle;text-anchor:middle;display:inline;fill:none;stroke:#00ff00"
@@ -600,12 +602,12 @@
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;fill:none;stroke:#00ff00"
        x="132.18097"
-       y="385.29169"
+       y="373.29169"
        id="txt-player1"><tspan
          sodipodi:role="line"
          id="tspan35"
          x="132.18097"
-         y="385.29169">PLAYER 1</tspan></text>
+         y="373.29169">PLAYER 1</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;fill:none;stroke:#00ff00"
