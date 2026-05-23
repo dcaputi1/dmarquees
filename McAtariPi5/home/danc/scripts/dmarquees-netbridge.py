@@ -167,6 +167,10 @@ def handle_command(line: str, fifo: str, swap_cfg: dict, verbose: bool) -> None:
             fifo,
             verbose,
         )
+    elif cmd == "SHUTDOWN":
+        if verbose:
+            print("[netbridge] SHUTDOWN command received; halting system", file=sys.stderr)
+        subprocess.Popen(["sudo", "shutdown", "-h", "now"])
     else:
         write_fifo_nonblocking(fifo, line, verbose)
 

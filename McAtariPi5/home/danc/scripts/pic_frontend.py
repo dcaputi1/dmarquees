@@ -2,6 +2,8 @@
 
 import json
 import os
+import socket
+import subprocess
 import sys
 
 # --- SDL/Pygame environment setup for console/framebuffer ---
@@ -143,6 +145,10 @@ BORDER_SZ = 10    # gap in pixels between the menu border and any inner rectangl
 MENU_BG_COLOR     = BLACK_RGB      # menu surface background fill
 SCREEN_BG_COLOR   = DK_BLUE_RGB   # screen background fill (visible behind centered menu surface)
 SELECT_RECT_COLOR = YELLOW_RGB    # selection rectangle outline and selected item text color
+
+# Pi3 network address (used for cross-machine shutdown)
+PI3_HOST = "10.77.77.3"
+PI3_PORT = 5533
 
 # State file paths
 HOME = os.path.expanduser("~")
@@ -533,6 +539,25 @@ def reset_xinmo_stats():
     except Exception:
         pass
 
+def _send_pi3_command(cmd):
+    """Send a command string to the Pi3 netbridge via TCP. Best-effort; ignores failures."""
+    try:
+        with socket.create_connection((PI3_HOST, PI3_PORT), timeout=3) as s:
+            s.sendall((cmd.rstrip("\n") + "\n").encode("utf-8"))
+    except Exception as e:
+        print(f"[WARN] Could not send '{cmd}' to Pi3: {e}", file=sys.stderr)
+
+def shutdown_system():
+    """Shut down the Pi3 (if present), then halt this Pi5."""
+    if pi3_present:
+        _send_pi3_command("SHUTDOWN")
+    pygame.quit()
+    try:
+        subprocess.run(["sudo", "shutdown", "-h", "now"], check=False)
+    except Exception as e:
+        print(f"[ERROR] shutdown failed: {e}", file=sys.stderr)
+    sys.exit(0)
+
 def main_menu():
     MENU_ITEMS = [
         ("EmulationStation", lambda: launch_emulationstation()),
@@ -540,6 +565,7 @@ def main_menu():
         ("Advanced Config Setup/Options", lambda: advanced_menu()),
         ("Command Prompt (Exit to Shell)", lambda: _output_choice("C")),
         ("Exit to X/Wayland Desktop", lambda: _output_choice("X")),
+        ("Shutdown System", lambda: shutdown_system()),
     ]
     def launch_emulationstation():
         _output_choice("E")
