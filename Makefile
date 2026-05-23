@@ -10,8 +10,10 @@ SHELLFLAGS := -eu -o pipefail -c
 
 .PHONY: all dmarquees analyze_games install install-force clean help sync-back
 
-# Install directory (fixed to arcade user path so sudo/non-sudo behave the same)
-INSTALL_DIR ?= /home/danc/marquees
+# Binary install directory for dmarquees daemon
+DMARQUEES_BIN_DIR ?= /home/danc/marquees/bin
+
+# NOTE: images and labels are referenced directly from ~/IvarArcade/ - no install needed
 
 all: dmarquees analyze_games
 
@@ -28,37 +30,13 @@ analyze_games:
 # Install both executables and resources
 install: all
 	@echo "Installing IvarArcade components..."
-	@mkdir -p $(INSTALL_DIR)/bin
+	@mkdir -p $(DMARQUEES_BIN_DIR)
 	
-	@# Install executables
-	@if [ ! -f $(INSTALL_DIR)/bin/dmarquees ] || [ dmarquees/dmarquees -nt $(INSTALL_DIR)/bin/dmarquees ]; then \
-		cp -p dmarquees/dmarquees $(INSTALL_DIR)/bin/ && echo "Updated: $(INSTALL_DIR)/bin/dmarquees"; \
+	@# Install dmarquees binary
+	@if [ ! -f $(DMARQUEES_BIN_DIR)/dmarquees ] || [ dmarquees/dmarquees -nt $(DMARQUEES_BIN_DIR)/dmarquees ]; then \
+		cp -p dmarquees/dmarquees $(DMARQUEES_BIN_DIR)/ && echo "Updated: $(DMARQUEES_BIN_DIR)/dmarquees"; \
 	else \
-		echo "Skipped: $(INSTALL_DIR)/bin/dmarquees (up to date)"; \
-	fi
-	
-	@# Install runtime resources (images directory)
-	@if [ -d images ]; then \
-		if [ ! -d $(INSTALL_DIR)/images ]; then \
-			rsync -a images $(INSTALL_DIR)/ && echo "Updated: $(INSTALL_DIR)/images"; \
-		else \
-			echo "Skipped: $(INSTALL_DIR)/images (already exists)"; \
-		fi; \
-	fi
-	
-	@# Install panel label mappings
-	@if [ -d labels ]; then \
-		mkdir -p $(INSTALL_DIR)/labels; \
-		rsync -a --info=NAME labels/ $(INSTALL_DIR)/labels/ | sed '/^[.][/]$$/d'; echo "Synced: $(INSTALL_DIR)/labels"; \
-	fi
-	
-	@# Install plugins to local directory
-	@if [ -d plugins ]; then \
-		if [ ! -d $(INSTALL_DIR)/plugins ]; then \
-			rsync -a plugins $(INSTALL_DIR)/ && echo "Updated: $(INSTALL_DIR)/plugins"; \
-		else \
-			echo "Skipped: $(INSTALL_DIR)/plugins (already exists)"; \
-		fi; \
+		echo "Skipped: $(DMARQUEES_BIN_DIR)/dmarquees (up to date)"; \
 	fi
 	
 	@# Sync McAtariPi5 contents to system (only newer files)
@@ -87,21 +65,11 @@ install: all
 # Install with forced overwrite of all files
 install-force: all
 	@echo "Installing IvarArcade components (forcing overwrites)..."
-	@mkdir -p $(INSTALL_DIR)/bin
+	@mkdir -p $(DMARQUEES_BIN_DIR)
 	
-	@# Force install executables
-	@cp -fp dmarquees/dmarquees $(INSTALL_DIR)/bin/ && echo "Installed: $(INSTALL_DIR)/bin/dmarquees"
-	
-	@# Force install runtime resources (images directory)
-	@if [ -d images ]; then \
-		rsync -a images $(INSTALL_DIR)/ && echo "Installed: $(INSTALL_DIR)/images"; \
-	fi
+	@# Force install dmarquees binary
+	@cp -fp dmarquees/dmarquees $(DMARQUEES_BIN_DIR)/ && echo "Installed: $(DMARQUEES_BIN_DIR)/dmarquees"
 
-	@# Force install panel label mappings
-	@if [ -d labels ]; then \
-		rsync -a labels $(INSTALL_DIR)/ && echo "Installed: $(INSTALL_DIR)/labels"; \
-	fi
-	
 	@# Force sync McAtariPi5 contents to system (overwrite all files)
 	@if [ ! -d McAtariPi5 ]; then \
 		echo "Error: McAtariPi5 source directory missing"; \
@@ -131,11 +99,8 @@ clean:
 # Uninstall
 uninstall:
 	@echo "Removing installed files..."
-	@rm -f $(INSTALL_DIR)/bin/dmarquees
-	@rm -rf $(INSTALL_DIR)/images
-	@rm -rf $(INSTALL_DIR)/plugins
-	@rmdir --ignore-fail-on-non-empty $(INSTALL_DIR)/bin || true
-	@rmdir --ignore-fail-on-non-empty $(INSTALL_DIR) || true
+	@rm -f $(DMARQUEES_BIN_DIR)/dmarquees
+	@rmdir --ignore-fail-on-non-empty $(DMARQUEES_BIN_DIR) || true
 	@echo "Uninstall complete."
 
 # Help
@@ -155,12 +120,13 @@ help:
 	@echo "  help          - Show this help message"
 	@echo ""
 	@echo "Variables:"
-	@echo "  INSTALL_DIR   - Installation directory (default: $(HOME)/marquees)"
+	@echo "  DMARQUEES_BIN_DIR - dmarquees binary install dir (default: /home/danc/marquees/bin)"
+	@echo ""
+	@echo "Note: images and labels are read directly from ~/IvarArcade/ - no install required"
 	@echo ""
 	@echo "Examples:"
 	@echo "  make"
 	@echo "  make install"
-	@echo "  make install INSTALL_DIR=/usr/local/ivararcade"
 	@echo "  make clean"
 
 sync-back:
