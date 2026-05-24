@@ -112,10 +112,12 @@ local function log_all_joystick_devices()
 
         if lname:find("xin") then
             xinmo_seen = xinmo_seen + 1
-            if xinmo_seen == 1 then
-                label = d.buttons == EXPECTED_P1_BTNS and "XinMo P1" or "XinMo P1? (unexpected btn count)"
+            if d.buttons == EXPECTED_P1_BTNS then
+                label = "XinMo P1"
+            elseif d.buttons == EXPECTED_P2_BTNS then
+                label = "XinMo P2"
             else
-                label = d.buttons == EXPECTED_P2_BTNS and "XinMo P2" or "XinMo P2? (unexpected btn count)"
+                label = "XinMo? (unexpected btn count)"
             end
         elseif lname:find("huijia") or lname:find("hui") then
             huijia_seen = huijia_seen + 1
