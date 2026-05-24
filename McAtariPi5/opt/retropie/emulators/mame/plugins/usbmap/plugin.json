@@ -1,0 +1,10 @@
+{
+  "plugin": {
+    "name": "usbmap",
+    "version": "1.0.0",
+    "description": "USB Mapper",
+    "author": "Dan Caputi",
+    "type": "plugin",
+    "start": "true"
+  }
+}
