@@ -66,13 +66,68 @@ end
 -----------------------------------------------------------
 
 local swap_done      = false   -- true once we've made a decision this session
-local swap_applied   = false   -- true if we swapped; used to show post-reset message
+local swap_applied   = false   -- true if we swapped; used to show post-reset message and restore cfg
 local reset_notifier = nil     -- held to prevent garbage collection
 local stop_notifier  = nil     -- held to prevent garbage collection
 
 -----------------------------------------------------------
 -- Input Detection
 -----------------------------------------------------------
+
+-- Logs all joystick devices with their JOYCODE index, name, button count,
+-- and a player/role label where determinable.
+local function log_all_joystick_devices()
+    local input = manager.machine.input
+    local joyclass = nil
+    for _, cls in pairs(input.device_classes) do
+        if cls.name == "joystick" then joyclass = cls; break end
+    end
+    if not joyclass then
+        print("[LuaSwap] log_all_joystick_devices: joystick class not available")
+        return
+    end
+
+    -- Collect and sort by devindex for deterministic output
+    local all = {}
+    for _, device in pairs(joyclass.devices) do
+        local btn_count = 0
+        for _, item in pairs(device.items) do
+            if tostring(item.token):match("^BUTTON%d") then
+                btn_count = btn_count + 1
+            end
+        end
+        table.insert(all, { devindex = device.devindex, name = device.name, buttons = btn_count })
+    end
+    table.sort(all, function(a, b) return a.devindex < b.devindex end)
+
+    -- Per-family first-seen counters for labelling
+    local xinmo_seen  = 0
+    local huijia_seen = 0
+
+    print("[LuaSwap] --- Joystick device enumeration ---")
+    for _, d in ipairs(all) do
+        local joycode = "JOYCODE_" .. (d.devindex + 1) .. "_"
+        local lname   = d.name:lower()
+        local label   = ""
+
+        if lname:find("xin") then
+            xinmo_seen = xinmo_seen + 1
+            if xinmo_seen == 1 then
+                label = d.buttons == EXPECTED_P1_BTNS and "XinMo P1" or "XinMo P1? (unexpected btn count)"
+            else
+                label = d.buttons == EXPECTED_P2_BTNS and "XinMo P2" or "XinMo P2? (unexpected btn count)"
+            end
+        elseif lname:find("huijia") or lname:find("hui") then
+            huijia_seen = huijia_seen + 1
+            label = huijia_seen == 1 and "HuiJia P1" or "HuiJia P" .. huijia_seen
+        end
+
+        print(string.format("[LuaSwap]  %s  id=%-3d  btns=%-3d  '%s'%s",
+            joycode, d.devindex, d.buttons, d.name,
+            label ~= "" and ("  [" .. label .. "]") or ""))
+    end
+    print("[LuaSwap] --- end enumeration ---")
+end
 
 -- Returns sorted list of XinMo devices as MAME enumerates them.
 -- Each entry: { devindex, joycode_prefix, name, buttons }
@@ -119,6 +174,7 @@ end
 --         false = hw is normal   (no action needed)
 --         nil   = inconclusive (fewer than 2 devices or unexpected button counts)
 local function check_swap_needed()
+    log_all_joystick_devices()
     local devs = find_xinmo_devices()
 
     if not devs or #devs < 2 then
@@ -146,13 +202,15 @@ end
 
 
 -----------------------------------------------------------
--- Game Stop: restore cfg from repo unconditionally
+-- Game Stop: restore cfg from repo only if a swap was applied
 -----------------------------------------------------------
 
 local function on_game_stop()
-    -- Always restore cfg from the repo copy so the next launch starts clean,
-    -- regardless of whether a swap was applied this session.
-    print("[LuaSwap] Restoring cfg from repo on game stop")
+    if not swap_applied then
+        print("[LuaSwap] No swap was applied; skipping cfg restore")
+        return
+    end
+    print("[LuaSwap] Restoring cfg from repo on game stop (swap was applied)")
     os.execute(string.format("cp -f '%s/cfg'/*.cfg '%s/cfg/' 2>/dev/null",
         REPO_CFG, MAME_BASE))
 end
@@ -169,7 +227,6 @@ function xinmo.startplugin()
         if swap_done then
             if swap_applied then
                 manager.machine:popmessage("XinMo p1-P2 fixed")
-                swap_applied = false
             end
             return
         end
