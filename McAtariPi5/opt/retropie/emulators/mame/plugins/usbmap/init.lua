@@ -326,58 +326,72 @@ local function on_game_stop()
 end
 
 -----------------------------------------------------------
+-- Game Start: perform remap when an actual game is launched
+-----------------------------------------------------------
+
+local function on_game_start()
+
+    -- After soft_reset: already done for this session
+    if remap_done then
+        if remap_applied then
+            manager.machine:popmessage("UsbMap: applied")
+        end
+        return
+    end
+
+    -- Parse desired ordering from allctrlrs.cfg
+    local desired_assignments = parse_allctrlrs()
+    remap_done = true
+
+    if not desired_assignments then return end
+
+    -- Enumerate live devices
+    local live_devices = enumerate_devices()
+    if not live_devices or #live_devices == 0 then
+        print("[UsbMap] No joystick devices found")
+        return
+    end
+
+    -- Build the cfg remap table (desired -> actual)
+    local remap = build_remap(desired_assignments, live_devices)
+
+    -- Log the current device layout with remap annotations
+    log_all_joystick_devices(live_devices, remap)
+
+    -- Count changes needed
+    local n = 0
+    for _ in pairs(remap) do n = n + 1 end
+
+    if n == 0 then
+        print("[UsbMap] All devices already in correct order - no cfg changes needed")
+        return
+    end
+
+    -- Apply remap and soft-reset so MAME picks up the patched cfg files
+    print(string.format("[UsbMap] Applying %d remap(s) to cfg files...", n))
+    apply_remap_to_cfg(remap)
+    remap_applied = true
+    manager.machine:popmessage("UsbMap: remapped")
+    manager.machine:soft_reset()
+end
+
+-----------------------------------------------------------
+-- Machine Reset Handler
+-----------------------------------------------------------
+
+local function on_machine_reset()
+    -- Skip the MAME UI / empty system; only run for real game ROMs
+    if emu.romname() == "___empty" then return end
+    on_game_start()
+end
+
+-----------------------------------------------------------
 -- Plugin Entry Point
 -----------------------------------------------------------
 
 function usbmap.startplugin()
-
-    reset_notifier = emu.add_machine_reset_notifier(function()
-
-        -- After soft_reset: already done for this session
-        if remap_done then
-            if remap_applied then
-                manager.machine:popmessage("UsbMap: applied")
-            end
-            return
-        end
-
-        -- Parse desired ordering from allctrlrs.cfg
-        local desired_assignments = parse_allctrlrs()
-        remap_done = true
-
-        if not desired_assignments then return end
-
-        -- Enumerate live devices
-        local live_devices = enumerate_devices()
-        if not live_devices or #live_devices == 0 then
-            print("[UsbMap] No joystick devices found")
-            return
-        end
-
-        -- Build the cfg remap table (desired -> actual)
-        local remap = build_remap(desired_assignments, live_devices)
-
-        -- Log the current device layout with remap annotations
-        log_all_joystick_devices(live_devices, remap)
-
-        -- Count changes needed
-        local n = 0
-        for _ in pairs(remap) do n = n + 1 end
-
-        if n == 0 then
-            print("[UsbMap] All devices already in correct order - no cfg changes needed")
-            return
-        end
-
-        -- Apply remap and soft-reset so MAME picks up the patched cfg files
-        print(string.format("[UsbMap] Applying %d remap(s) to cfg files...", n))
-        apply_remap_to_cfg(remap)
-        remap_applied = true
-        manager.machine:popmessage("UsbMap: remapped")
-        manager.machine:soft_reset()
-    end)
-
-    stop_notifier = emu.add_machine_stop_notifier(on_game_stop)
+    reset_notifier = emu.add_machine_reset_notifier(on_machine_reset)
+    stop_notifier  = emu.add_machine_stop_notifier(on_game_stop)
 end
 
 return exports
