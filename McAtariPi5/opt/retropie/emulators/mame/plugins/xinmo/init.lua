@@ -1,5 +1,5 @@
 -----------------------------------------------------------
--- Xin-Mo PxSwap Plugin
+-- Xin-Mo Swap Plugin
 -- Detects P1/P2 controller swap via MAME's input driver
 -- and corrects cfg files + soft-resets if needed.
 -----------------------------------------------------------
@@ -9,7 +9,7 @@ local VERSION = "0.3.0"
 local exports = {
     name        = "xinmo",
     version     = VERSION,
-    description = "Xin-Mo PxSwap",
+    description = "Xin-Mo Swap",
     license     = "MIT",
     author      = { name = "Dan Caputi" }
 }
@@ -65,8 +65,8 @@ end
 -- Plugin State (survives soft_reset within a session)
 -----------------------------------------------------------
 
-local pxswap_done    = false   -- true once we've made a decision this session
-local pxswap_applied = false   -- true if we swapped; used to show post-reset message
+local swap_done      = false   -- true once we've made a decision this session
+local swap_applied   = false   -- true if we swapped; used to show post-reset message
 local reset_notifier = nil     -- held to prevent garbage collection
 local stop_notifier  = nil     -- held to prevent garbage collection
 
@@ -88,8 +88,8 @@ local function find_xinmo_devices()
     end
 
     if not joyclass then
-        print("[PxSwap] ERROR: joystick device class not available")
-        return nil
+        print("[LuaSwap] ERROR: joystick device class not available")
+        return nil, nil
     end
 
     local found = {}
@@ -122,25 +122,25 @@ local function check_swap_needed()
     local devs = find_xinmo_devices()
 
     if not devs or #devs < 2 then
-        print("[PxSwap] Cannot determine swap state: fewer than 2 XinMo devices found")
-        return nil
+        print("[LuaSwap] Cannot determine swap state: fewer than 2 XinMo devices found")
+        return nil, nil
     end
 
     for _, d in ipairs(devs) do
-        print(string.format("[PxSwap] %s -> '%s' -- %d buttons",
+        print(string.format("[LuaSwap] %s -> '%s' -- %d buttons",
               d.joycode_prefix, d.name, d.buttons))
     end
 
     if devs[1].buttons == EXPECTED_P1_BTNS and devs[2].buttons == EXPECTED_P2_BTNS then
-        print("[PxSwap] HW order: Normal (P1 first)")
-        return false
+        print("[LuaSwap] HW order: Normal (P1 first)")
+        return false, devs
     elseif devs[1].buttons == EXPECTED_P2_BTNS and devs[2].buttons == EXPECTED_P1_BTNS then
-        print("[PxSwap] HW order: SWAPPED (P2 enumerated first)")
-        return true
+        print("[LuaSwap] HW order: SWAPPED (P2 enumerated first)")
+        return true, devs
     else
-        print(string.format("[PxSwap] Inconclusive button counts: %d / %d",
+        print(string.format("[LuaSwap] Inconclusive button counts: %d / %d",
               devs[1].buttons, devs[2].buttons))
-        return nil
+        return nil, nil
     end
 end
 
@@ -152,7 +152,7 @@ end
 local function on_game_stop()
     -- Always restore cfg from the repo copy so the next launch starts clean,
     -- regardless of whether a swap was applied this session.
-    print("[PxSwap] Restoring cfg from repo on game stop")
+    print("[LuaSwap] Restoring cfg from repo on game stop")
     os.execute(string.format("cp -f '%s/cfg'/*.cfg '%s/cfg/' 2>/dev/null",
         REPO_CFG, MAME_BASE))
 end
@@ -166,17 +166,17 @@ function xinmo.startplugin()
     reset_notifier = emu.add_machine_reset_notifier(function()
 
         -- Post-reset: show confirmation that the fix took effect
-        if pxswap_done then
-            if pxswap_applied then
+        if swap_done then
+            if swap_applied then
                 manager.machine:popmessage("XinMo p1-P2 fixed")
-                pxswap_applied = false
+                swap_applied = false
             end
             return
         end
 
         -- First start: detect MAME's input order vs cfg state
-        local needs_swap = check_swap_needed()
-        pxswap_done = true
+        local needs_swap, xinmo_devs = check_swap_needed()
+        swap_done = true
 
         if needs_swap ~= nil then
             update_mame_stats(needs_swap)
@@ -188,8 +188,14 @@ function xinmo.startplugin()
 
         if needs_swap then
             manager.machine:popmessage("XinMo Swap: restart...")
-            os.execute(SWAP_SCRIPT)
-            pxswap_applied = true
+            -- Pass actual joycode prefixes so the script can remap correctly
+            -- regardless of which JOYCODE slots the hardware landed on
+            local cmd = string.format("%s '%s' '%s'",
+                SWAP_SCRIPT,
+                xinmo_devs[1].joycode_prefix,
+                xinmo_devs[2].joycode_prefix)
+            os.execute(cmd)
+            swap_applied = true
             manager.machine:soft_reset()
         end
 

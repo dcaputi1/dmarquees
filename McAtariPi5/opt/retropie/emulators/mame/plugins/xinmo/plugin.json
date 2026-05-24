@@ -2,7 +2,7 @@
   "plugin": {
     "name": "xinmo",
     "version": "0.1.0",
-    "description": "Xin-Mo PxSwap",
+    "description": "Xin-Mo Swap",
     "author": "Dan Caputi",
     "type": "plugin",
     "start": "true"
