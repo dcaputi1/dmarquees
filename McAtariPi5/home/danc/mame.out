@@ -1,0 +1,562 @@
+Attempting load of mame.ini
+Parsing mame.ini
+Attempting load of mame.ini
+Parsing mame.ini
+Starting plugin marquee...
+Marquee Plugin: Initialized (v1.3.3)
+Starting plugin defenderlr...
+Starting plugin xinmo...
+Starting plugin leds...
+LEDS Plugin: Initialized (v1.4.0)
+Attempting load of mame.ini
+Parsing mame.ini
+Attempting load of mame.ini
+Parsing mame.ini
+Attempting load of source/empty.ini
+Attempting load of ___empty.ini
+Available videodrivers: x11 KMSDRM offscreen dummy evdev 
+Current Videodriver: KMSDRM
+	Display #0
+		Desktop Mode:         1600x1200-32@60
+		Current Display Mode: 1600x1200-32@60
+		Renderdrivers:
+			    opengl (0x0)
+			 opengles2 (0x0)
+			  opengles (0x0)
+			  software (0x0)
+	Display #1
+		Desktop Mode:         1600x1200-32@60
+		Current Display Mode: 1600x1200-32@60
+		Renderdrivers:
+			    opengl (0x0)
+			 opengles2 (0x0)
+			  opengles (0x0)
+			  software (0x0)
+Available audio drivers: 
+	alsa                
+	sndio               
+	dsp                 
+	disk                
+	dummy               
+Build version:      0.283 (mame0283)
+Build architecure:  
+Build defines 1:    SDLMAME_UNIX=1 SDLMAME_X11=1 SDLMAME_LINUX=1 
+Build defines 1:    LSB_FIRST=1 
+SDL/OpenGL defines: SDL_COMPILEDVERSION=4605 USE_OPENGL=1 
+Compiler defines A: __GNUC__=12 __GNUC_MINOR__=2 __GNUC_PATCHLEVEL__=0 __VERSION__="12.2.0" 
+Compiler defines B: __unix__=1 
+Compiler defines C: __USE_FORTIFY_LEVEL=0 
+Enter init_monitors
+Adding monitor screen0 (1600 x 1200)
+Adding monitor screen1 (1600 x 1200)
+Leave init_monitors
+Using SDL multi-window OpenGL driver (SDL 2.0+)
+Enter sdlwindow_init
+
+Hints:
+	SDL_FRAMEBUFFER_ACCELERATION             (NULL)
+	SDL_RENDER_DRIVER                        (NULL)
+	SDL_RENDER_OPENGL_SHADERS                (NULL)
+	SDL_RENDER_SCALE_QUALITY                 (NULL)
+	SDL_RENDER_VSYNC                         (NULL)
+	SDL_VIDEO_X11_XVIDMODE                   (NULL)
+	SDL_VIDEO_X11_XINERAMA                   (NULL)
+	SDL_VIDEO_X11_XRANDR                     (NULL)
+	SDL_GRAB_KEYBOARD                        (NULL)
+	SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS         (NULL)
+	SDL_IOS_IDLE_TIMER_DISABLED              (NULL)
+	SDL_IOS_ORIENTATIONS                     (NULL)
+	SDL_XINPUT_ENABLED                       (NULL)
+	SDL_GAMECONTROLLERCONFIG                 (NULL)
+	SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS     (NULL)
+	SDL_ALLOW_TOPMOST                        (NULL)
+	SDL_TIMER_RESOLUTION                     (NULL)
+	SDL_RENDER_DIRECT3D_THREADSAFE           (NULL)
+	SDL_VIDEO_ALLOW_SCREENSAVER              (NULL)
+	SDL_ACCELEROMETER_AS_JOYSTICK            (NULL)
+	SDL_MAC_CTRL_CLICK_EMULATE_RIGHT_CLICK   (NULL)
+	SDL_VIDEO_WIN_D3DCOMPILER                (NULL)
+	SDL_VIDEO_WINDOW_SHARE_PIXEL_FORMAT      (NULL)
+	SDL_VIDEO_MAC_FULLSCREEN_SPACES          (NULL)
+	SDL_MOUSE_RELATIVE_MODE_WARP             (NULL)
+	SDL_RENDER_DIRECT3D11_DEBUG              (NULL)
+	SDL_VIDEO_HIGHDPI_DISABLED               (NULL)
+	SDL_WINRT_PRIVACY_POLICY_URL             (NULL)
+	SDL_WINRT_PRIVACY_POLICY_LABEL           (NULL)
+	SDL_WINRT_HANDLE_BACK_BUTTON             (NULL)
+Leave sdlwindow_init
+Enter sdl_info::create
+OpenGL: Broadcom
+OpenGL: V3D 7.1.7.0
+OpenGL: 3.1 Mesa 24.2.8-1~bpo12+rpt4
+OpenGL: texture rectangle supported
+OpenGL: non-power-of-2 textures supported (new method)
+OpenGL: vertex buffer supported
+OpenGL: pixel buffers supported
+OpenGL: framebuffer object supported
+OpenGL: GLSL supported
+OpenGL: max texture size 4096 x 4096
+Leave renderer_ogl::create
+Audio: Start initialization
+Audio: Driver is alsa
+Audio: sdl module does not support audio_latency option
+Keyboard: Start initialization
+Input: Adding keyboard #1: System keyboard (device id: System keyboard)
+Keyboard: Registered System keyboard
+Keyboard: End initialization
+Mouse: Start initialization
+Input: Adding mouse #1: System mouse (device id: System mouse)
+Mouse: Registered System mouse
+Mouse: End initialization
+Lightgun: Start initialization
+Input: Adding lightgun #1: System pointer gun 1 (device id: System pointer gun 1)
+Lightgun: Registered System pointer gun 1
+Lightgun: End initialization
+
+Joystick: Start initialization
+Joystick: HuiJia USB GamePad [GUID 030083a08f0e00001330000011010000] Vendor ID 0E8F, Product ID 3013, Revision 0111, Serial <nullptr>
+Joystick:   ...  6 axes, 13 buttons 1 hats 0 balls
+Input: Adding joystick #1: HuiJia USB GamePad (device id: 030083a08f0e00001330000011010000)
+Joystick:   ...  Does not have haptic capability
+Joystick: HuiJia USB GamePad [GUID 030083a08f0e00001330000011010000] Vendor ID 0E8F, Product ID 3013, Revision 0111, Serial <nullptr>
+Joystick:   ...  6 axes, 13 buttons 1 hats 0 balls
+Input: Adding joystick #2: HuiJia USB GamePad (device id: 030083a08f0e00001330000011010000)
+Joystick:   ...  Does not have haptic capability
+
+Joystick: Trooper V2 [GUID 0300a319242e00006a38000010010000] Vendor ID 2E24, Product ID 386A, Revision 0110, Serial <nullptr>
+Joystick:   ...  2 axes, 8 buttons 0 hats 0 balls
+Input: Adding joystick #3: Trooper V2 (device id: 0300a319242e00006a38000010010000)
+Joystick:   ...  Does not have haptic capability
+
+Joystick: mo.com Xinmotek Controller [GUID 0300d582c0160000e105000010010000] Vendor ID 16C0, Product ID 05E1, Revision 0110, Serial <nullptr>
+Joystick:   ...  2 axes, 15 buttons 1 hats 0 balls
+Input: Adding joystick #4: mo.com Xinmotek Controller (device id: 0300d582c0160000e105000010010000)
+Joystick:   ...  Does not have haptic capability
+Joystick: mo.com Xinmotek Controller [GUID 0300d582c0160000e105000010010000] Vendor ID 16C0, Product ID 05E1, Revision 0110, Serial <nullptr>
+Joystick:   ...  2 axes, 13 buttons 1 hats 0 balls
+Input: Adding joystick #5: mo.com Xinmotek Controller (device id: 0300d582c0160000e105000010010000)
+Joystick:   ...  Does not have haptic capability
+
+Joystick: Generic X-Box pad [GUID 030086650d0f00003e01000015010000] Vendor ID 0F0D, Product ID 013E, Revision 0115, Serial <nullptr>
+Joystick:   ...  6 axes, 11 buttons 1 hats 0 balls
+Input: Adding joystick #6: Generic X-Box pad (device id: 030086650d0f00003e01000015010000)
+Joystick:   ...  Has haptic capability
+
+Joystick: UltraStik Ultimarc Ultra-Stik Player 1 [GUID 0300c41c09d200001105000011010000] Vendor ID D209, Product ID 0511, Revision 0111, Serial <nullptr>
+Joystick:   ...  2 axes, 15 buttons 0 hats 0 balls
+Input: Adding joystick #7: UltraStik Ultimarc Ultra-Stik Player 1 (device id: 0300c41c09d200001105000011010000)
+Joystick:   ...  Does not have haptic capability
+Joystick: End initialization
+
+Searching font Liberation Sans in -. path/s
+Matching font: 0x555625e328d0
+Optional memory region ':screen' not found
+Starting No Driver Loaded ':'
+  (missing dependencies; rescheduling)
+Starting Video Screen ':screen'
+Starting No Driver Loaded ':'
+Checking for icons in directory icons
+Checking for icons in directory /home/danc/MAME_0.256_EXTRAs
+Entry icons.zip is a candidate icon collection
+
+Attempting to parse: allctrlrs.cfg
+Applying default configuration from controller configuration file allctrlrs.cfg
+Input: Remapped joystick #6: HuiJia USB GamePad (device id: 030083a08f0e00001330000011010000)
+Input: Remapped joystick #5: Generic X-Box pad (device id: 030086650d0f00003e01000015010000)
+Input: Remapped joystick #1: Trooper V2 (device id: 0300a319242e00006a38000010010000)
+Input: Remapped joystick #4: UltraStik Ultimarc Ultra-Stik Player 1 (device id: 0300c41c09d200001105000011010000)
+Input: Remapped joystick #2: mo.com Xinmotek Controller (device id: 0300d582c0160000e105000010010000)
+
+Attempting to parse: default.cfg
+Attempting to parse: ___empty.cfg
+
+[PxSwap] JOYCODE_2_ -> 'mo.com Xinmotek Controller' -- 13 buttons
+[PxSwap] JOYCODE_7_ -> 'mo.com Xinmotek Controller' -- 15 buttons
+[PxSwap] HW order: SWAPPED (P2 enumerated first)
+Swapped: /opt/retropie/emulators/mame/cfg/dkong.cfg
+Swapped: /opt/retropie/emulators/mame/cfg/sbrkout.cfg
+Swapped: /opt/retropie/emulators/mame/cfg/pong.cfg
+Swapped: /opt/retropie/emulators/mame/cfg/defender.cfg
+Swapped: /opt/retropie/emulators/mame/cfg/sf.cfg
+Swapped: /opt/retropie/emulators/mame/cfg/mk3.cfg
+Swapped: /opt/retropie/emulators/mame/cfg/spyhunt.cfg
+Swapped: /opt/retropie/emulators/mame/cfg/___empty.cfg
+Swapped: /opt/retropie/emulators/mame/cfg/dkongjr.cfg
+Swapped: /opt/retropie/emulators/mame/cfg/mhavoc.cfg
+Swapped: /opt/retropie/emulators/mame/cfg/default.cfg
+Swapped: /opt/retropie/emulators/mame/cfg/superbug.cfg
+Swapped: /opt/retropie/emulators/mame/cfg/mk2.cfg
+Swapped: /opt/retropie/emulators/mame/cfg/stargate.cfg
+Swapped: /opt/retropie/emulators/mame/cfg/mk4.cfg
+Swapped: /opt/retropie/emulators/mame/cfg/sf2.cfg
+Swapped: /opt/retropie/emulators/mame/cfg/mk.cfg
+Swapped: /opt/retropie/emulators/mame/cfg/popeye.cfg
+Swapped: /opt/retropie/emulators/mame/cfg/asteroid.cfg
+Swapped: /opt/retropie/emulators/mame/cfg/indytemp.cfg
+Swapped: /opt/retropie/emulators/mame/cfg/punchout.cfg
+Swapped: /opt/retropie/emulators/mame/cfg/tempest.cfg
+Swapped: /opt/retropie/emulators/mame/cfg/astdelux.cfg
+Swapped: /opt/retropie/emulators/mame/cfg/spnchout.cfg
+
+Icon path for machines set to icons;icons/icons;/home/danc/MAME_0.256_EXTRAs;/home/danc/MAME_0.256_EXTRAs/icons
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip ECD at 980
+unzip: /home/danc/MAME_0.256_EXTRAs/icons.zip has no ZIP64 ECD locator
+unzip: read /home/danc/MAME_0.256_EXTRAs/icons.zip central directory
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+OpenGL: VBO supported
+OpenGL: PBO supported
+OpenGL: FBO supported
+OpenGL: GLSL using mame bitmap shader filter 0: '/opt/retropie/emulators/mame/glsl/crt-pi'
+GL texture: copy 0, shader 1, dynamic 0, 640x480 640x480 [RGB32, Equal: 1, Palette: 0,
+            scale 1x1, border 0, pitch 640,640/4096], bytes/pix 4
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+GL texture: copy 0, shader 1, dynamic 0, 640x480 640x480 [RGB32, Equal: 1, Palette: 0,
+            scale 1x1, border 0, pitch 640,640/4096], bytes/pix 4
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+Marquee plugin: Game stopped, reset marquee
+Marquee plugin: Sent to Pi3 via sender: 'CLEAR'
+Marquee plugin: Sent to local FIFO: 'CLEAR'
+[PxSwap] Restoring cfg from repo on game stop
+LEDS Plugin: Game stopped, turning off all LEDs
+Average speed: 99.82% (258 seconds)
+Enter sdlwindow_exit
+Leave sdlwindow_exit
+Attempting load of mame.ini
+Parsing mame.ini
+Attempting load of mame.ini
+Parsing mame.ini
+Attempting load of source/empty.ini
+Attempting load of ___empty.ini
+Available videodrivers: x11 KMSDRM offscreen dummy evdev 
+Current Videodriver: KMSDRM
+	Display #0
+		Desktop Mode:         1600x1200-32@60
+		Current Display Mode: 1600x1200-32@60
+		Renderdrivers:
+			    opengl (0x0)
+			 opengles2 (0x0)
+			  opengles (0x0)
+			  software (0x0)
+	Display #1
+		Desktop Mode:         1600x1200-32@60
+		Current Display Mode: 1600x1200-32@60
+		Renderdrivers:
+			    opengl (0x0)
+			 opengles2 (0x0)
+			  opengles (0x0)
+			  software (0x0)
+Available audio drivers: 
+	alsa                
+	sndio               
+	dsp                 
+	disk                
+	dummy               
+Build version:      0.283 (mame0283)
+Build architecure:  
+Build defines 1:    SDLMAME_UNIX=1 SDLMAME_X11=1 SDLMAME_LINUX=1 
+Build defines 1:    LSB_FIRST=1 
+SDL/OpenGL defines: SDL_COMPILEDVERSION=4605 USE_OPENGL=1 
+Compiler defines A: __GNUC__=12 __GNUC_MINOR__=2 __GNUC_PATCHLEVEL__=0 __VERSION__="12.2.0" 
+Compiler defines B: __unix__=1 
+Compiler defines C: __USE_FORTIFY_LEVEL=0 
+Enter init_monitors
+Adding monitor screen0 (1600 x 1200)
+Adding monitor screen1 (1600 x 1200)
+Leave init_monitors
+Using SDL multi-window OpenGL driver (SDL 2.0+)
+Enter sdlwindow_init
+
+Hints:
+	SDL_FRAMEBUFFER_ACCELERATION             (NULL)
+	SDL_RENDER_DRIVER                        (NULL)
+	SDL_RENDER_OPENGL_SHADERS                (NULL)
+	SDL_RENDER_SCALE_QUALITY                 (NULL)
+	SDL_RENDER_VSYNC                         (NULL)
+	SDL_VIDEO_X11_XVIDMODE                   (NULL)
+	SDL_VIDEO_X11_XINERAMA                   (NULL)
+	SDL_VIDEO_X11_XRANDR                     (NULL)
+	SDL_GRAB_KEYBOARD                        (NULL)
+	SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS         (NULL)
+	SDL_IOS_IDLE_TIMER_DISABLED              (NULL)
+	SDL_IOS_ORIENTATIONS                     (NULL)
+	SDL_XINPUT_ENABLED                       (NULL)
+	SDL_GAMECONTROLLERCONFIG                 (NULL)
+	SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS     (NULL)
+	SDL_ALLOW_TOPMOST                        (NULL)
+	SDL_TIMER_RESOLUTION                     (NULL)
+	SDL_RENDER_DIRECT3D_THREADSAFE           (NULL)
+	SDL_VIDEO_ALLOW_SCREENSAVER              (NULL)
+	SDL_ACCELEROMETER_AS_JOYSTICK            0
+	SDL_MAC_CTRL_CLICK_EMULATE_RIGHT_CLICK   (NULL)
+	SDL_VIDEO_WIN_D3DCOMPILER                (NULL)
+	SDL_VIDEO_WINDOW_SHARE_PIXEL_FORMAT      (NULL)
+	SDL_VIDEO_MAC_FULLSCREEN_SPACES          (NULL)
+	SDL_MOUSE_RELATIVE_MODE_WARP             (NULL)
+	SDL_RENDER_DIRECT3D11_DEBUG              (NULL)
+	SDL_VIDEO_HIGHDPI_DISABLED               (NULL)
+	SDL_WINRT_PRIVACY_POLICY_URL             (NULL)
+	SDL_WINRT_PRIVACY_POLICY_LABEL           (NULL)
+	SDL_WINRT_HANDLE_BACK_BUTTON             (NULL)
+Leave sdlwindow_init
+Enter sdl_info::create
+Leave renderer_ogl::create
+Audio: Start initialization
+Audio: Driver is alsa
+Audio: sdl module does not support audio_latency option
+Keyboard: Start initialization
+Input: Adding keyboard #1: System keyboard (device id: System keyboard)
+Keyboard: Registered System keyboard
+Keyboard: End initialization
+Mouse: Start initialization
+Input: Adding mouse #1: System mouse (device id: System mouse)
+Mouse: Registered System mouse
+Mouse: End initialization
+Lightgun: Start initialization
+Input: Adding lightgun #1: System pointer gun 1 (device id: System pointer gun 1)
+Lightgun: Registered System pointer gun 1
+Lightgun: End initialization
+Joystick: Start initialization
+Joystick: HuiJia USB GamePad [GUID 030083a08f0e00001330000011010000] Vendor ID 0E8F, Product ID 3013, Revision 0111, Serial <nullptr>
+Joystick:   ...  6 axes, 13 buttons 1 hats 0 balls
+Input: Adding joystick #1: HuiJia USB GamePad (device id: 030083a08f0e00001330000011010000)
+Joystick:   ...  Does not have haptic capability
+Joystick: HuiJia USB GamePad [GUID 030083a08f0e00001330000011010000] Vendor ID 0E8F, Product ID 3013, Revision 0111, Serial <nullptr>
+Joystick:   ...  6 axes, 13 buttons 1 hats 0 balls
+Input: Adding joystick #2: HuiJia USB GamePad (device id: 030083a08f0e00001330000011010000)
+Joystick:   ...  Does not have haptic capability
+Joystick: Trooper V2 [GUID 0300a319242e00006a38000010010000] Vendor ID 2E24, Product ID 386A, Revision 0110, Serial <nullptr>
+Joystick:   ...  2 axes, 8 buttons 0 hats 0 balls
+Input: Adding joystick #3: Trooper V2 (device id: 0300a319242e00006a38000010010000)
+Joystick:   ...  Does not have haptic capability
+Joystick: mo.com Xinmotek Controller [GUID 0300d582c0160000e105000010010000] Vendor ID 16C0, Product ID 05E1, Revision 0110, Serial <nullptr>
+Joystick:   ...  2 axes, 15 buttons 1 hats 0 balls
+Input: Adding joystick #4: mo.com Xinmotek Controller (device id: 0300d582c0160000e105000010010000)
+Joystick:   ...  Does not have haptic capability
+Joystick: mo.com Xinmotek Controller [GUID 0300d582c0160000e105000010010000] Vendor ID 16C0, Product ID 05E1, Revision 0110, Serial <nullptr>
+Joystick:   ...  2 axes, 13 buttons 1 hats 0 balls
+Input: Adding joystick #5: mo.com Xinmotek Controller (device id: 0300d582c0160000e105000010010000)
+Joystick:   ...  Does not have haptic capability
+Joystick: Generic X-Box pad [GUID 030086650d0f00003e01000015010000] Vendor ID 0F0D, Product ID 013E, Revision 0115, Serial <nullptr>
+Joystick:   ...  6 axes, 11 buttons 1 hats 0 balls
+Input: Adding joystick #6: Generic X-Box pad (device id: 030086650d0f00003e01000015010000)
+Joystick:   ...  Has haptic capability
+Joystick: UltraStik Ultimarc Ultra-Stik Player 1 [GUID 0300c41c09d200001105000011010000] Vendor ID D209, Product ID 0511, Revision 0111, Serial <nullptr>
+Joystick:   ...  2 axes, 15 buttons 0 hats 0 balls
+Input: Adding joystick #7: UltraStik Ultimarc Ultra-Stik Player 1 (device id: 0300c41c09d200001105000011010000)
+Joystick:   ...  Does not have haptic capability
+Joystick: End initialization
+Searching font Liberation Sans in -. path/s
+Matching font: 0x555625f04430
+Optional memory region ':screen' not found
+Starting No Driver Loaded ':'
+  (missing dependencies; rescheduling)
+Starting Video Screen ':screen'
+Starting No Driver Loaded ':'
+Checking for icons in directory icons
+Checking for icons in directory /home/danc/MAME_0.256_EXTRAs
+Entry icons.zip is a candidate icon collection
+Attempting to parse: allctrlrs.cfg
+Applying default configuration from controller configuration file allctrlrs.cfg
+Input: Remapped joystick #6: HuiJia USB GamePad (device id: 030083a08f0e00001330000011010000)
+Input: Remapped joystick #5: Generic X-Box pad (device id: 030086650d0f00003e01000015010000)
+Input: Remapped joystick #1: Trooper V2 (device id: 0300a319242e00006a38000010010000)
+Input: Remapped joystick #4: UltraStik Ultimarc Ultra-Stik Player 1 (device id: 0300c41c09d200001105000011010000)
+Input: Remapped joystick #2: mo.com Xinmotek Controller (device id: 0300d582c0160000e105000010010000)
+Attempting to parse: default.cfg
+Attempting to parse: ___empty.cfg
+Icon path for machines set to icons;icons/icons;/home/danc/MAME_0.256_EXTRAs;/home/danc/MAME_0.256_EXTRAs/icons
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip ECD at 980
+unzip: /home/danc/MAME_0.256_EXTRAs/icons.zip has no ZIP64 ECD locator
+unzip: read /home/danc/MAME_0.256_EXTRAs/icons.zip central directory
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+unzip: found /home/danc/MAME_0.256_EXTRAs/icons.zip in cache
+unzip: opened archive file /home/danc/MAME_0.256_EXTRAs/icons.zip
+unzip: closing archive file /home/danc/MAME_0.256_EXTRAs/icons.zip and sending to cache
+Marquee plugin: Game stopped, reset marquee
+Marquee plugin: Sent to Pi3 via sender: 'CLEAR'
+Marquee plugin: Sent to local FIFO: 'CLEAR'
+[PxSwap] Restoring cfg from repo on game stop
+LEDS Plugin: Game stopped, turning off all LEDs
+Enter sdlwindow_exit
+Leave sdlwindow_exit
