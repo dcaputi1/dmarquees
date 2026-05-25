@@ -42,10 +42,13 @@ local CFG_DIR   = MAME_BASE .. "/cfg"
 -- Plugin State  (survives soft_reset within a session)
 -----------------------------------------------------------
 
-local remap_done     = false
-local remap_applied  = false
+local remap_computed      = false  -- have we computed remap for this game session?
+local cached_remap        = {}     -- cached remap table, reused on game-initiated resets
+local remap_applied       = false  -- was any remap needed? (for stop handler + popmessage)
+local pending_frame_remap = false  -- in-memory remap scheduled for first frame
 local reset_notifier = nil
 local stop_notifier  = nil
+local frame_notifier = nil
 
 -----------------------------------------------------------
 -- allctrlrs.cfg parsing
@@ -254,6 +257,85 @@ local function log_all_joystick_devices(live_devices, remap)
 end
 
 -----------------------------------------------------------
+-- Apply remap to live ioport fields in memory
+-----------------------------------------------------------
+
+-- Directly modifies the input sequences of all ioport fields to replace
+-- any JOYCODE tokens that appear in the remap table.  Uses the same
+-- two-phase temp-token strategy as the cfg-file patcher to avoid chain
+-- collisions.  Wrapped in pcall throughout so that API differences
+-- between MAME versions degrade gracefully.
+local function apply_remap_to_ioports(remap)
+    local input  = manager.machine.input
+    local ioport = manager.machine.ioport
+    local count  = 0
+
+    local tmp_tokens = {}
+    local i = 1
+    for desired, _ in pairs(remap) do
+        tmp_tokens[desired] = string.format("__USBMAPTMP%d__", i)
+        i = i + 1
+    end
+
+    for _, port in pairs(ioport.ports) do
+        for _, field in pairs(port.fields) do
+            -- 0 = standard, 1 = increment, 2 = decrement
+            for seqtype = 0, 2 do
+                local ok, seq = pcall(function() return field:input_seq(seqtype) end)
+                if ok and seq then
+                    local ok2, tok_str = pcall(function()
+                        return input:seq_to_tokens(seq)
+                    end)
+                    if ok2 and tok_str and tok_str ~= "" then
+                        local modified = tok_str
+                        for desired, tmp in pairs(tmp_tokens) do
+                            modified = modified:gsub(desired, tmp)
+                        end
+                        for desired, tmp in pairs(tmp_tokens) do
+                            modified = modified:gsub(tmp, remap[desired])
+                        end
+                        if modified ~= tok_str then
+                            local ok3, new_seq = pcall(function()
+                                return input:seq_from_tokens(modified)
+                            end)
+                            if ok3 and new_seq then
+                                local ok4 = pcall(function()
+                                    field:set_input_seq(seqtype, new_seq)
+                                end)
+                                if ok4 then
+                                    -- Readback to verify the change persisted
+                                    local ok5, chk_seq = pcall(function() return field:input_seq(seqtype) end)
+                                    local chk_str = ""
+                                    if ok5 and chk_seq then
+                                        local ok6, s = pcall(function() return input:seq_to_tokens(chk_seq) end)
+                                        if ok6 and s then chk_str = s end
+                                    end
+                                    local fname = ""
+                                    pcall(function() fname = tostring(field.name) end)
+                                    if chk_str == modified then
+                                        print(string.format("[UsbMap]   patched '%s' st=%d: %s -> %s",
+                                            fname, seqtype, tok_str, modified))
+                                        count = count + 1
+                                    else
+                                        print(string.format("[UsbMap]   PATCH LOST '%s' st=%d: wrote=%s got=%s",
+                                            fname, seqtype, modified, chk_str))
+                                    end
+                                else
+                                    print("[UsbMap] WARNING: set_input_seq failed (seqtype=" .. seqtype .. ")")
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    print(string.format("[UsbMap] In-memory remap: updated %d field sequence(s)", count))
+    return count
+end
+
+-----------------------------------------------------------
 -- Apply remap to all cfg files
 -----------------------------------------------------------
 
@@ -318,11 +400,16 @@ end
 local function on_game_stop()
     if not remap_applied then
         print("[UsbMap] No remap was applied; skipping cfg restore")
-        return
+    else
+        print("[UsbMap] Restoring cfg from repo on game stop")
+        os.execute(string.format("cp -f '%s/cfg'/*.cfg '%s/cfg/' 2>/dev/null",
+            REPO_CFG, MAME_BASE))
     end
-    print("[UsbMap] Restoring cfg from repo on game stop")
-    os.execute(string.format("cp -f '%s/cfg'/*.cfg '%s/cfg/' 2>/dev/null",
-        REPO_CFG, MAME_BASE))
+    -- Reset all session state for the next game
+    remap_computed      = false
+    cached_remap        = {}
+    remap_applied       = false
+    pending_frame_remap = false
 end
 
 -----------------------------------------------------------
@@ -330,49 +417,43 @@ end
 -----------------------------------------------------------
 
 local function on_game_start()
+    print(string.format("[UsbMap] on_game_start entered  remap_computed=%s  remap_applied=%s",
+        tostring(remap_computed), tostring(remap_applied)))
 
-    -- After soft_reset: already done for this session
-    if remap_done then
-        if remap_applied then
-            manager.machine:popmessage("UsbMap: applied")
+    -- First time for this game session: compute remap and patch cfg files on disk.
+    -- (Disk patch ensures correct values if MAME saves cfg again; the actual
+    -- control fix for the running game is done via in-memory ioport patching below.)
+    if not remap_computed then
+        remap_computed = true
+
+        local desired_assignments = parse_allctrlrs()
+        if desired_assignments then
+            local live_devices = enumerate_devices()
+            if not live_devices or #live_devices == 0 then
+                print("[UsbMap] No joystick devices found")
+            else
+                cached_remap = build_remap(desired_assignments, live_devices)
+                log_all_joystick_devices(live_devices, cached_remap)
+
+                local n = 0
+                for _ in pairs(cached_remap) do n = n + 1 end
+
+                if n == 0 then
+                    print("[UsbMap] All devices already in correct order - no remap needed")
+                else
+                    remap_applied = true
+                    print(string.format("[UsbMap] Patching %d remap(s) to cfg files on disk...", n))
+                    apply_remap_to_cfg(cached_remap)
+                    -- Schedule in-memory ioport remap for the first emulation frame.
+                    -- MAME caches cfg values before firing the reset notifier and applies
+                    -- them to ioport fields after this callback returns, so patching here
+                    -- would be overwritten.  Deferring to the first frame ensures the
+                    -- canonical (pre-patch) cfg values are in place when we remap them.
+                    pending_frame_remap = true
+                end
+            end
         end
-        return
     end
-
-    -- Parse desired ordering from allctrlrs.cfg
-    local desired_assignments = parse_allctrlrs()
-    remap_done = true
-
-    if not desired_assignments then return end
-
-    -- Enumerate live devices
-    local live_devices = enumerate_devices()
-    if not live_devices or #live_devices == 0 then
-        print("[UsbMap] No joystick devices found")
-        return
-    end
-
-    -- Build the cfg remap table (desired -> actual)
-    local remap = build_remap(desired_assignments, live_devices)
-
-    -- Log the current device layout with remap annotations
-    log_all_joystick_devices(live_devices, remap)
-
-    -- Count changes needed
-    local n = 0
-    for _ in pairs(remap) do n = n + 1 end
-
-    if n == 0 then
-        print("[UsbMap] All devices already in correct order - no cfg changes needed")
-        return
-    end
-
-    -- Apply remap and soft-reset so MAME picks up the patched cfg files
-    print(string.format("[UsbMap] Applying %d remap(s) to cfg files...", n))
-    apply_remap_to_cfg(remap)
-    remap_applied = true
-    manager.machine:popmessage("UsbMap: remapped")
-    manager.machine:soft_reset()
 end
 
 -----------------------------------------------------------
@@ -389,9 +470,23 @@ end
 -- Plugin Entry Point
 -----------------------------------------------------------
 
+local function on_first_frame()
+    if not pending_frame_remap then return end
+    pending_frame_remap = false
+    local n = 0
+    for _ in pairs(cached_remap) do n = n + 1 end
+    if n > 0 then
+        print(string.format("[UsbMap] Applying %d remap(s) to ioport fields (first frame)...", n))
+        apply_remap_to_ioports(cached_remap)
+        manager.machine:popmessage("UsbMap: applied")
+    end
+end
+
 function usbmap.startplugin()
+    print(string.format("[UsbMap] v%s loaded", VERSION))
     reset_notifier = emu.add_machine_reset_notifier(on_machine_reset)
     stop_notifier  = emu.add_machine_stop_notifier(on_game_stop)
+    frame_notifier = emu.add_machine_frame_notifier(on_first_frame)
 end
 
 return exports
