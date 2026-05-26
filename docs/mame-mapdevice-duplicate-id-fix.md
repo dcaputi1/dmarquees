@@ -142,3 +142,120 @@ both slots are reliably filled on every boot.
 - The fix is minimal and safe — `vector<pair>` iteration is semantically equivalent to map
   iteration in `map_device_to_controller` since that function never does key-based lookup.
 - The `allctrlrs.cfg` file itself requires **no changes** — the XML is already correct.
+
+---
+
+## Building a Patched MAME via RetroPie-Setup
+
+This section documents how to integrate the fix into a RetroPie-Setup "Install From Source"
+build using a modified copy of the MAME scriptmodule kept in this project.
+
+### Modified Scriptmodule
+
+**Project file (deploy this to the Pi 5):**
+```
+McAtariPi5/home/danc/RetroPie-Setup/scriptmodules/emulators/mame.sh
+```
+This mirrors the on-device path `~/RetroPie-Setup/scriptmodules/emulators/mame.sh`.
+
+**What the script does differently from upstream:**
+
+| Function | Change |
+|----------|--------|
+| Module scope | `__keep_sources=1` — prevents RetroPie-Setup from deleting the build directory after install |
+| `sources_mame()` | After `gitPullOrClone`, applies both `sed` patches; prints pass/fail per file; pauses for your verification before the multi-hour build starts |
+| `install_mame()` | After copying build artifacts to `/opt/retropie/emulators/mame/`, also copies the two patched files to `/home/danc/mame-src-patched/src/emu/` for permanent reference; sets `__keep_sources=1` again immediately before the framework cleanup check |
+
+### Deploy to Pi 5
+
+```bash
+# From your workstation, in the IvarArcade project root:
+scp McAtariPi5/home/danc/RetroPie-Setup/scriptmodules/emulators/mame.sh \
+    danc@<pi5-ip>:~/RetroPie-Setup/scriptmodules/emulators/mame.sh
+```
+
+Or over SSH directly on the Pi 5 (copy-paste from this project after pulling):
+```bash
+# On the Pi 5:
+cp ~/IvarArcade/McAtariPi5/home/danc/RetroPie-Setup/scriptmodules/emulators/mame.sh \
+   ~/RetroPie-Setup/scriptmodules/emulators/mame.sh
+```
+
+### Run the Build
+
+```bash
+sudo ~/RetroPie-Setup/retropie_setup.sh
+# Navigate: Manage packages → Manage experimental packages → mame → Install from source
+```
+
+The setup script runs four steps in order: **sources → build → install → configure**.
+
+### What You See During the Sources Step
+
+After `git clone` (or pull) completes, the modified script applies the patches and pauses:
+
+```
+IvarArcade: applying mapdevice duplicate-ID fix...
+  [OK] src/emu/input.h: devicemap_table -> std::vector<std::pair<std::string, std::string>>
+  [OK] src/emu/ioport.cpp: devicemap.emplace() -> emplace_back()
+
+Source tree: /home/danc/RetroPie-Setup/tmp/build/mame
+
+Verify the applied changes:
+  grep -n 'devicemap_table' /home/danc/RetroPie-Setup/tmp/build/mame/src/emu/input.h
+  grep -n 'emplace_back'    /home/danc/RetroPie-Setup/tmp/build/mame/src/emu/ioport.cpp
+
+Press Enter to start the build, or Ctrl+C to abort and fix manually...
+```
+
+Run the `grep` commands in a second terminal to confirm, then press **Enter**. The build takes
+roughly 3–6 hours on a Pi 5.
+
+If a pattern is not found (e.g. the MAME version changed the surrounding code), the script
+prints `[!!]` for that file and still pauses. In that case:
+1. Press **Ctrl+C** to abort.
+2. Navigate to the source: `cd ~/RetroPie-Setup/tmp/build/mame`
+3. Apply the fix manually per the **Quick Diff** section above.
+4. Back in `retropie_setup.sh`: select `mame` → **Build** (skips the sources step).
+
+### Source Locations After a Successful Build
+
+Because `__keep_sources=1` is set, the full MAME source tree is preserved at:
+```
+~/RetroPie-Setup/tmp/build/mame/
+```
+
+The two patched files are also explicitly copied to:
+```
+/home/danc/mame-src-patched/src/emu/input.h
+/home/danc/mame-src-patched/src/emu/ioport.cpp
+```
+
+### Restoring the Upstream Script
+
+After the build, restore the stock scriptmodule so future `retropie_setup.sh` updates work
+normally:
+
+```bash
+cd ~/RetroPie-Setup
+git checkout scriptmodules/emulators/mame.sh
+```
+
+The patched MAME binary in `/opt/retropie/emulators/mame/` and the saved source files in
+`/home/danc/mame-src-patched/` are unaffected by this reset.
+
+### Re-applying After a MAME Version Bump
+
+If MAME changes the surrounding code and the `sed` patterns no longer match:
+
+1. Re-run `retropie_setup.sh` → `mame` → **Update source / Install from source** with the
+   modified scriptmodule in place.
+2. At the pause prompt, press **Ctrl+C**.
+3. Find the new location of the relevant lines:
+   ```bash
+   cd ~/RetroPie-Setup/tmp/build/mame
+   grep -n "devicemap_table" src/emu/input.h
+   grep -n "devicemap.emplace" src/emu/ioport.cpp
+   ```
+4. Apply the changes manually using the logic from the **Quick Diff** section above.
+5. Return to `retropie_setup.sh` → `mame` → **Build** to continue.
