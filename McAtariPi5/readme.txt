@@ -28,7 +28,8 @@ f. reboot and run:
 > git clone https://github.com/dcaputi1/IvarArcade.git
   then reload this readme.txt from ~/IvarArcade/McAtariPi5, make sure nothing above changed
 > git clone --depth=1 https://github.com/RetroPie/RetroPie-Setup.git
-  2/28/2026 - use dcaputi1/Retropie-Setup.git for Trixie
+  2/28/2026 - use dcaputi1/Retropie-Setup.git for Trixie (using 5/27...)
+  5/27/2026 - attempt to fix mapdevice feature for duplicate device IDs
 > cd RetroPie-Setup
 > sudo ./retropie_setup.sh
 g. install all core packs
@@ -208,6 +209,7 @@ i. Configure direct wired link static IPs (NetworkManager):
         [X] "[HW] Normal:" (whats with the brackets?) "[ERROR] Cfg directories disagree..."
 5/10/26 [X] try Claude in Co-Pilot for scanlines shader help
 5/12/26 [ ] how to easily switch between effects scanlines and scanlines glsl?
-5/13/26 [ ] need a shutdown option from the frontend menu
+5/13/26 [X] need a shutdown option from the frontend menu
 5/15/26 [X] xinmo swap still NFG - change unswap to force copy from ~/McAtariPi5/...
-        [ ] pi3 way out of date and NO WIFI! ... WTF!?
+        [X] pi3 way out of date and NO WIFI! ... WTF!?
+5/27/26 [ ] Attempt new Trixie baseline
