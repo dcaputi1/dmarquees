@@ -69,17 +69,40 @@ function sources_mame() {
     printHeading "IvarArcade: applying mapdevice duplicate-ID fix..."
 
     local patch_ok=1
+    local devicemap_alias="using devicemap_table = std::vector<std::pair<std::string, std::string>>;"
 
     # -- Change 1: src/emu/input.h ----------------------------------------
     local input_h="$md_build/src/emu/input.h"
-    if grep -q "transparent_string_map<std::string, std::string>" "$input_h"; then
-        sed -i \
-            's/using devicemap_table = util::transparent_string_map<std::string, std::string>;/using devicemap_table = std::vector<std::pair<std::string, std::string>>;/' \
+    if grep -qF "$devicemap_alias" "$input_h"; then
+        echo "  [OK] src/emu/input.h: devicemap_table already uses std::vector<std::pair<std::string, std::string>>"
+    elif grep -Eq '^[[:space:]]*using devicemap_table = .*;$' "$input_h"; then
+        sed -E -i \
+            's|^([[:space:]]*using devicemap_table = ).*;|\1std::vector<std::pair<std::string, std::string>>;|' \
             "$input_h"
-        echo "  [OK] src/emu/input.h: devicemap_table -> std::vector<std::pair<std::string, std::string>>"
+
+        if ! grep -q '^#include <utility>$' "$input_h"; then
+            sed -i '/^#include <string>$/a #include <utility>' "$input_h"
+        fi
+
+        if ! grep -q '^#include <vector>$' "$input_h"; then
+            if grep -q '^#include <utility>$' "$input_h"; then
+                sed -i '/^#include <utility>$/a #include <vector>' "$input_h"
+            else
+                sed -i '/^#include <string>$/a #include <vector>' "$input_h"
+            fi
+        fi
+
+        if grep -qF "$devicemap_alias" "$input_h"; then
+            echo "  [OK] src/emu/input.h: devicemap_table -> std::vector<std::pair<std::string, std::string>>"
+        else
+            echo "  [!!] src/emu/input.h: alias rewrite did not stick!"
+            echo "       Expected alias: $devicemap_alias"
+            echo "       Apply manually: $input_h"
+            patch_ok=0
+        fi
     else
         echo "  [!!] src/emu/input.h: PATTERN NOT FOUND — automatic patch skipped!"
-        echo "       Expected line:  using devicemap_table = util::transparent_string_map<std::string, std::string>;"
+        echo "       Expected alias: using devicemap_table = ...;"
         echo "       Apply manually: $input_h"
         patch_ok=0
     fi

@@ -80,6 +80,10 @@ using devicemap_table = std::vector<std::pair<std::string, std::string>>;
 Add `#include <vector>` and `#include <utility>` to the includes at the top of `input.h` if not
 already present (check — `<vector>` is likely already pulled in transitively, but be explicit).
 
+If the exact original right-hand side has changed upstream, the fix is still the same: rewrite the
+`using devicemap_table = ...;` alias to the `std::vector<std::pair<std::string, std::string>>`
+form above.
+
 ### Change 2 — `src/emu/ioport.cpp`
 
 In `ioport_manager::load_config()`, change `emplace` to `emplace_back`:
@@ -105,6 +109,8 @@ This works identically for both maps and `vector<pair<>>`. No modification requi
 ```diff
 --- a/src/emu/input.h
 +++ b/src/emu/input.h
++#include <utility>
++#include <vector>
 -    using devicemap_table = util::transparent_string_map<std::string, std::string>;
 +    using devicemap_table = std::vector<std::pair<std::string, std::string>>;
 
