@@ -154,21 +154,23 @@ both slots are reliably filled on every boot.
 ## Building a Patched MAME via RetroPie-Setup
 
 This section documents how to integrate the fix into a RetroPie-Setup "Install From Source"
-build using a modified copy of the MAME scriptmodule kept in this project.
+build using the patched MAME scriptmodule from the sibling `RetroPie-Setup` repo.
 
 ### Modified Scriptmodule
 
-**Project file (deploy this to the Pi 5):**
+**Authoritative project file (deploy this to the Pi 5):**
 ```
-McAtariPi5/home/danc/RetroPie-Setup/scriptmodules/emulators/mame.sh
+../RetroPie-Setup/scriptmodules/emulators/mame.sh
 ```
-This mirrors the on-device path `~/RetroPie-Setup/scriptmodules/emulators/mame.sh`.
+In this workspace, that file is the single source of truth. It maps to the on-device path
+`~/RetroPie-Setup/scriptmodules/emulators/mame.sh`.
 
 **What the script does differently from upstream:**
 
 | Function | Change |
 |----------|--------|
 | Module scope | `__keep_sources=1` — prevents RetroPie-Setup from deleting the build directory after install |
+| Module scope | `IVAR_MAME_PROFILE=full|arcade` — selects full MAME (`mame`, upstream `arcade.flt`) or stripped-down MAME (`mamearcade`, custom `arcade.flt`) |
 | `sources_mame()` | After `gitPullOrClone`, applies both `sed` patches; prints pass/fail per file; pauses for your verification before the multi-hour build starts |
 | `install_mame()` | After copying build artifacts to `/opt/retropie/emulators/mame/`, also copies the two patched files to `/home/danc/mame-src-patched/src/emu/` for permanent reference; sets `__keep_sources=1` again immediately before the framework cleanup check |
 
@@ -176,23 +178,38 @@ This mirrors the on-device path `~/RetroPie-Setup/scriptmodules/emulators/mame.s
 
 ```bash
 # From your workstation, in the IvarArcade project root:
-scp McAtariPi5/home/danc/RetroPie-Setup/scriptmodules/emulators/mame.sh \
+scp ../RetroPie-Setup/scriptmodules/emulators/mame.sh \
     danc@<pi5-ip>:~/RetroPie-Setup/scriptmodules/emulators/mame.sh
 ```
 
-Or over SSH directly on the Pi 5 (copy-paste from this project after pulling):
+Or over SSH directly on the Pi 5, update the file in place inside the checked-out `RetroPie-Setup` repo:
 ```bash
 # On the Pi 5:
-cp ~/IvarArcade/McAtariPi5/home/danc/RetroPie-Setup/scriptmodules/emulators/mame.sh \
-   ~/RetroPie-Setup/scriptmodules/emulators/mame.sh
+cd ~/RetroPie-Setup
+git pull
 ```
+
+If the Pi does not have the `RetroPie-Setup` repo checked out, copy the file from the workstation
+path `../RetroPie-Setup/scriptmodules/emulators/mame.sh` instead of expecting a second tracked
+copy under `IvarArcade`.
 
 ### Run the Build
 
+Build the full MAME target right now:
+
 ```bash
-sudo ~/RetroPie-Setup/retropie_setup.sh
+sudo env IVAR_MAME_PROFILE=full ~/RetroPie-Setup/retropie_setup.sh
 # Navigate: Manage packages → Manage experimental packages → mame → Install from source
 ```
+
+Later, switch back to the stripped-down arcade-only build from the same checkout:
+
+```bash
+sudo env IVAR_MAME_PROFILE=arcade ~/RetroPie-Setup/retropie_setup.sh
+# Navigate: Manage packages → Manage experimental packages → mame → Install from source
+```
+
+If `IVAR_MAME_PROFILE` is unset, the script defaults to `arcade`.
 
 The setup script runs four steps in order: **sources → build → install → configure**.
 
@@ -201,6 +218,9 @@ The setup script runs four steps in order: **sources → build → install → c
 After `git clone` (or pull) completes, the modified script applies the patches and pauses:
 
 ```
+IvarArcade: building MAME profile 'full'
+   [OK] using upstream arcade.flt and full MAME target
+
 IvarArcade: applying mapdevice duplicate-ID fix...
   [OK] src/emu/input.h: devicemap_table -> std::vector<std::pair<std::string, std::string>>
   [OK] src/emu/ioport.cpp: devicemap.emplace() -> emplace_back()
@@ -254,8 +274,8 @@ The patched MAME binary in `/opt/retropie/emulators/mame/` and the saved source 
 
 If MAME changes the surrounding code and the `sed` patterns no longer match:
 
-1. Re-run `retropie_setup.sh` → `mame` → **Update source / Install from source** with the
-   modified scriptmodule in place.
+1. Re-run `retropie_setup.sh` with either `IVAR_MAME_PROFILE=full` or `IVAR_MAME_PROFILE=arcade`
+   and keep the modified scriptmodule in place.
 2. At the pause prompt, press **Ctrl+C**.
 3. Find the new location of the relevant lines:
    ```bash

@@ -31,10 +31,13 @@ f. reboot and run:
   2/28/2026 - use dcaputi1/Retropie-Setup.git for Trixie (using 5/27...)
   5/27/2026 - attempt to fix mapdevice feature for duplicate device IDs
 > cd RetroPie-Setup
-> sudo ./retropie_setup.sh
+> sudo env IVAR_MAME_PROFILE=full ./retropie_setup.sh
+        use IVAR_MAME_PROFILE=full right now to build full MAME with upstream arcade.flt and the mame binary
 g. install all core packs
    5/27/2026 - install emulationstation-dev
 h. install experimantal mame package (~2 hours from source)
+         later, to switch back to the stripped-down arcade-only build from the same checkout:
+         sudo env IVAR_MAME_PROFILE=arcade ./retropie_setup.sh
 i. 5/27/2026 SKIP [install experimental lr-mame]
 j. 5/27/2026 SKIP enable autostart emulationstation
    autostart, select boot to desktop with auto-login as danc
@@ -96,7 +99,8 @@ f. reboot, open command prompt and run:
 > git clone https://github.com/dcaputi1/RetroPie-Setup.git
   4/4/2026 - any diffs with https://github.com/RetroPie/RetroPie-Setup.git ?
 > cd RetroPie-Setup
-> sudo ./retropie_setup.sh
+> sudo env IVAR_MAME_PROFILE=full ./retropie_setup.sh
+        use IVAR_MAME_PROFILE=arcade later if you want the stripped-down mamearcade build from the same repo
 g. install all core packs, enable boot to ES
 h. do NOT reboot, from command prompt:
 
