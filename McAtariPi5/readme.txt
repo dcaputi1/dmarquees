@@ -33,30 +33,26 @@ f. reboot and run:
 > cd RetroPie-Setup
 > sudo ./retropie_setup.sh
 g. install all core packs
-   12/30/2025 - RetroArch must be installed from source! (compatable with lr-mame)
+   5/27/2026 - install emulationstation-dev
 h. install experimantal mame package (~2 hours from source)
-   1/15/2026 - installed from binary
-i. install experimental lr-mame (~2 hours from source)
-   1/11/2026 - installed from binary
-j. enable autostart emulationstation
-   note: deferring this step later will corrupt custom autostart.sh
-k. install optional package Skyscraper
-l. edit autostart.sh and replace 'emulationstation' with desktop launch
-   'wayfire-pi' for Bookworm, 'sudo systemctl start lightdm' for Trixie
-> sudo chown -R danc /opt/retropie
+i. 5/27/2026 SKIP [install experimental lr-mame]
+j. 5/27/2026 SKIP enable autostart emulationstation
+   autostart, select boot to desktop with auto-login as danc
+k. [optional] install Skyscraper
 
 steps:
-1. ~/IvarArcade/McAtariPi5/cp_roms.sh (~1 hours)
-2. add paths for mame and (optional) retroarch, frontends to /etc/profile (user long path)
+1. sudo chown -R danc /opt/retropie
+2. ~/IvarArcade/McAtariPi5/cp_roms.sh (~1 hours)
+3. add paths for mame and (optional) retroarch, frontends to /etc/profile (user long path)
    :/opt/retropie/emulators/mame:/opt/retropie/emulators/retroarch/bin
-3. sudo ~/IvarArcade/McAtariPi5/analyze_games.sh (installs tinyxml2 and python3-hid packages)
-4. mkdir -p /opt/retropie/configs/all/retroarch/config/MAME
-5. build and install IvarArcade project components:
+4. sudo ~/IvarArcade/McAtariPi5/analyze_games.sh (installs tinyxml2 and python3-hid packages)
+5. mkdir -p /opt/retropie/configs/all/retroarch/config/MAME
+6. build and install IvarArcade project components:
    cd ~/IvarArcade
    make all
    make install-force # deploys binaries, scripts, plugins, etc...
-6. reboot (for path to take effect)
-7. clone, build, install ultrastikcmd tool for per-game joystick mapping:
+7. reboot (for path to take effect)
+8. clone, build, install ultrastikcmd tool for per-game joystick mapping:
    mkdir -p ~/IvarArcade/tools/linux
    cd ~/IvarArcade/tools/linux
    git clone https://github.com/dcaputi1/UltrastikCmd.git
@@ -64,16 +60,16 @@ steps:
    ./build.sh
    sudo ldconfig -v | grep libhid
    (verify ldconfig shows libhid.so.0 -> libhid.so.0.0.0)
-8. run ~/IvarArcade/McAtariPi5/ra_final.sh (formerly cp_opt.sh)
-9. run ~/IvarArcade/analyze_games/analyze_games (not sudo!)
-10.sudo ~/scripts/set_asound.sh (for Trixie sound problem - not needed for Bookworm Debian base OS)
-11.if using Pi3 as remote marquee node:
+9. run ~/IvarArcade/McAtariPi5/ra_final.sh (formerly cp_opt.sh)
+10.run ~/IvarArcade/analyze_games/analyze_games (not sudo!)
+11.sudo ~/scripts/set_asound.sh (for Trixie sound problem - not needed for Bookworm Debian base OS)
+12.if using Pi3 as remote marquee node:
    sudo nmcli con add type ethernet ifname eth0 con-name eth0-static ip4 10.77.77.5/24
    sudo nmcli con up eth0-static
-12.sudo apt install fuse-zip (mounts zip file w/ PNGs)
+13.sudo apt install fuse-zip (mounts zip file w/ PNGs)
    edit /etc/fuse.conf and uncomment #user_allow_other:
    sudo sed -i 's/^#user_allow_other/user_allow_other/' /etc/fuse.conf
-13.sudo apt install librsvg2-bin
+14.sudo apt install librsvg2-bin
 
 optional:
 A. sudo apt install meld
@@ -213,3 +209,8 @@ i. Configure direct wired link static IPs (NetworkManager):
 5/15/26 [X] xinmo swap still NFG - change unswap to force copy from ~/McAtariPi5/...
         [X] pi3 way out of date and NO WIFI! ... WTF!?
 5/27/26 [ ] Attempt new Trixie baseline
+5/28/26 [x] Trixie continued - Pi Connect screen share failed after RetroPie setup
+        root cause: no active Wayland desktop session for user danc
+        fix: RetroPie autostart / raspi-config boot to desktop auto-login restored
+              lightdm/Wayland; keep IvarArcade autostart.sh launching pic_frontend.py
+              and use 'sudo systemctl start lightdm' for Exit to X/Wayland Desktop
