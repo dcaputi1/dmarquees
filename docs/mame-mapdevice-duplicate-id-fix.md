@@ -172,6 +172,8 @@ In this workspace, that file is the single source of truth. It maps to the on-de
 | Module scope | `__keep_sources=1` — prevents RetroPie-Setup from deleting the build directory after install |
 | Module scope | `IVAR_MAME_PROFILE=full|arcade` — selects full MAME (`mame`, upstream `arcade.flt`) or stripped-down MAME (`mamearcade`, custom `arcade.flt`) |
 | `sources_mame()` | After `gitPullOrClone`, applies both `sed` patches; prints pass/fail per file; pauses for your verification before the multi-hour build starts |
+| `depends_mame()` | On desktop/X11 builds, installs Qt 6 build dependencies including `qmake6` explicitly (needed on current Debian 13 / trixie packages) |
+| `build_mame()` | Always passes `REGENIE=1` and forces `ARCHOPTS_CXX=-std=c++20` in the wrapper so current MAME releases build cleanly on newer GCC toolchains |
 | `install_mame()` | After copying build artifacts to `/opt/retropie/emulators/mame/`, also copies the two patched files to `/home/danc/mame-src-patched/src/emu/` for permanent reference; sets `__keep_sources=1` again immediately before the framework cleanup check |
 
 ### Deploy to Pi 5
@@ -212,6 +214,10 @@ sudo env IVAR_MAME_PROFILE=arcade ~/RetroPie-Setup/retropie_setup.sh
 If `IVAR_MAME_PROFILE` is unset, the script defaults to `arcade`.
 
 The setup script runs four steps in order: **sources → build → install → configure**.
+
+For Debian 13 / trixie on Pi 5, let RetroPie-Setup install dependencies first so the build gets
+`qmake6`, and keep the patched script in place so the wrapper reasserts C++20 even if local
+toolchain overrides or stale generated files would otherwise drop it.
 
 ### What You See During the Sources Step
 
