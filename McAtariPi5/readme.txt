@@ -32,15 +32,13 @@ f. reboot and run:
   5/27/2026 - attempt to fix mapdevice feature for duplicate device IDs
 > cd RetroPie-Setup
 > sudo env IVAR_MAME_PROFILE=full ./retropie_setup.sh
-        use IVAR_MAME_PROFILE=full right now to build full MAME with upstream arcade.flt and the mame binary
+  use IVAR_MAME_PROFILE=full right now to build full MAME with upstream arcade.flt and the mame binary
 g. install all core packs
    5/27/2026 - install emulationstation-dev
 h. install experimantal mame package (~2 hours from source)
-         later, to switch back to the stripped-down arcade-only build from the same checkout:
-         sudo env IVAR_MAME_PROFILE=arcade ./retropie_setup.sh
+   NOTE: for arcade-only build use sudo env IVAR_MAME_PROFILE=arcade ./retropie_setup.sh
 i. 5/27/2026 SKIP [install experimental lr-mame]
-j. 5/27/2026 SKIP enable autostart emulationstation
-   autostart, select boot to desktop with auto-login as danc
+j. enable autostart [was emulationstation] boot to desktop / auto-login danc
 k. [optional] install Skyscraper
 
 steps:
@@ -70,8 +68,8 @@ steps:
    sudo nmcli con add type ethernet ifname eth0 con-name eth0-static ip4 10.77.77.5/24
    sudo nmcli con up eth0-static
 13.sudo apt install fuse-zip (mounts zip file w/ PNGs)
-   edit /etc/fuse.conf and uncomment #user_allow_other:
-   sudo sed -i 's/^#user_allow_other/user_allow_other/' /etc/fuse.conf
+14.sudo sed -i 's/^#user_allow_other/user_allow_other/' /etc/fuse.conf
+   # edits /etc/fuse.conf and uncomments #user_allow_other
 14.sudo apt install librsvg2-bin
 
 optional:
