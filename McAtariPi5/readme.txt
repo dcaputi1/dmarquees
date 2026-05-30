@@ -38,7 +38,7 @@ g. install all core packs
 h. install experimantal mame package (~2 hours from source)
    NOTE: for arcade-only build use sudo env IVAR_MAME_PROFILE=arcade ./retropie_setup.sh
 i. 5/27/2026 SKIP [install experimental lr-mame]
-j. enable autostart [was emulationstation] boot to desktop / auto-login danc
+j. enable autostart emulationstation
 k. [optional] install Skyscraper
 
 steps:

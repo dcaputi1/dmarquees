@@ -1,8 +1,8 @@
 -----------------------------------------------------------
 -- USB Mapper Plugin (usbmap)
 -- Reads the desired JOYCODE ordering from allctrlrs.cfg and
--- remaps all game cfg files to match the actual USB device
--- enumeration order at runtime.
+-- remaps live ioport fields in memory to match the actual USB
+-- device enumeration order at runtime.
 --
 -- For XinMo controllers (two devices, same GUID) the
 -- correct player is identified by button count.
@@ -10,7 +10,7 @@
 -- unit is treated as P1.
 -----------------------------------------------------------
 
-local VERSION = "1.0.0"
+local VERSION = "1.1.0"
 
 local exports = {
     name        = "usbmap",
@@ -31,12 +31,9 @@ local usbmap = exports
 local XINMO_P1_BTNS = 15
 local XINMO_P2_BTNS = 13
 
-local HOME      = os.getenv("HOME") or "/home/danc"
 local MAME_BASE = "/opt/retropie/emulators/mame"
-local REPO_CFG  = HOME .. "/IvarArcade/McAtariPi5/opt/retropie/emulators/mame"
 
 local ALLCTRLRS = MAME_BASE .. "/ctrlr/allctrlrs.cfg"
-local CFG_DIR   = MAME_BASE .. "/cfg"
 
 -----------------------------------------------------------
 -- Plugin State  (survives soft_reset within a session)
@@ -44,7 +41,7 @@ local CFG_DIR   = MAME_BASE .. "/cfg"
 
 local remap_computed      = false  -- have we computed remap for this game session?
 local cached_remap        = {}     -- cached remap table, reused on game-initiated resets
-local remap_applied       = false  -- was any remap needed? (for stop handler + popmessage)
+local remap_applied       = false  -- was any remap needed? (for popmessage / reset state)
 local pending_frame_remap = false  -- in-memory remap scheduled for first frame
 local reset_notifier = nil
 local stop_notifier  = nil
@@ -336,74 +333,12 @@ local function apply_remap_to_ioports(remap)
 end
 
 -----------------------------------------------------------
--- Apply remap to all cfg files
------------------------------------------------------------
-
--- Uses a two-phase temp-token replacement to avoid chain
--- collisions when remapping overlapping JOYCODE numbers
--- (e.g. JOYCODE_2_->JOYCODE_7_ and JOYCODE_3_->JOYCODE_2_).
-local function apply_remap_to_cfg(remap)
-    -- Assign a unique temp token to each desired prefix
-    local tokens = {}
-    local i = 1
-    for desired, _ in pairs(remap) do
-        tokens[desired] = string.format("_USBMAP_TMP%d_", i)
-        i = i + 1
-    end
-
-    local handle = io.popen("ls '" .. CFG_DIR .. "'/*.cfg 2>/dev/null")
-    if not handle then
-        print("[UsbMap] ERROR: Cannot list cfg files in " .. CFG_DIR)
-        return
-    end
-
-    for path in handle:lines() do
-        local f = io.open(path, "r")
-        if not f then
-            print("[UsbMap] ERROR: Cannot read " .. path)
-        else
-            local content = f:read("*a")
-            f:close()
-
-            local modified = content
-
-            -- Phase 1: desired prefixes -> temp tokens
-            for desired, tmp in pairs(tokens) do
-                modified = modified:gsub(desired, tmp)
-            end
-            -- Phase 2: temp tokens -> actual prefixes
-            for desired, tmp in pairs(tokens) do
-                modified = modified:gsub(tmp, remap[desired])
-            end
-
-            if modified == content then
-                print("[UsbMap] No change: " .. path)
-            else
-                local out = io.open(path, "w")
-                if out then
-                    out:write(modified)
-                    out:close()
-                    print("[UsbMap] Remapped:  " .. path)
-                else
-                    print("[UsbMap] ERROR: Cannot write " .. path)
-                end
-            end
-        end
-    end
-    handle:close()
-end
-
------------------------------------------------------------
--- Game Stop: restore canonical cfg from repo
+-- Game Stop: clear session state only
 -----------------------------------------------------------
 
 local function on_game_stop()
-    if not remap_applied then
-        print("[UsbMap] No remap was applied; skipping cfg restore")
-    else
-        print("[UsbMap] Restoring cfg from repo on game stop")
-        os.execute(string.format("cp -f '%s/cfg'/*.cfg '%s/cfg/' 2>/dev/null",
-            REPO_CFG, MAME_BASE))
+    if remap_applied then
+        print("[UsbMap] Game stop: clearing in-memory remap state")
     end
     -- Reset all session state for the next game
     remap_computed      = false
@@ -420,9 +355,9 @@ local function on_game_start()
     print(string.format("[UsbMap] on_game_start entered  remap_computed=%s  remap_applied=%s",
         tostring(remap_computed), tostring(remap_applied)))
 
-    -- First time for this game session: compute remap and patch cfg files on disk.
-    -- (Disk patch ensures correct values if MAME saves cfg again; the actual
-    -- control fix for the running game is done via in-memory ioport patching below.)
+    -- First time for this game session: compute the desired live remap.
+    -- The control fix is applied only to in-memory ioport fields below;
+    -- canonical cfg files remain unchanged on disk.
     if not remap_computed then
         remap_computed = true
 
@@ -442,13 +377,11 @@ local function on_game_start()
                     print("[UsbMap] All devices already in correct order - no remap needed")
                 else
                     remap_applied = true
-                    print(string.format("[UsbMap] Patching %d remap(s) to cfg files on disk...", n))
-                    apply_remap_to_cfg(cached_remap)
                     -- Schedule in-memory ioport remap for the first emulation frame.
                     -- MAME caches cfg values before firing the reset notifier and applies
                     -- them to ioport fields after this callback returns, so patching here
-                    -- would be overwritten.  Deferring to the first frame ensures the
-                    -- canonical (pre-patch) cfg values are in place when we remap them.
+                    -- would be overwritten. Deferring to the first frame ensures the
+                    -- canonical cfg values are in place when we remap them in memory.
                     pending_frame_remap = true
                 end
             end

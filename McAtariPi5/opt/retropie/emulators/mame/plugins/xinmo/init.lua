@@ -1,10 +1,14 @@
 -----------------------------------------------------------
 -- Xin-Mo Swap Plugin
 -- Detects P1/P2 controller swap via MAME's input driver
--- and corrects cfg files + soft-resets if needed.
+-- and reports it for legacy troubleshooting.
+--
+-- Deprecated: the active usbmap plugin performs the actual
+-- controller fix in memory, so this plugin no longer rewrites
+-- cfg files or restores them from the repo.
 -----------------------------------------------------------
 
-local VERSION = "0.3.0"
+local VERSION = "0.4.0"
 
 local exports = {
     name        = "xinmo",
@@ -23,11 +27,7 @@ local xinmo = exports
 local EXPECTED_P1_BTNS = 15   -- first XinMo device (JOYCODE_N_) should have 15 buttons
 local EXPECTED_P2_BTNS = 13   -- second XinMo device should have 13 buttons
 
-local HOME      = os.getenv("HOME") or "/home/danc"
-local MAME_BASE = "/opt/retropie/emulators/mame"
-local REPO_CFG  = HOME .. "/IvarArcade/McAtariPi5/opt/retropie/emulators/mame"
-
-local SWAP_SCRIPT = "python3 /home/danc/scripts/xinmo-swap.py"
+local HOME = os.getenv("HOME") or "/home/danc"
 
 -- Persistent stats file tracking MAME-level swap detection history.
 local MAME_STATS_FILE = HOME .. "/IvarArcade/json/xinmo_mame_stats.json"
@@ -66,9 +66,8 @@ end
 -----------------------------------------------------------
 
 local swap_done      = false   -- true once we've made a decision this session
-local swap_applied   = false   -- true if we swapped; used to show post-reset message and restore cfg
+local swap_applied   = false   -- true if swapped hardware was detected; used for post-reset message
 local reset_notifier = nil     -- held to prevent garbage collection
-local stop_notifier  = nil     -- held to prevent garbage collection
 
 -----------------------------------------------------------
 -- Input Detection
@@ -202,21 +201,6 @@ local function check_swap_needed()
     end
 end
 
-
------------------------------------------------------------
--- Game Stop: restore cfg from repo only if a swap was applied
------------------------------------------------------------
-
-local function on_game_stop()
-    if not swap_applied then
-        print("[LuaSwap] No swap was applied; skipping cfg restore")
-        return
-    end
-    print("[LuaSwap] Restoring cfg from repo on game stop (swap was applied)")
-    os.execute(string.format("cp -f '%s/cfg'/*.cfg '%s/cfg/' 2>/dev/null",
-        REPO_CFG, MAME_BASE))
-end
-
 -----------------------------------------------------------
 -- Plugin Entry Point
 -----------------------------------------------------------
@@ -228,7 +212,7 @@ function xinmo.startplugin()
         -- Post-reset: show confirmation that the fix took effect
         if swap_done then
             if swap_applied then
-                manager.machine:popmessage("XinMo p1-P2 fixed")
+                manager.machine:popmessage("XinMo swap detected")
             end
             return
         end
@@ -246,21 +230,12 @@ function xinmo.startplugin()
         end
 
         if needs_swap then
-            manager.machine:popmessage("XinMo Swap: restart...")
-            -- Pass actual joycode prefixes so the script can remap correctly
-            -- regardless of which JOYCODE slots the hardware landed on
-            local cmd = string.format("%s '%s' '%s'",
-                SWAP_SCRIPT,
-                xinmo_devs[1].joycode_prefix,
-                xinmo_devs[2].joycode_prefix)
-            os.execute(cmd)
             swap_applied = true
-            manager.machine:soft_reset()
+            print("[LuaSwap] Swap detected; no cfg rewrite performed (handled by usbmap in memory)")
+            manager.machine:popmessage("XinMo swap detected")
         end
 
     end)
-
-    stop_notifier = emu.add_machine_stop_notifier(on_game_stop)
 end
 
 return exports
