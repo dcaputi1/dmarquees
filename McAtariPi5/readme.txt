@@ -51,8 +51,7 @@ steps:
 5. mkdir -p /opt/retropie/configs/all/retroarch/config/MAME
 6. build and install IvarArcade project components:
    cd ~/IvarArcade
-   make all
-   make install-force # deploys binaries, scripts, plugins, etc...
+   make install-force
    5/30/2026: custom autostart.sh on Trixie requires sodoers...
    sudo visudo -f /etc/sudoers.d/autostart-nopass
    INSERT THESE:
