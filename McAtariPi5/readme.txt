@@ -28,16 +28,17 @@ f. reboot and run:
 > git clone https://github.com/dcaputi1/IvarArcade.git
   then reload this readme.txt from ~/IvarArcade/McAtariPi5, make sure nothing above changed
 > git clone --depth=1 https://github.com/RetroPie/RetroPie-Setup.git
-  2/28/2026 - use dcaputi1/Retropie-Setup.git for Trixie (using 5/27...)
-  5/27/2026 - attempt to fix mapdevice feature for duplicate device IDs
+  2/28/2026: use dcaputi1/Retropie-Setup.git for *Trixie* (*using 5/27...)
+  5/27/2026: attempt to fix mapdevice feature for duplicate device IDs
 > cd RetroPie-Setup
 > sudo env IVAR_MAME_PROFILE=full ./retropie_setup.sh
   use IVAR_MAME_PROFILE=full right now to build full MAME with upstream arcade.flt and the mame binary
 g. install all core packs
-   5/27/2026 - install emulationstation-dev
+   5/27/2026: install emulationstation-dev
 h. install experimantal mame package (~2 hours from source)
    NOTE: for arcade-only build use sudo env IVAR_MAME_PROFILE=arcade ./retropie_setup.sh
-i. 5/27/2026 SKIP [install experimental lr-mame]
+   5/27/2026 - 5/31/2026: several revs needed to fix full mame build, may've broke bookworm
+i. 5/27/2026: SKIP [install experimental lr-mame]
 j. enable autostart emulationstation
 k. [optional] install Skyscraper
 
@@ -52,6 +53,13 @@ steps:
    cd ~/IvarArcade
    make all
    make install-force # deploys binaries, scripts, plugins, etc...
+   5/30/2026: custom autostart.sh on Trixie requires sodoers...
+   sudo visudo -f /etc/sudoers.d/autostart-nopass
+   INSERT THESE:
+      danc ALL=(ALL) NOPASSWD: /usr/bin/tee
+      danc ALL=(ALL) NOPASSWD: /bin/pkill
+      danc ALL=(ALL) NOPASSWD: /usr/bin/stdbuf
+      danc ALL=(ALL) NOPASSWD: /bin/systemctl
 7. reboot (for path to take effect)
 8. clone, build, install ultrastikcmd tool for per-game joystick mapping:
    mkdir -p ~/IvarArcade/tools/linux
