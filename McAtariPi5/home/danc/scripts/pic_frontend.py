@@ -553,7 +553,10 @@ def shutdown_system():
         _send_pi3_command("SHUTDOWN")
     pygame.quit()
     try:
-        subprocess.run(["sudo", "shutdown", "-h", "now"], check=False)
+        shutdown_cmd = ["/bin/systemctl", "poweroff"]
+        if hasattr(os, "geteuid") and os.geteuid() != 0:
+            shutdown_cmd.insert(0, "sudo")
+        subprocess.run(shutdown_cmd, check=False)
     except Exception as e:
         print(f"[ERROR] shutdown failed: {e}", file=sys.stderr)
     sys.exit(0)

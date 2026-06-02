@@ -34,6 +34,8 @@ local XINMO_P2_BTNS = 13
 local MAME_BASE = "/opt/retropie/emulators/mame"
 
 local ALLCTRLRS = MAME_BASE .. "/ctrlr/allctrlrs.cfg"
+local HOME = os.getenv("HOME") or ""
+local XINMO_STATS_FILE = HOME ~= "" and (HOME .. "/IvarArcade/json/xinmo_mame_stats.json") or nil
 
 -----------------------------------------------------------
 -- Plugin State  (survives soft_reset within a session)
@@ -43,9 +45,88 @@ local remap_computed      = false  -- have we computed remap for this game sessi
 local cached_remap        = {}     -- cached remap table, reused on game-initiated resets
 local remap_applied       = false  -- was any remap needed? (for popmessage / reset state)
 local pending_frame_remap = false  -- in-memory remap scheduled for first frame
+local xinmo_swap_fixed    = false  -- did this session correct XinMo ordering?
 local reset_notifier = nil
 local stop_notifier  = nil
 local frame_notifier = nil
+
+-----------------------------------------------------------
+-- XinMo stats persistence
+-----------------------------------------------------------
+
+local function _read_xinmo_stats()
+    local stats = { swaps = 0, last_swap = nil }
+    if not XINMO_STATS_FILE then
+        return stats
+    end
+
+    local f = io.open(XINMO_STATS_FILE, "r")
+    if not f then
+        return stats
+    end
+
+    local content = f:read("*a") or ""
+    f:close()
+
+    local swaps = tonumber(content:match('"swaps"%s*:%s*(%d+)'))
+    local last_swap = content:match('"last_swap"%s*:%s*"([^"]+)"')
+    if swaps then
+        stats.swaps = swaps
+    end
+    if last_swap and last_swap ~= "" then
+        stats.last_swap = last_swap
+    end
+    return stats
+end
+
+local function _write_xinmo_stats(stats)
+    if not XINMO_STATS_FILE then
+        return false
+    end
+
+    local f = io.open(XINMO_STATS_FILE, "w")
+    if not f then
+        print("[UsbMap] WARNING: Cannot write XinMo stats file " .. XINMO_STATS_FILE)
+        return false
+    end
+
+    local last_swap_json = stats.last_swap and string.format('"%s"', stats.last_swap) or "null"
+    f:write(string.format('{"swaps": %d, "last_swap": %s}\n', stats.swaps or 0, last_swap_json))
+    f:close()
+    return true
+end
+
+local function _record_xinmo_swap_if_needed(remap, live_devices)
+    if not XINMO_STATS_FILE then
+        return false
+    end
+
+    local remapped_actual = {}
+    for _, actual in pairs(remap) do
+        remapped_actual[actual] = true
+    end
+
+    local xinmo_swap = false
+    for _, dev in ipairs(live_devices) do
+        local actual_prefix = string.format("JOYCODE_%d_", dev.joycode_num)
+        if remapped_actual[actual_prefix] and dev.name:lower():find("xin") then
+            xinmo_swap = true
+            break
+        end
+    end
+
+    if not xinmo_swap then
+        return false
+    end
+
+    local stats = _read_xinmo_stats()
+    stats.swaps = (tonumber(stats.swaps) or 0) + 1
+    stats.last_swap = os.date("!%Y-%m-%dT%H:%M:%SZ")
+    if _write_xinmo_stats(stats) then
+        print(string.format("[UsbMap] XinMo stats updated: swaps=%d last_swap=%s", stats.swaps, stats.last_swap))
+    end
+    return true
+end
 
 -----------------------------------------------------------
 -- allctrlrs.cfg parsing
@@ -345,6 +426,7 @@ local function on_game_stop()
     cached_remap        = {}
     remap_applied       = false
     pending_frame_remap = false
+    xinmo_swap_fixed    = false
 end
 
 -----------------------------------------------------------
@@ -369,6 +451,7 @@ local function on_game_start()
             else
                 cached_remap = build_remap(desired_assignments, live_devices)
                 log_all_joystick_devices(live_devices, cached_remap)
+                xinmo_swap_fixed = _record_xinmo_swap_if_needed(cached_remap, live_devices)
 
                 local n = 0
                 for _ in pairs(cached_remap) do n = n + 1 end
@@ -411,7 +494,9 @@ local function on_first_frame()
     if n > 0 then
         print(string.format("[UsbMap] Applying %d remap(s) to ioport fields (first frame)...", n))
         apply_remap_to_ioports(cached_remap)
-        manager.machine:popmessage("UsbMap: applied")
+        if xinmo_swap_fixed then
+            manager.machine:popmessage("UsbMap: XinMo swap")
+        end
     end
 end
 
