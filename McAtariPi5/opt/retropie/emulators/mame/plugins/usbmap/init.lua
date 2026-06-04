@@ -35,6 +35,7 @@ local MAME_BASE = "/opt/retropie/emulators/mame"
 
 local ALLCTRLRS = MAME_BASE .. "/ctrlr/allctrlrs.cfg"
 local HOME = os.getenv("HOME") or ""
+local XINMO_STATS_DIR = HOME ~= "" and (HOME .. "/IvarArcade/json") or nil
 local XINMO_STATS_FILE = HOME ~= "" and (HOME .. "/IvarArcade/json/xinmo_mame_stats.json") or nil
 
 -----------------------------------------------------------
@@ -53,6 +54,21 @@ local frame_notifier = nil
 -----------------------------------------------------------
 -- XinMo stats persistence
 -----------------------------------------------------------
+
+local function _ensure_xinmo_stats_dir()
+    if not XINMO_STATS_DIR then
+        return false
+    end
+
+    local escaped_dir = XINMO_STATS_DIR:gsub('"', '\\"')
+    local ok = os.execute(string.format('mkdir -p "%s" >/dev/null 2>&1', escaped_dir))
+    if ok == true or ok == 0 then
+        return true
+    end
+
+    print("[UsbMap] WARNING: Cannot create XinMo stats dir " .. XINMO_STATS_DIR)
+    return false
+end
 
 local function _read_xinmo_stats()
     local stats = { swaps = 0, last_swap = nil }
@@ -81,6 +97,9 @@ end
 
 local function _write_xinmo_stats(stats)
     if not XINMO_STATS_FILE then
+        return false
+    end
+    if not _ensure_xinmo_stats_dir() then
         return false
     end
 

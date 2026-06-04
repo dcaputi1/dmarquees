@@ -534,6 +534,7 @@ def _check_xinmo():
 def reset_xinmo_stats():
     """Reset XinMo swap statistics to zero."""
     try:
+        os.makedirs(os.path.dirname(XINMO_STATS_FILE), exist_ok=True)
         with open(XINMO_STATS_FILE, "w") as f:
             json.dump({"swaps": 0, "last_swap": None}, f)
     except Exception:
