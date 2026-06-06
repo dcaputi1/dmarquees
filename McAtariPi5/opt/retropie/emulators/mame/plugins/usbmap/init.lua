@@ -44,9 +44,13 @@ local XINMO_STATS_FILE = HOME ~= "" and (HOME .. "/IvarArcade/json/xinmo_mame_st
 
 local remap_computed      = false  -- have we computed remap for this game session?
 local cached_remap        = {}     -- cached remap table, reused on game-initiated resets
+local cached_xinmo_remap  = {}     -- manual-only XinMo remap table for this game session
 local remap_applied       = false  -- was any remap needed? (for popmessage / reset state)
 local pending_frame_remap = false  -- in-memory remap scheduled for first frame
 local xinmo_swap_fixed    = false  -- did this session correct XinMo ordering?
+local xinmo_swap_needed   = false  -- was a XinMo swap detected for this session?
+local xinmo_swap_active   = false  -- is the manual XinMo swap currently applied?
+local pending_xinmo_popup = false  -- show one popup when manual XinMo swap is needed
 local reset_notifier = nil
 local stop_notifier  = nil
 local frame_notifier = nil
@@ -147,6 +151,13 @@ local function _record_xinmo_swap_if_needed(remap, live_devices)
     return true
 end
 
+local function _has_entries(remap)
+    for _ in pairs(remap) do
+        return true
+    end
+    return false
+end
+
 -----------------------------------------------------------
 -- allctrlrs.cfg parsing
 -----------------------------------------------------------
@@ -245,7 +256,8 @@ local function build_remap(desired_assignments, live_devices)
     -- Track how many times each GUID has been matched so far
     local id_slot = {}
 
-    local remap = {}   -- desired_prefix -> actual_prefix
+    local remap = {}         -- desired_prefix -> actual_prefix
+    local xinmo_remap = {}   -- desired_prefix -> actual_prefix, XinMo only
 
     for _, entry in ipairs(desired_assignments) do
         local desired_prefix = string.format("JOYCODE_%d_", entry.joycode_num)
@@ -290,6 +302,9 @@ local function build_remap(desired_assignments, live_devices)
                 local actual_prefix = string.format("JOYCODE_%d_", matched.joycode_num)
                 if actual_prefix ~= desired_prefix then
                     remap[desired_prefix] = actual_prefix
+                    if matched.name:lower():find("xin") then
+                        xinmo_remap[desired_prefix] = actual_prefix
+                    end
                     print(string.format(
                         "[UsbMap] Remap needed: cfg %s -> actual %s  '%s' btns=%d",
                         desired_prefix, actual_prefix, matched.name, matched.buttons))
@@ -302,7 +317,7 @@ local function build_remap(desired_assignments, live_devices)
         end
     end
 
-    return remap
+    return remap, xinmo_remap
 end
 
 -----------------------------------------------------------
@@ -432,6 +447,56 @@ local function apply_remap_to_ioports(remap)
     return count
 end
 
+local function menu_populate()
+    local action = "not needed"
+    if xinmo_swap_active then
+        action = "undo"
+    elseif xinmo_swap_needed then
+        action = "apply"
+    end
+
+    return {
+        { "XinMo Swap", action, "" }
+    }
+end
+
+local function menu_callback(index, event)
+    if event ~= "select" then
+        return false
+    end
+
+    if index == 1 then
+        if not xinmo_swap_needed and not xinmo_swap_active then
+            manager.machine:popmessage("UsbMap: XinMo swap not needed")
+            return false
+        end
+
+        if not _has_entries(cached_xinmo_remap) then
+            manager.machine:popmessage("UsbMap: XinMo swap unavailable")
+            return false
+        end
+
+        print(string.format("[UsbMap] %s XinMo swap from usbmap menu",
+            xinmo_swap_active and "Undoing" or "Applying"))
+        local count = apply_remap_to_ioports(cached_xinmo_remap)
+        if count > 0 then
+            xinmo_swap_active = not xinmo_swap_active
+            xinmo_swap_fixed = xinmo_swap_active
+            xinmo_swap_needed = not xinmo_swap_active
+            pending_xinmo_popup = false
+            manager.machine:popmessage(xinmo_swap_active
+                and "UsbMap: XinMo swap applied"
+                or "UsbMap: XinMo swap undone")
+            return true
+        end
+
+        manager.machine:popmessage("UsbMap: XinMo swap failed")
+        return false
+    end
+
+    return false
+end
+
 -----------------------------------------------------------
 -- Game Stop: clear session state only
 -----------------------------------------------------------
@@ -443,9 +508,13 @@ local function on_game_stop()
     -- Reset all session state for the next game
     remap_computed      = false
     cached_remap        = {}
+    cached_xinmo_remap  = {}
     remap_applied       = false
     pending_frame_remap = false
     xinmo_swap_fixed    = false
+    xinmo_swap_needed   = false
+    xinmo_swap_active   = false
+    pending_xinmo_popup = false
 end
 
 -----------------------------------------------------------
@@ -468,23 +537,38 @@ local function on_game_start()
             if not live_devices or #live_devices == 0 then
                 print("[UsbMap] No joystick devices found")
             else
-                cached_remap = build_remap(desired_assignments, live_devices)
-                log_all_joystick_devices(live_devices, cached_remap)
-                xinmo_swap_fixed = _record_xinmo_swap_if_needed(cached_remap, live_devices)
+                local full_remap, xinmo_remap = build_remap(desired_assignments, live_devices)
+                cached_remap = {}
+                cached_xinmo_remap = xinmo_remap
+                for desired, actual in pairs(full_remap) do
+                    if not xinmo_remap[desired] then
+                        cached_remap[desired] = actual
+                    end
+                end
+                log_all_joystick_devices(live_devices, full_remap)
+                xinmo_swap_needed = _record_xinmo_swap_if_needed(cached_xinmo_remap, live_devices)
+                xinmo_swap_fixed = false
+                xinmo_swap_active = false
+                pending_xinmo_popup = xinmo_swap_needed
 
                 local n = 0
                 for _ in pairs(cached_remap) do n = n + 1 end
 
-                if n == 0 then
+                if n == 0 and not xinmo_swap_needed then
                     print("[UsbMap] All devices already in correct order - no remap needed")
                 else
-                    remap_applied = true
-                    -- Schedule in-memory ioport remap for the first emulation frame.
-                    -- MAME caches cfg values before firing the reset notifier and applies
-                    -- them to ioport fields after this callback returns, so patching here
-                    -- would be overwritten. Deferring to the first frame ensures the
-                    -- canonical cfg values are in place when we remap them in memory.
-                    pending_frame_remap = true
+                    remap_applied = n > 0
+                    if xinmo_swap_needed then
+                        print("[UsbMap] XinMo swap detected: automatic apply disabled; use the UsbMap menu to apply it manually")
+                    end
+                    if n > 0 then
+                        -- Schedule in-memory ioport remap for the first emulation frame.
+                        -- MAME caches cfg values before firing the reset notifier and applies
+                        -- them to ioport fields after this callback returns, so patching here
+                        -- would be overwritten. Deferring to the first frame ensures the
+                        -- canonical cfg values are in place when we remap them in memory.
+                        pending_frame_remap = true
+                    end
                 end
             end
         end
@@ -506,16 +590,19 @@ end
 -----------------------------------------------------------
 
 local function on_first_frame()
-    if not pending_frame_remap then return end
-    pending_frame_remap = false
-    local n = 0
-    for _ in pairs(cached_remap) do n = n + 1 end
-    if n > 0 then
-        print(string.format("[UsbMap] Applying %d remap(s) to ioport fields (first frame)...", n))
-        apply_remap_to_ioports(cached_remap)
-        if xinmo_swap_fixed then
-            manager.machine:popmessage("UsbMap: XinMo swap")
+    if pending_frame_remap then
+        pending_frame_remap = false
+        local n = 0
+        for _ in pairs(cached_remap) do n = n + 1 end
+        if n > 0 then
+            print(string.format("[UsbMap] Applying %d remap(s) to ioport fields (first frame)...", n))
+            apply_remap_to_ioports(cached_remap)
         end
+    end
+
+    if pending_xinmo_popup and xinmo_swap_needed and not xinmo_swap_fixed then
+        pending_xinmo_popup = false
+        manager.machine:popmessage("UsbMap: XinMo swap needed")
     end
 end
 
@@ -524,6 +611,7 @@ function usbmap.startplugin()
     reset_notifier = emu.add_machine_reset_notifier(on_machine_reset)
     stop_notifier  = emu.add_machine_stop_notifier(on_game_stop)
     frame_notifier = emu.add_machine_frame_notifier(on_first_frame)
+	emu.register_menu(menu_callback, menu_populate, "UsbMap")
 end
 
 return exports
