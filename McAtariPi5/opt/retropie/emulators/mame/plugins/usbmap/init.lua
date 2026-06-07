@@ -45,6 +45,7 @@ local XINMO_STATS_FILE = HOME ~= "" and (HOME .. "/IvarArcade/json/xinmo_mame_st
 local remap_computed      = false  -- have we computed remap for this game session?
 local cached_remap        = {}     -- cached remap table, reused on game-initiated resets
 local cached_xinmo_remap  = {}     -- current XinMo remap table, reused on game-initiated resets
+local cached_xinmo_swap_remap = {} -- startup XinMo swap remap used by the legacy swap action
 local cached_xinmo_devices = {}    -- live XinMo devices for this game session
 local xinmo_desired_prefixes = {}  -- desired JOYCODE slots for the two XinMo halves
 local xinmo_player1_joycode = nil  -- live JOYCODE currently assigned to XinMo player 1
@@ -56,6 +57,7 @@ local remap_applied       = false  -- was any remap needed? (for popmessage / re
 local pending_frame_remap = false  -- in-memory remap scheduled for first frame
 local xinmo_swap_fixed    = false  -- did this session correct XinMo ordering?
 local xinmo_swap_needed   = false  -- was a XinMo swap detected for this session?
+local xinmo_swap_active   = false  -- is the legacy XinMo swap currently applied?
 local pending_xinmo_popup = false  -- show one popup when manual XinMo swap is needed
 local reset_notifier = nil
 local stop_notifier  = nil
@@ -266,11 +268,13 @@ local function _capture_xinmo_test_snapshot()
 
     for _, dev in ipairs(cached_xinmo_devices) do
         for _, button in ipairs(dev.button_items or {}) do
-            local current = 0
-            pcall(function()
-                current = tonumber(button.item.current) or 0
-            end)
-            snapshot[string.format("%d:%s", dev.joycode_num, button.token)] = current
+            if button.token == "BUTTON1" then
+                local current = 0
+                pcall(function()
+                    current = tonumber(button.item.current) or 0
+                end)
+                snapshot[string.format("%d:%s", dev.joycode_num, button.token)] = current
+            end
         end
     end
 
@@ -286,8 +290,8 @@ local function _arm_xinmo_test()
     xinmo_test_snapshot = _capture_xinmo_test_snapshot()
     xinmo_test_active = true
     xinmo_test_last_hit = nil
-    print("[UsbMap] XinMo TEST armed; waiting for the first button hit")
-    manager.machine:popmessage("UsbMap: Press a XinMo start button")
+    print("[UsbMap] XinMo TEST armed; waiting for BUTTON1 hit")
+    manager.machine:popmessage("UsbMap: Press Button 1 on the P1 controller")
     return true
 end
 
@@ -298,20 +302,22 @@ local function _poll_xinmo_test_hit()
 
     for _, dev in ipairs(cached_xinmo_devices) do
         for _, button in ipairs(dev.button_items or {}) do
-            local key = string.format("%d:%s", dev.joycode_num, button.token)
-            local baseline = xinmo_test_snapshot[key] or 0
-            local current = 0
-            local ok = pcall(function()
-                current = tonumber(button.item.current) or 0
-            end)
+            if button.token == "BUTTON1" then
+                local key = string.format("%d:%s", dev.joycode_num, button.token)
+                local baseline = xinmo_test_snapshot[key] or 0
+                local current = 0
+                local ok = pcall(function()
+                    current = tonumber(button.item.current) or 0
+                end)
 
-            if ok and current ~= 0 and current ~= baseline then
-                xinmo_test_active = false
-                xinmo_test_snapshot = {}
-                xinmo_test_last_hit = dev.joycode_num
-                print(string.format("[UsbMap] XinMo TEST hit JOYCODE_%d_ via %s", dev.joycode_num, button.token))
-                manager.machine:popmessage(string.format("UsbMap: TEST hit J%d", dev.joycode_num))
-                return true
+                if ok and current ~= 0 and current ~= baseline then
+                    xinmo_test_active = false
+                    xinmo_test_snapshot = {}
+                    xinmo_test_last_hit = dev.joycode_num
+                    print(string.format("[UsbMap] XinMo B1 hit JOYCODE_%d_; auto-applying P1", dev.joycode_num))
+                    _apply_xinmo_player1_assignment(dev.joycode_num)
+                    return true
+                end
             end
         end
     end
@@ -357,16 +363,41 @@ local function _cycle_xinmo_player1_assignment()
         return false
     end
 
-    if xinmo_test_last_hit then
-        return _apply_xinmo_player1_assignment(xinmo_test_last_hit)
-    end
-
     local next_joycode = cached_xinmo_devices[1].joycode_num
     if xinmo_player1_joycode == next_joycode and cached_xinmo_devices[2] then
         next_joycode = cached_xinmo_devices[2].joycode_num
     end
 
     return _apply_xinmo_player1_assignment(next_joycode)
+end
+
+local function _toggle_xinmo_swap()
+    if not xinmo_swap_needed and not xinmo_swap_active then
+        manager.machine:popmessage("UsbMap: XinMo swap not needed")
+        return false
+    end
+
+    if not _has_entries(cached_xinmo_swap_remap) then
+        manager.machine:popmessage("UsbMap: XinMo swap unavailable")
+        return false
+    end
+
+    print(string.format("[UsbMap] %s XinMo swap from usbmap menu",
+        xinmo_swap_active and "Undoing" or "Applying"))
+    local count = apply_remap_to_ioports(cached_xinmo_swap_remap, true)
+    if count > 0 then
+        xinmo_swap_active = not xinmo_swap_active
+        xinmo_swap_fixed = xinmo_swap_active
+        xinmo_swap_needed = not xinmo_swap_active
+        pending_xinmo_popup = false
+        manager.machine:popmessage(xinmo_swap_active
+            and "UsbMap: XinMo swap applied"
+            or "UsbMap: XinMo swap undone")
+        return true
+    end
+
+    manager.machine:popmessage("UsbMap: XinMo swap failed")
+    return false
 end
 
 -----------------------------------------------------------
@@ -688,11 +719,18 @@ end
 
 local function menu_populate()
     local current = xinmo_player1_joycode and ("J" .. xinmo_player1_joycode) or "--"
-    local test_state = xinmo_test_active and "waiting..." or (xinmo_test_last_hit and ("J" .. xinmo_test_last_hit) or "")
+    local detect_state = xinmo_test_active and "waiting..." or (xinmo_test_last_hit and ("J" .. xinmo_test_last_hit) or "")
+    local swap_state = "not needed"
+    if xinmo_swap_active then
+        swap_state = "undo"
+    elseif xinmo_swap_needed then
+        swap_state = "apply"
+    end
 
     return {
-        { "Start Button TEST", test_state, "" },
-        { "Player 1 Set " .. current, "", "" }
+        { "Detect P1 (press B1)", detect_state, "" },
+        { "P1 Manual " .. current, "", "" },
+        { "XinMo SWAP", swap_state, "" }
     }
 end
 
@@ -713,6 +751,14 @@ local function menu_callback(index, event)
         return false
     end
 
+    if index == 3 then
+        if event == "select" then
+            return _toggle_xinmo_swap()
+        end
+
+        return false
+    end
+
     return false
 end
 
@@ -728,6 +774,7 @@ local function on_game_stop()
     remap_computed      = false
     cached_remap        = {}
     cached_xinmo_remap  = {}
+    cached_xinmo_swap_remap = {}
     cached_xinmo_devices = {}
     xinmo_desired_prefixes = {}
     xinmo_player1_joycode = nil
@@ -739,6 +786,7 @@ local function on_game_stop()
     pending_frame_remap = false
     xinmo_swap_fixed    = false
     xinmo_swap_needed   = false
+    xinmo_swap_active   = false
     pending_xinmo_popup = false
 end
 
@@ -779,11 +827,13 @@ local function on_game_start()
                 cached_xinmo_remap = {}
                 log_all_joystick_devices(live_devices, full_remap)
                 local startup_xinmo_remap = _build_xinmo_remap(xinmo_player1_joycode)
+                cached_xinmo_swap_remap = startup_xinmo_remap
                 xinmo_swap_needed = _has_entries(startup_xinmo_remap)
                 if xinmo_swap_needed then
                     _record_xinmo_swap_if_needed(startup_xinmo_remap, live_devices)
                 end
                 xinmo_swap_fixed = false
+                xinmo_swap_active = false
                 pending_xinmo_popup = xinmo_swap_needed
 
                 local n = _count_entries(cached_remap)
@@ -852,7 +902,7 @@ function usbmap.startplugin()
     reset_notifier = emu.add_machine_reset_notifier(on_machine_reset)
     stop_notifier  = emu.add_machine_stop_notifier(on_game_stop)
     frame_notifier = emu.add_machine_frame_notifier(on_first_frame)
-	emu.register_menu(menu_callback, menu_populate, "XinMo Player 1")
+	emu.register_menu(menu_callback, menu_populate, "USB Map")
 end
 
 return exports
