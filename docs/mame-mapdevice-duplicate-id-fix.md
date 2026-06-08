@@ -291,3 +291,49 @@ If MAME changes the surrounding code and the `sed` patterns no longer match:
    ```
 4. Apply the changes manually using the logic from the **Quick Diff** section above.
 5. Return to `retropie_setup.sh` → `mame` → **Build** to continue.
+
+# Update 6/8/2026
+
+I Asked Co-Pilot/Claude to look again at this change and explain why J2 and J3 always seem to be backwards with P1 on J3 and P2 on J2. Here's what it said (and then "fixed the bug" with modified input.cpp)...
+
+Let me look at the changes made to ioport.cpp and understand the duplicate ID handling.
+
+Now let me see the full context around this change — specifically how devicemap is declared and how it's iterated later.
+
+Now let me look at remap_device_index to understand what happens internally when duplicate GUIDs are processed:
+
+I can see the bug clearly now. Let me trace through the exact execution for your setup:
+
+Initial physical state (SDL enumerates P1 first, as you described):
+
+slot 1 → Device A (P1, 15 btns) → JOYCODE_2
+slot 2 → Device B (P2, 13 btns) → JOYCODE_3
+Table entries (from your allctrlrs.cfg, in document order):
+
+{xinmo_guid, "JOYCODE_2"} → target devindex = 1
+{xinmo_guid, "JOYCODE_3"} → target devindex = 2
+Processing Entry 1 — target devindex=1:
+
+Scans slots in order, finds Device A at slot 1 → remap_device_index(1, 1) → no-op ✓
+Processing Entry 2 — target devindex=2:
+
+Scans slots in order, finds Device A again at slot 1 (it's still the first GUID match!) → remap_device_index(1, 2) → SWAPS slots 1 and 2
+slot 1: Device B (P2) now at JOYCODE_2
+slot 2: Device A (P1) now at JOYCODE_3 — reversed!
+The bug is that map_device_to_controller has no memory of which devices it has already assigned. Both duplicate-GUID entries always resolve to the same first-encountered device. Entry 2 overwrites Entry 1's work, landing P1 at JOYCODE_3 every time.
+
+The fix is to track already-mapped devices and skip them. Here's the corrected map_device_to_controller:
+
+Now add the #include <unordered_set> since it's needed:
+
+Edited
+input.cpp+1-0
+To summarize the bug and fix:
+
+The bug — map_device_to_controller had no memory of already-processed devices. For two <mapdevice> entries with the same GUID (your two XinMo halves), both iterations of the scan loop found the same device — whichever happened to be at the lowest slot. So:
+
+Entry 1 (JOYCODE_2): finds Device A → remap_device_index(1, 1) → no-op ✓
+Entry 2 (JOYCODE_3): finds Device A again → remap_device_index(1, 2) → swaps A and B, putting P1 at JOYCODE_3 ✗
+Entry 2 always undid Entry 1, consistently reversing them regardless of physical order.
+
+The fix — an already_mapped set (keyed by device pointer) causes the inner scan to skip any device already claimed by a prior entry. Entry 2 now skips Device A and correctly lands on Device B. Duplicate GUIDs are matched in document order, which mirrors what the Lua plugin's id_slot counter does.
