@@ -59,6 +59,7 @@ local reset_notifier = nil
 local stop_notifier  = nil
 local frame_notifier = nil
 local apply_remap_to_ioports
+local enumerate_devices
 
 -----------------------------------------------------------
 -- XinMo stats persistence
@@ -399,7 +400,7 @@ end
 -- Returns a list of all live joystick devices sorted by
 -- current devindex (= JOYCODE slot - 1):
 --   { devindex, joycode_num, id, name, buttons, button_items }
-local function enumerate_devices()
+enumerate_devices = function()
     local input = manager.machine.input
     local joyclass = nil
     for _, cls in pairs(input.device_classes) do
