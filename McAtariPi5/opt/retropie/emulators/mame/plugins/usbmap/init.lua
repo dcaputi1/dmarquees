@@ -54,6 +54,7 @@ local js_test_devices     = {}     -- device list captured at arm time
 local cached_ioport_tokens = nil   -- original ioport token strings before usbmap rewrites
 local remap_applied       = false  -- was any remap needed? (for popmessage / reset state)
 local pending_frame_remap = false  -- in-memory remap scheduled for first frame
+local pending_xinmo_remap_joycode = nil  -- deferred XinMo swap applied on next emulation frame
 local reset_notifier = nil
 local stop_notifier  = nil
 local frame_notifier = nil
@@ -347,7 +348,14 @@ local function _cycle_xinmo_player1_assignment()
         next_joycode = cached_xinmo_devices[2].joycode_num
     end
 
-    return _apply_xinmo_player1_assignment(next_joycode)
+    -- Update display immediately so the menu reflects the change now.
+    -- The actual ioport remap is deferred to the next emulation frame because
+    -- MAME pauses emulation while the plugin menu is open; set_input_seq
+    -- changes made while paused are discarded when emulation resumes.
+    xinmo_player1_joycode       = next_joycode
+    pending_xinmo_remap_joycode = next_joycode
+    print(string.format("[UsbMap] XinMo swap queued: P1=J%d (will apply on next emulation frame)", next_joycode))
+    return true
 end
 
 -----------------------------------------------------------
@@ -592,6 +600,7 @@ apply_remap_to_ioports = function(remap, use_baseline)
     local input  = manager.machine.input
     local ioport = manager.machine.ioport
     local count  = 0
+    local scanned = 0
 
     if use_baseline then
         _capture_ioport_baseline_if_needed()
@@ -614,6 +623,7 @@ apply_remap_to_ioports = function(remap, use_baseline)
                         return input:seq_to_tokens(seq)
                     end)
                     if ok2 and tok_str and tok_str ~= "" then
+                        scanned = scanned + 1
                         local source_tokens = tok_str
                         if use_baseline and cached_ioport_tokens then
                             source_tokens = cached_ioport_tokens[_ioport_token_key(port_tag, field_name, seqtype)] or tok_str
@@ -663,11 +673,15 @@ apply_remap_to_ioports = function(remap, use_baseline)
         end
     end
 
-    print(string.format("[UsbMap] In-memory remap: updated %d field sequence(s)", count))
+    print(string.format("[UsbMap] In-memory remap: updated %d field sequence(s) (scanned %d fields)", count, scanned))
     return count
 end
 
 local function menu_populate()
+    -- Poll while the menu is open: the frame notifier is paused during menu display
+    -- so we must poll here to detect button presses for the joycode test.
+    _poll_js_test_hit()
+
     local p1_j   = xinmo_player1_joycode and ("J" .. xinmo_player1_joycode) or "??"
     local p2_num = xinmo_player1_joycode and _other_xinmo_joycode(xinmo_player1_joycode) or nil
     local p2_j   = p2_num and ("J" .. p2_num) or "??"
@@ -724,6 +738,7 @@ local function on_game_stop()
     cached_ioport_tokens = nil
     remap_applied       = false
     pending_frame_remap = false
+    pending_xinmo_remap_joycode = nil
 end
 
 -----------------------------------------------------------
@@ -809,6 +824,12 @@ local function on_first_frame()
             print(string.format("[UsbMap] Applying %d remap(s) to ioport fields (first frame)...", n))
             apply_remap_to_ioports(effective_remap, true)
         end
+    end
+
+    if pending_xinmo_remap_joycode then
+        local target = pending_xinmo_remap_joycode
+        pending_xinmo_remap_joycode = nil
+        _apply_xinmo_player1_assignment(target)
     end
 
     _poll_js_test_hit()
