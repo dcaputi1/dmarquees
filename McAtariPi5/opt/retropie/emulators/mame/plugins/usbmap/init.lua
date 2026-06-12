@@ -704,10 +704,15 @@ local function menu_callback(index, event)
     if index == 1 then
         if event == "select" then
             if js_test_active then
-                -- Cancel
-                js_test_active   = false
-                js_test_snapshot = {}
-                js_test_devices  = {}
+                -- BUTTON1 is mapped to UI_Select, so pressing A triggers this callback
+                -- instead of (or before) the frame-poller.  Try to read the physical
+                -- button state right now while the button is still held down.
+                if not _poll_js_test_hit() then
+                    -- Button already released before we could read it — cancel.
+                    js_test_active   = false
+                    js_test_snapshot = {}
+                    js_test_devices  = {}
+                end
                 return true
             end
             if js_test_result then
