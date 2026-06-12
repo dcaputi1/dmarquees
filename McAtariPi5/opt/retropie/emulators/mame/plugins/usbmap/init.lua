@@ -10,7 +10,7 @@
 -- unit is treated as P1.
 -----------------------------------------------------------
 
-local VERSION = "1.3.0"
+local VERSION = "1.3.1"
 
 local exports = {
     name        = "usbmap",
@@ -55,6 +55,8 @@ local cached_ioport_tokens = nil   -- original ioport token strings before usbma
 local remap_applied       = false  -- was any remap needed? (for popmessage / reset state)
 local pending_frame_remap = false  -- in-memory remap scheduled for first frame
 local pending_xinmo_remap_joycode = nil  -- deferred XinMo swap applied on next emulation frame
+local xinmo_verify_countdown = 0         -- frames remaining before post-swap verify
+local xinmo_verify_expected  = {}        -- {desired_prefix -> actual_prefix} expected after swap
 local reset_notifier = nil
 local stop_notifier  = nil
 local frame_notifier = nil
@@ -266,44 +268,33 @@ local function _arm_js_test()
         manager.machine:popmessage("UsbMap: No joysticks found")
         return false
     end
-
-    local snapshot = {}
-    for _, dev in ipairs(live_devices) do
-        for _, button in ipairs(dev.button_items or {}) do
-            if button.token == "BUTTON1" then
-                local current = 0
-                pcall(function() current = tonumber(button.item.current) or 0 end)
-                snapshot[dev.joycode_num] = current
-            end
-        end
-    end
-
+    -- Store the joycode list; button state is read fresh each poll via code_from_token
     js_test_devices  = live_devices
-    js_test_snapshot = snapshot
+    js_test_snapshot = {}
     js_test_active   = true
-    print("[UsbMap] Button A joycode test armed; waiting for A button (BUTTON1) on any joystick")
+    print("[UsbMap] Button A joycode test armed; waiting for BUTTON1 on any joystick")
     return true
 end
 
 local function _poll_js_test_hit()
     if not js_test_active then return false end
 
+    local inp = manager.machine.input
     for _, dev in ipairs(js_test_devices) do
-        for _, button in ipairs(dev.button_items or {}) do
-            if button.token == "BUTTON1" then
-                local baseline = js_test_snapshot[dev.joycode_num] or 0
-                local current  = 0
-                local ok = pcall(function() current = tonumber(button.item.current) or 0 end)
-                if ok and current ~= 0 and current ~= baseline then
-                    js_test_active   = false
-                    js_test_snapshot = {}
-                    js_test_devices  = {}
-                    local label = string.format("J%d", dev.joycode_num)
-                    print(string.format("[UsbMap] Button A joycode test: A button detected on %s", label))
-                    manager.machine:popmessage(string.format("Button A on %s", label))
-                    return true
-                end
-            end
+        local token = string.format("JOYCODE_%d_BUTTON1", dev.joycode_num)
+        local current = 0
+        pcall(function()
+            local code = inp:code_from_token(token)
+            if code then current = inp:code_value(code) or 0 end
+        end)
+        if current ~= 0 then
+            js_test_active   = false
+            js_test_snapshot = {}
+            js_test_devices  = {}
+            local label = string.format("J%d", dev.joycode_num)
+            print(string.format("[UsbMap] Button A joycode test: BUTTON1 detected on %s", label))
+            manager.machine:popmessage(string.format("Button A: %s", label))
+            return true
         end
     end
 
@@ -330,6 +321,11 @@ local function _apply_xinmo_player1_assignment(player1_joycode)
     end
 
     if count > 0 or not _has_entries(remap) then
+        -- Schedule a 2-frame deferred verify to check whether set_input_seq persists
+        if _has_entries(cached_xinmo_remap) then
+            xinmo_verify_countdown = 2
+            xinmo_verify_expected  = cached_xinmo_remap  -- {desired -> actual}
+        end
         manager.machine:popmessage(string.format("UsbMap: XinMo P1 = J%d", player1_joycode))
         return true
     end
@@ -689,7 +685,7 @@ local function menu_populate()
     local xinmo_state = "P1:" .. p1_j .. " / P2:" .. p2_j
 
     local js_label = js_test_active
-        and "Button A Joycode Test:  Press A    waiting..."
+        and "Button A Joycode Test:  [Enter cancels]  waiting..."
         or  "Button A Joycode Test"
 
     return {
@@ -701,6 +697,13 @@ end
 local function menu_callback(index, event)
     if index == 1 then
         if event == "select" then
+            if js_test_active then
+                -- Cancel
+                js_test_active   = false
+                js_test_snapshot = {}
+                js_test_devices  = {}
+                return true
+            end
             return _arm_js_test()
         end
 
@@ -740,6 +743,8 @@ local function on_game_stop()
     remap_applied       = false
     pending_frame_remap = false
     pending_xinmo_remap_joycode = nil
+    xinmo_verify_countdown = 0
+    xinmo_verify_expected  = {}
 end
 
 -----------------------------------------------------------
@@ -831,6 +836,44 @@ local function on_first_frame()
         local target = pending_xinmo_remap_joycode
         pending_xinmo_remap_joycode = nil
         _apply_xinmo_player1_assignment(target)
+    end
+
+    if xinmo_verify_countdown > 0 then
+        xinmo_verify_countdown = xinmo_verify_countdown - 1
+        if xinmo_verify_countdown == 0 then
+            -- Check whether the sequences we wrote 2 frames ago are still in place
+            local inp    = manager.machine.input
+            local ioport = manager.machine.ioport
+            local still_swapped = 0
+            local reverted      = 0
+            for desired, actual in pairs(xinmo_verify_expected) do
+                for _, port in pairs(ioport.ports) do
+                    for _, field in pairs(port.fields) do
+                        local ok, seq = pcall(function() return field:input_seq(0) end)
+                        if ok and seq then
+                            local ok2, tok = pcall(function() return inp:seq_to_tokens(seq) end)
+                            if ok2 and tok and tok ~= "" then
+                                if tok:find(actual, 1, true) then
+                                    still_swapped = still_swapped + 1
+                                elseif tok:find(desired, 1, true) then
+                                    reverted = reverted + 1
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            xinmo_verify_expected = {}
+            print(string.format("[UsbMap] SWAP VERIFY (+2 frames): %d field(s) show swapped tokens, %d reverted to original",
+                still_swapped, reverted))
+            if reverted > 0 and still_swapped == 0 then
+                print("[UsbMap] SWAP VERIFY: *** set_input_seq DID NOT PERSIST -- in-memory swap cannot work here ***")
+            elseif still_swapped > 0 then
+                print("[UsbMap] SWAP VERIFY: swap tokens ARE persisting (if game input unchanged, issue is elsewhere)")
+            else
+                print("[UsbMap] SWAP VERIFY: no matching XinMo tokens found in any ioport field")
+            end
+        end
     end
 
     _poll_js_test_hit()
