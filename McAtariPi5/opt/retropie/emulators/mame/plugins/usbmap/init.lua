@@ -1,4 +1,4 @@
------------------------------------------------------------
+﻿-----------------------------------------------------------
 -- USB Mapper Plugin (usbmap)
 -- Reads the desired JOYCODE ordering from allctrlrs.cfg and
 -- remaps live ioport fields in memory to match the actual USB
@@ -50,6 +50,8 @@ local xinmo_desired_prefixes = {}  -- desired JOYCODE slots for the two XinMo ha
 local xinmo_player1_joycode = nil  -- live JOYCODE currently assigned to XinMo player 1
 local js_test_active      = false  -- waiting for an A button press on any joystick
 local js_test_result      = nil    -- label of last detected device ("J3"), or nil
+local js_test_arm_time    = nil    -- os.clock() at arm time, for countdown
+local JS_TEST_TIMEOUT     = 10     -- seconds before auto-cancel
 local js_test_snapshot    = {}     -- baseline BUTTON1 states (keyed by joycode_num) at arm time
 local js_test_devices     = {}     -- device list captured at arm time
 local cached_ioport_tokens = nil   -- original ioport token strings before usbmap rewrites
@@ -273,6 +275,7 @@ local function _arm_js_test()
     js_test_devices  = live_devices
     js_test_snapshot = {}
     js_test_active   = true
+    js_test_arm_time = os.clock()
     print("[UsbMap] Button A joycode test armed; waiting for BUTTON1 on any joystick")
     return true
 end
@@ -280,16 +283,31 @@ end
 local function _poll_js_test_hit()
     if not js_test_active then return false end
 
+    -- Auto-cancel on timeout
+    if js_test_arm_time and (os.clock() - js_test_arm_time) >= JS_TEST_TIMEOUT then
+        js_test_active   = false
+        js_test_arm_time = nil
+        js_test_snapshot = {}
+        js_test_devices  = {}
+        print("[UsbMap] Button A joycode test timed out")
+        return false
+    end
+
     local inp = manager.machine.input
     for _, dev in ipairs(js_test_devices) do
         local token = string.format("JOYCODE_%d_BUTTON1", dev.joycode_num)
-        local current = 0
+        local pressed = false
         pcall(function()
-            local code = inp:code_from_token(token)
-            if code then current = inp:code_value(code) or 0 end
+            -- Use seq_pressed (MAME's UI input path) rather than code_value;
+            -- code_value reads raw device state which is frozen while MAME's
+            -- menu is open, but seq_pressed uses the same evaluation path as
+            -- MAME's own UI input checks and remains active during menu display.
+            local seq = inp:seq_from_tokens(token)
+            if seq then pressed = inp:seq_pressed(seq) end
         end)
-        if current ~= 0 then
+        if pressed then
             js_test_active   = false
+            js_test_arm_time = nil
             js_test_snapshot = {}
             js_test_devices  = {}
             local label = string.format("J%d", dev.joycode_num)
@@ -364,7 +382,7 @@ end
 -- as specified in allctrlrs.cfg:
 --   { { guid = "...", joycode_num = N }, ... }
 -- Entries appear in document order, so duplicate GUIDs are
--- listed in the order MAME would assign them (first, second…).
+-- listed in the order MAME would assign them (first, secondΓÇª).
 local function parse_allctrlrs()
     local f = io.open(ALLCTRLRS, "r")
     if not f then
@@ -687,7 +705,9 @@ local function menu_populate()
 
     local js_label
     if js_test_active then
-        js_label = "Button A Joycode Test:  waiting..."
+        local elapsed = js_test_arm_time and (os.clock() - js_test_arm_time) or 0
+        local remaining = math.max(1, JS_TEST_TIMEOUT - math.floor(elapsed))
+        js_label = string.format("Button A Joycode Test:  waiting %ds", remaining)
     elseif js_test_result then
         js_label = string.format("Button A Joycode Test: %s A Button HIT", js_test_result)
     else
@@ -704,14 +724,8 @@ local function menu_callback(index, event)
     if index == 1 then
         if event == "select" then
             if js_test_active then
-                -- BUTTON1 may still fire UI_Select even after remapping; try to read the
-                -- physical button state right now while the button is still held down.
-                if not _poll_js_test_hit() then
-                    -- Button already released before we could read it — cancel.
-                    js_test_active   = false
-                    js_test_snapshot = {}
-                    js_test_devices  = {}
-                end
+                -- BUTTON1 is mapped to UI_Select, so Enter/A fires here while the test
+                -- is armed.  Consume the event silently and let the timeout handle cleanup.
                 return true
             end
             if js_test_result then
@@ -753,6 +767,7 @@ local function on_game_stop()
     xinmo_player1_joycode = nil
     js_test_active      = false
     js_test_result      = nil
+    js_test_arm_time    = nil
     js_test_snapshot    = {}
     js_test_devices     = {}
     cached_ioport_tokens = nil
@@ -904,3 +919,4 @@ function usbmap.startplugin()
 end
 
 return exports
+
