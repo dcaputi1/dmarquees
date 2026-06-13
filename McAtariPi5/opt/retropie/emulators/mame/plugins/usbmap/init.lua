@@ -275,7 +275,7 @@ local function _arm_js_test()
     js_test_devices  = live_devices
     js_test_snapshot = {}
     js_test_active   = true
-    js_test_arm_time = os.clock()
+    js_test_arm_time = os.time()
     print("[UsbMap] Button A joycode test armed; waiting for BUTTON1 on any joystick")
     return true
 end
@@ -283,8 +283,8 @@ end
 local function _poll_js_test_hit()
     if not js_test_active then return false end
 
-    -- Auto-cancel on timeout
-    if js_test_arm_time and (os.clock() - js_test_arm_time) >= JS_TEST_TIMEOUT then
+    -- Auto-cancel on timeout (os.time gives wall-clock seconds, works even when MAME is paused)
+    if js_test_arm_time and (os.time() - js_test_arm_time) >= JS_TEST_TIMEOUT then
         js_test_active   = false
         js_test_arm_time = nil
         js_test_snapshot = {}
@@ -296,16 +296,12 @@ local function _poll_js_test_hit()
     local inp = manager.machine.input
     for _, dev in ipairs(js_test_devices) do
         local token = string.format("JOYCODE_%d_BUTTON1", dev.joycode_num)
-        local pressed = false
+        local current = 0
         pcall(function()
-            -- Use seq_pressed (MAME's UI input path) rather than code_value;
-            -- code_value reads raw device state which is frozen while MAME's
-            -- menu is open, but seq_pressed uses the same evaluation path as
-            -- MAME's own UI input checks and remains active during menu display.
-            local seq = inp:seq_from_tokens(token)
-            if seq then pressed = inp:seq_pressed(seq) end
+            local code = inp:code_from_token(token)
+            if code then current = inp:code_value(code) or 0 end
         end)
-        if pressed then
+        if current ~= 0 then
             js_test_active   = false
             js_test_arm_time = nil
             js_test_snapshot = {}
@@ -705,7 +701,7 @@ local function menu_populate()
 
     local js_label
     if js_test_active then
-        local elapsed = js_test_arm_time and (os.clock() - js_test_arm_time) or 0
+        local elapsed = js_test_arm_time and (os.time() - js_test_arm_time) or 0
         local remaining = math.max(1, JS_TEST_TIMEOUT - math.floor(elapsed))
         js_label = string.format("Button A Joycode Test:  waiting %ds", remaining)
     elseif js_test_result then
