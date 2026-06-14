@@ -269,12 +269,24 @@ local function _arm_js_test()
     end
     js_test_devices = live_devices
     js_test_active  = true
+    -- diagnostic: show what was captured
+    for _, dev in ipairs(js_test_devices) do
+        print(string.format("[UsbMap] armed: J%d '%s' btn_items=%d",
+            dev.joycode_num, dev.name, #dev.button_items))
+    end
     print("[UsbMap] Button A joycode test armed")
     return true
 end
 
+local poll_call_count = 0
+
 local function _poll_js_test_hit()
     if not js_test_active then return end
+    poll_call_count = poll_call_count + 1
+    -- log every 60th call so we can confirm the function is running
+    if poll_call_count % 60 == 1 then
+        print(string.format("[UsbMap] poll#%d active devs=%d", poll_call_count, #js_test_devices))
+    end
     for _, dev in ipairs(js_test_devices) do
         for _, btn_item in ipairs(dev.button_items) do
             local ok, val = pcall(function() return btn_item.item.current end)
