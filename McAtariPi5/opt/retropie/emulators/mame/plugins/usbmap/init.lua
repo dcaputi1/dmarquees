@@ -49,10 +49,11 @@ local cached_xinmo_devices = {}    -- live XinMo devices for this game session
 local xinmo_desired_prefixes = {}  -- desired JOYCODE slots for the two XinMo halves
 local xinmo_player1_joycode = nil  -- live JOYCODE currently assigned to XinMo player 1
 local js_test_active      = false  -- waiting for an A button press on any joystick
-local js_test_result      = nil    -- label of last detected device ("J3"), or nil
+local js_test_result      = nil    -- last detected device label ("J3"), or nil
 local js_test_snapshot    = {}     -- (unused, kept for compat)
 local js_test_devices     = {}     -- device list captured at arm time
 local js_code_poller      = nil    -- switch_code_poller active during a joycode test
+local js_test_arm_time    = nil    -- emu.osd_ticks() at arm time, for 10-second timeout
 local cached_ioport_tokens = nil   -- original ioport token strings before usbmap rewrites
 local remap_applied       = false  -- was any remap needed? (for popmessage / reset state)
 local pending_frame_remap = false  -- in-memory remap scheduled for first frame
@@ -278,6 +279,8 @@ local function _arm_js_test()
     js_test_devices  = live_devices
     js_test_snapshot = {}
     js_test_active   = true
+    js_test_result   = nil   -- clear any previous result when re-arming
+    pcall(function() js_test_arm_time = emu.osd_ticks() end)
 
     -- Also start a switch_code_poller as a second detection path.
     -- After reset() any newly-activated switch (including BUTTON1) will be
@@ -307,14 +310,13 @@ local function _poll_js_test_hit()
         for _, btn_item in ipairs(dev.button_items) do
             local ok, val = pcall(function() return btn_item.item.current end)
             if ok and val and val ~= 0 then
-                js_test_active   = false
-                js_test_snapshot = {}
-                js_test_devices  = {}
-                js_code_poller   = nil
-                local label = string.format("J%d", dev.joycode_num)
-                js_test_result   = label
-                print(string.format("[UsbMap] Button A joycode test: %s detected on %s (item.current=%d)",
-                    btn_item.token, label, val))
+                local label = string.format("J%d @ 1", dev.joycode_num)
+                if js_test_result ~= label then
+                    js_test_result = label
+                    print(string.format("[UsbMap] Button A joycode test: %s detected on J%d (item.current=%d) [path 1]",
+                        btn_item.token, dev.joycode_num, val))
+                end
+                -- stay armed so user can keep pressing to refine, Enter to confirm
                 return true
             end
         end
@@ -335,19 +337,32 @@ local function _poll_js_test_hit()
                 if jnum then
                     for _, dev in ipairs(js_test_devices) do
                         if dev.joycode_num == jnum then
-                            js_test_active   = false
-                            js_test_snapshot = {}
-                            js_test_devices  = {}
-                            js_code_poller   = nil
-                            local label = string.format("J%d", jnum)
-                            js_test_result   = label
-                            print(string.format(
-                                "[UsbMap] Button A joycode test: detected on %s via code_poller (token=%s)",
-                                label, token))
+                            local label = string.format("J%d @ 2", jnum)
+                            if js_test_result ~= label then
+                                js_test_result = label
+                                print(string.format(
+                                    "[UsbMap] Button A joycode test: detected on J%d via code_poller (token=%s) [path 2]",
+                                    jnum, token))
+                            end
+                            -- stay armed; Enter or timeout ends the test
                             return true
                         end
                     end
                 end
+            end
+        end
+    end
+
+    -- 10-second timeout: if nothing has been detected yet, disarm and reset.
+    if js_test_result == nil and js_test_arm_time then
+        local ok_now, now = pcall(function() return emu.osd_ticks() end)
+        local ok_tps, tps = pcall(function() return emu.osd_ticks_per_second() end)
+        if ok_now and ok_tps and tps and tps > 0 then
+            if (now - js_test_arm_time) / tps >= 10.0 then
+                js_test_active   = false
+                js_code_poller   = nil
+                js_test_arm_time = nil
+                print("[UsbMap] Button A joycode test: timed out (no button in 10s)")
             end
         end
     end
@@ -738,17 +753,15 @@ local function menu_populate()
     local p2_j   = p2_num and ("J" .. p2_num) or "??"
     local xinmo_state = "P1:" .. p1_j .. " / P2:" .. p2_j
 
-    local js_label
+    local js_sub
     if js_test_active then
-        js_label = "Button A Joycode Test:  waiting..."
-    elseif js_test_result then
-        js_label = string.format("Button A Joycode Test: %s A Button HIT", js_test_result)
+        js_sub = js_test_result or "waiting..."
     else
-        js_label = "Button A Joycode Test"
+        js_sub = js_test_result or ""
     end
 
     return {
-        { js_label, "", "" },
+        { "Button A Joycode Test", js_sub, "" },
         { "XinMo Swap", xinmo_state, "" }
     }
 end
@@ -757,18 +770,16 @@ local function menu_callback(index, event)
     if index == 1 then
         if event == "select" then
             if js_test_active then
-                -- BUTTON1 is mapped to UI_Select, so pressing A triggers this callback
-                -- instead of (or before) the frame-poller.  Read item.current right now
-                -- while the button is still held.  If it was a brief tap and already
-                -- released, the code_poller fallback will catch it next poll.
-                if not _poll_js_test_hit() then
-                    -- Neither path detected it yet — leave test armed so the next
-                    -- menu_populate redraw or frame-notifier poll can still catch it.
-                end
+                -- Enter while test is running: try one last poll (catches button
+                -- held at confirm time), then disarm regardless.
+                _poll_js_test_hit()
+                js_test_active   = false
+                js_code_poller   = nil
+                js_test_arm_time = nil
                 return true
             end
             if js_test_result then
-                -- Clear last result and allow re-arm
+                -- Enter on a finalized result: clear it
                 js_test_result = nil
                 return true
             end
@@ -809,6 +820,7 @@ local function on_game_stop()
     js_test_snapshot    = {}
     js_test_devices     = {}
     js_code_poller      = nil
+    js_test_arm_time    = nil
     cached_ioport_tokens = nil
     remap_applied       = false
     pending_frame_remap = false
