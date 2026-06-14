@@ -316,7 +316,8 @@ local function _poll_js_test_hit()
                     print(string.format("[UsbMap] Button A joycode test: %s detected on J%d (item.current=%d) [path 1]",
                         btn_item.token, dev.joycode_num, val))
                 end
-                -- stay armed so user can keep pressing to refine, Enter to confirm
+                -- popmessage renders immediately regardless of menu refresh timing
+                pcall(function() manager.machine:popmessage(js_test_result) end)
                 return true
             end
         end
@@ -344,7 +345,8 @@ local function _poll_js_test_hit()
                                     "[UsbMap] Button A joycode test: detected on J%d via code_poller (token=%s) [path 2]",
                                     jnum, token))
                             end
-                            -- stay armed; Enter or timeout ends the test
+                            -- popmessage renders immediately regardless of menu refresh timing
+                            pcall(function() manager.machine:popmessage(js_test_result) end)
                             return true
                         end
                     end
@@ -363,6 +365,7 @@ local function _poll_js_test_hit()
                 js_code_poller   = nil
                 js_test_arm_time = nil
                 print("[UsbMap] Button A joycode test: timed out (no button in 10s)")
+                pcall(function() manager.machine:popmessage(nil) end)
             end
         end
     end
