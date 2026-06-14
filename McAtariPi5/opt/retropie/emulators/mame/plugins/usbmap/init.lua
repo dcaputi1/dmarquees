@@ -49,6 +49,7 @@ local cached_xinmo_devices = {}    -- live XinMo devices for this game session
 local xinmo_desired_prefixes = {}  -- desired JOYCODE slots for the two XinMo halves
 local xinmo_player1_joycode = nil  -- live JOYCODE currently assigned to XinMo player 1
 local js_test_active      = false  -- waiting for an A button press on any joystick
+local js_test_result      = nil    -- label of last detected device ("J3"), or nil
 local js_test_snapshot    = {}     -- baseline BUTTON1 states (keyed by joycode_num) at arm time
 local js_test_devices     = {}     -- device list captured at arm time
 local cached_ioport_tokens = nil   -- original ioport token strings before usbmap rewrites
@@ -292,8 +293,8 @@ local function _poll_js_test_hit()
             js_test_snapshot = {}
             js_test_devices  = {}
             local label = string.format("J%d", dev.joycode_num)
+            js_test_result   = label
             print(string.format("[UsbMap] Button A joycode test: BUTTON1 detected on %s", label))
-            manager.machine:popmessage(string.format("Button A: %s", label))
             return true
         end
     end
@@ -684,9 +685,14 @@ local function menu_populate()
     local p2_j   = p2_num and ("J" .. p2_num) or "??"
     local xinmo_state = "P1:" .. p1_j .. " / P2:" .. p2_j
 
-    local js_label = js_test_active
-        and "Button A Joycode Test:  [Enter cancels]  waiting..."
-        or  "Button A Joycode Test"
+    local js_label
+    if js_test_active then
+        js_label = "Button A Joycode Test:  waiting..."
+    elseif js_test_result then
+        js_label = string.format("Button A Joycode Test: %s A Button HIT", js_test_result)
+    else
+        js_label = "Button A Joycode Test"
+    end
 
     return {
         { js_label, "", "" },
@@ -702,6 +708,11 @@ local function menu_callback(index, event)
                 js_test_active   = false
                 js_test_snapshot = {}
                 js_test_devices  = {}
+                return true
+            end
+            if js_test_result then
+                -- Clear last result and allow re-arm
+                js_test_result = nil
                 return true
             end
             return _arm_js_test()
@@ -737,6 +748,7 @@ local function on_game_stop()
     xinmo_desired_prefixes = {}
     xinmo_player1_joycode = nil
     js_test_active      = false
+    js_test_result      = nil
     js_test_snapshot    = {}
     js_test_devices     = {}
     cached_ioport_tokens = nil
