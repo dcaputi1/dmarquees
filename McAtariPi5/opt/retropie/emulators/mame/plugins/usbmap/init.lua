@@ -10,7 +10,7 @@
 -- unit is treated as P1.
 -----------------------------------------------------------
 
-local VERSION = "1.3.1"
+local VERSION = "1.3.2"
 
 local exports = {
     name        = "usbmap",
@@ -48,12 +48,8 @@ local cached_xinmo_remap  = {}     -- current XinMo remap table, reused on game-
 local cached_xinmo_devices = {}    -- live XinMo devices for this game session
 local xinmo_desired_prefixes = {}  -- desired JOYCODE slots for the two XinMo halves
 local xinmo_player1_joycode = nil  -- live JOYCODE currently assigned to XinMo player 1
-local js_test_active      = false  -- waiting for an A button press on any joystick
-local js_test_result      = nil    -- last detected device label ("J3"), or nil
-local js_test_snapshot    = {}     -- (unused, kept for compat)
+local js_test_active      = false  -- true while joycode test is polling
 local js_test_devices     = {}     -- device list captured at arm time
-local js_code_poller      = nil    -- switch_code_poller active during a joycode test
-local js_test_arm_time    = nil    -- emu.osd_ticks() at arm time, for 10-second timeout
 local cached_ioport_tokens = nil   -- original ioport token strings before usbmap rewrites
 local remap_applied       = false  -- was any remap needed? (for popmessage / reset state)
 local pending_frame_remap = false  -- in-memory remap scheduled for first frame
@@ -265,112 +261,33 @@ local function _build_xinmo_remap(player1_joycode)
     return remap
 end
 
--- switch_code_poller instance active while a joycode test is running.
--- Returns the first host switch code activated after arm time, which lets
--- us identify the device even when item.current has already gone back to 0.
-local js_code_poller = nil
-
 local function _arm_js_test()
     local live_devices = enumerate_devices()
     if not live_devices or #live_devices == 0 then
         manager.machine:popmessage("UsbMap: No joysticks found")
         return false
     end
-    js_test_devices  = live_devices
-    js_test_snapshot = {}
-    js_test_active   = true
-    js_test_result   = nil   -- clear any previous result when re-arming
-    pcall(function() js_test_arm_time = emu.osd_ticks() end)
-
-    -- Also start a switch_code_poller as a second detection path.
-    -- After reset() any newly-activated switch (including BUTTON1) will be
-    -- returned by the next poll() call; code_to_token() then gives the full
-    -- "JOYCODE_N_BUTTON1" token so we can identify the device.
-    js_code_poller = nil
-    local ok, p = pcall(function() return manager.machine.input:switch_code_poller() end)
-    if ok and p then
-        pcall(function() p:reset() end)
-        js_code_poller = p
-        print("[UsbMap] Button A joycode test armed; waiting for any button (item.current + code_poller)")
-    else
-        print("[UsbMap] Button A joycode test armed; waiting for any button (item.current only)")
-    end
+    js_test_devices = live_devices
+    js_test_active  = true
+    print("[UsbMap] Button A joycode test armed")
     return true
 end
 
 local function _poll_js_test_hit()
-    if not js_test_active then return false end
-
-    -- Strategy: read item.current directly on each cached button item.
-    -- This is the same raw hardware state the MAME "Input Devices" tab window
-    -- displays.  item.current is a live signed integer (0 = neutral) that does
-    -- not go through code_from_token / code_value, so it works even when the
-    -- menu intercepts BUTTON1 as UI_Select before the frame notifier fires.
+    if not js_test_active then return end
     for _, dev in ipairs(js_test_devices) do
         for _, btn_item in ipairs(dev.button_items) do
             local ok, val = pcall(function() return btn_item.item.current end)
             if ok and val and val ~= 0 then
-                local label = string.format("J%d @ 1", dev.joycode_num)
-                if js_test_result ~= label then
-                    js_test_result = label
-                    print(string.format("[UsbMap] Button A joycode test: %s detected on J%d (item.current=%d) [path 1]",
-                        btn_item.token, dev.joycode_num, val))
-                end
-                -- popmessage renders immediately regardless of menu refresh timing
-                pcall(function() manager.machine:popmessage(js_test_result) end)
-                return true
+                print(string.format("[UsbMap] joycode test: J%d %s current=%d",
+                    dev.joycode_num, btn_item.token, val))
+                pcall(function()
+                    manager.machine:popmessage(string.format("J%d", dev.joycode_num))
+                end)
+                return
             end
         end
     end
-
-    -- Fallback: drain the switch_code_poller.  This catches a very brief tap
-    -- that has already gone back to 0 by the time item.current is read.
-    -- code_to_token() returns the full "JOYCODE_N_ITEM" string; match the N
-    -- back to one of our known devices.
-    if js_code_poller then
-        local ok_poll, code = pcall(function() return js_code_poller:poll() end)
-        if ok_poll and code then
-            local ok_tok, token = pcall(function()
-                return manager.machine.input:code_to_token(code)
-            end)
-            if ok_tok and token and token ~= "" then
-                local jnum = tonumber(token:match("^JOYCODE_(%d+)_"))
-                if jnum then
-                    for _, dev in ipairs(js_test_devices) do
-                        if dev.joycode_num == jnum then
-                            local label = string.format("J%d @ 2", jnum)
-                            if js_test_result ~= label then
-                                js_test_result = label
-                                print(string.format(
-                                    "[UsbMap] Button A joycode test: detected on J%d via code_poller (token=%s) [path 2]",
-                                    jnum, token))
-                            end
-                            -- popmessage renders immediately regardless of menu refresh timing
-                            pcall(function() manager.machine:popmessage(js_test_result) end)
-                            return true
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    -- 10-second timeout: if nothing has been detected yet, disarm and reset.
-    if js_test_result == nil and js_test_arm_time then
-        local ok_now, now = pcall(function() return emu.osd_ticks() end)
-        local ok_tps, tps = pcall(function() return emu.osd_ticks_per_second() end)
-        if ok_now and ok_tps and tps and tps > 0 then
-            if (now - js_test_arm_time) / tps >= 10.0 then
-                js_test_active   = false
-                js_code_poller   = nil
-                js_test_arm_time = nil
-                print("[UsbMap] Button A joycode test: timed out (no button in 10s)")
-                pcall(function() manager.machine:popmessage(nil) end)
-            end
-        end
-    end
-
-    return false
 end
 
 local function _apply_xinmo_player1_assignment(player1_joycode)
@@ -756,15 +673,8 @@ local function menu_populate()
     local p2_j   = p2_num and ("J" .. p2_num) or "??"
     local xinmo_state = "P1:" .. p1_j .. " / P2:" .. p2_j
 
-    local js_sub
-    if js_test_active then
-        js_sub = js_test_result or "waiting..."
-    else
-        js_sub = js_test_result or ""
-    end
-
     return {
-        { "Button A Joycode Test", js_sub, "" },
+        { "Button A Joycode Test", js_test_active and "waiting..." or "", "" },
         { "XinMo Swap", xinmo_state, "" }
     }
 end
@@ -773,17 +683,9 @@ local function menu_callback(index, event)
     if index == 1 then
         if event == "select" then
             if js_test_active then
-                -- Enter while test is running: try one last poll (catches button
-                -- held at confirm time), then disarm regardless.
-                _poll_js_test_hit()
-                js_test_active   = false
-                js_code_poller   = nil
-                js_test_arm_time = nil
-                return true
-            end
-            if js_test_result then
-                -- Enter on a finalized result: clear it
-                js_test_result = nil
+                js_test_active  = false
+                js_test_devices = {}
+                pcall(function() manager.machine:popmessage(nil) end)
                 return true
             end
             return _arm_js_test()
@@ -819,11 +721,7 @@ local function on_game_stop()
     xinmo_desired_prefixes = {}
     xinmo_player1_joycode = nil
     js_test_active      = false
-    js_test_result      = nil
-    js_test_snapshot    = {}
     js_test_devices     = {}
-    js_code_poller      = nil
-    js_test_arm_time    = nil
     cached_ioport_tokens = nil
     remap_applied       = false
     pending_frame_remap = false
