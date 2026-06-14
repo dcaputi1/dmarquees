@@ -49,7 +49,6 @@ local cached_xinmo_devices = {}    -- live XinMo devices for this game session
 local xinmo_desired_prefixes = {}  -- desired JOYCODE slots for the two XinMo halves
 local xinmo_player1_joycode = nil  -- live JOYCODE currently assigned to XinMo player 1
 local js_test_active      = false  -- true while joycode test is polling
-local js_test_devices     = {}     -- device list captured at arm time
 local cached_ioport_tokens = nil   -- original ioport token strings before usbmap rewrites
 local remap_applied       = false  -- was any remap needed? (for popmessage / reset state)
 local pending_frame_remap = false  -- in-memory remap scheduled for first frame
@@ -262,18 +261,17 @@ local function _build_xinmo_remap(player1_joycode)
 end
 
 local function _arm_js_test()
-    local live_devices = enumerate_devices()
-    if not live_devices or #live_devices == 0 then
+    -- verify joystick class exists
+    local input = manager.machine.input
+    local joyclass = nil
+    for _, cls in pairs(input.device_classes) do
+        if cls.name == "joystick" then joyclass = cls; break end
+    end
+    if not joyclass or not next(joyclass.devices) then
         manager.machine:popmessage("UsbMap: No joysticks found")
         return false
     end
-    js_test_devices = live_devices
-    js_test_active  = true
-    -- diagnostic: show what was captured
-    for _, dev in ipairs(js_test_devices) do
-        print(string.format("[UsbMap] armed: J%d '%s' btn_items=%d",
-            dev.joycode_num, dev.name, #dev.button_items))
-    end
+    js_test_active = true
     print("[UsbMap] Button A joycode test armed")
     return true
 end
@@ -283,20 +281,35 @@ local poll_call_count = 0
 local function _poll_js_test_hit()
     if not js_test_active then return end
     poll_call_count = poll_call_count + 1
-    -- log every 60th call so we can confirm the function is running
-    if poll_call_count % 60 == 1 then
-        print(string.format("[UsbMap] poll#%d active devs=%d", poll_call_count, #js_test_devices))
+
+    -- Re-enumerate devices live each poll; stored item userdata references
+    -- may be stale after the frame that enumerate_devices() was called in.
+    local input = manager.machine.input
+    local joyclass = nil
+    for _, cls in pairs(input.device_classes) do
+        if cls.name == "joystick" then joyclass = cls; break end
     end
-    for _, dev in ipairs(js_test_devices) do
-        for _, btn_item in ipairs(dev.button_items) do
-            local ok, val = pcall(function() return btn_item.item.current end)
-            if ok and val and val ~= 0 then
-                print(string.format("[UsbMap] joycode test: J%d %s current=%d",
-                    dev.joycode_num, btn_item.token, val))
-                pcall(function()
-                    manager.machine:popmessage(string.format("J%d", dev.joycode_num))
-                end)
-                return
+    if not joyclass then return end
+
+    if poll_call_count % 60 == 1 then
+        local n = 0; for _ in pairs(joyclass.devices) do n = n + 1 end
+        print(string.format("[UsbMap] poll#%d live devs=%d", poll_call_count, n))
+    end
+
+    for _, device in pairs(joyclass.devices) do
+        for _, item in pairs(device.items) do
+            local token = tostring(item.token)
+            if token:match("^BUTTON%d") then
+                local ok, val = pcall(function() return item.current end)
+                if ok and val and val ~= 0 then
+                    local jnum = device.devindex + 1
+                    print(string.format("[UsbMap] joycode test: J%d %s current=%d",
+                        jnum, token, val))
+                    pcall(function()
+                        manager.machine:popmessage(string.format("J%d", jnum))
+                    end)
+                    return
+                end
             end
         end
     end
@@ -695,8 +708,7 @@ local function menu_callback(index, event)
     if index == 1 then
         if event == "select" then
             if js_test_active then
-                js_test_active  = false
-                js_test_devices = {}
+                js_test_active = false
                 pcall(function() manager.machine:popmessage(nil) end)
                 return true
             end
@@ -733,7 +745,6 @@ local function on_game_stop()
     xinmo_desired_prefixes = {}
     xinmo_player1_joycode = nil
     js_test_active      = false
-    js_test_devices     = {}
     cached_ioport_tokens = nil
     remap_applied       = false
     pending_frame_remap = false
