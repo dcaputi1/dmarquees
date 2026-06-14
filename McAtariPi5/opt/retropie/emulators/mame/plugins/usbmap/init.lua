@@ -50,8 +50,9 @@ local xinmo_desired_prefixes = {}  -- desired JOYCODE slots for the two XinMo ha
 local xinmo_player1_joycode = nil  -- live JOYCODE currently assigned to XinMo player 1
 local js_test_active      = false  -- waiting for an A button press on any joystick
 local js_test_result      = nil    -- label of last detected device ("J3"), or nil
-local js_test_snapshot    = {}     -- baseline BUTTON1 states (keyed by joycode_num) at arm time
+local js_test_snapshot    = {}     -- (unused, kept for compat)
 local js_test_devices     = {}     -- device list captured at arm time
+local js_code_poller      = nil    -- switch_code_poller active during a joycode test
 local cached_ioport_tokens = nil   -- original ioport token strings before usbmap rewrites
 local remap_applied       = false  -- was any remap needed? (for popmessage / reset state)
 local pending_frame_remap = false  -- in-memory remap scheduled for first frame
@@ -263,39 +264,91 @@ local function _build_xinmo_remap(player1_joycode)
     return remap
 end
 
+-- switch_code_poller instance active while a joycode test is running.
+-- Returns the first host switch code activated after arm time, which lets
+-- us identify the device even when item.current has already gone back to 0.
+local js_code_poller = nil
+
 local function _arm_js_test()
     local live_devices = enumerate_devices()
     if not live_devices or #live_devices == 0 then
         manager.machine:popmessage("UsbMap: No joysticks found")
         return false
     end
-    -- Store the joycode list; button state is read fresh each poll via code_from_token
     js_test_devices  = live_devices
     js_test_snapshot = {}
     js_test_active   = true
-    print("[UsbMap] Button A joycode test armed; waiting for BUTTON1 on any joystick")
+
+    -- Also start a switch_code_poller as a second detection path.
+    -- After reset() any newly-activated switch (including BUTTON1) will be
+    -- returned by the next poll() call; code_to_token() then gives the full
+    -- "JOYCODE_N_BUTTON1" token so we can identify the device.
+    js_code_poller = nil
+    local ok, p = pcall(function() return manager.machine.input:switch_code_poller() end)
+    if ok and p then
+        pcall(function() p:reset() end)
+        js_code_poller = p
+        print("[UsbMap] Button A joycode test armed; waiting for any button (item.current + code_poller)")
+    else
+        print("[UsbMap] Button A joycode test armed; waiting for any button (item.current only)")
+    end
     return true
 end
 
 local function _poll_js_test_hit()
     if not js_test_active then return false end
 
-    local inp = manager.machine.input
+    -- Strategy: read item.current directly on each cached button item.
+    -- This is the same raw hardware state the MAME "Input Devices" tab window
+    -- displays.  item.current is a live signed integer (0 = neutral) that does
+    -- not go through code_from_token / code_value, so it works even when the
+    -- menu intercepts BUTTON1 as UI_Select before the frame notifier fires.
     for _, dev in ipairs(js_test_devices) do
-        local token = string.format("JOYCODE_%d_BUTTON1", dev.joycode_num)
-        local current = 0
-        pcall(function()
-            local code = inp:code_from_token(token)
-            if code then current = inp:code_value(code) or 0 end
-        end)
-        if current ~= 0 then
-            js_test_active   = false
-            js_test_snapshot = {}
-            js_test_devices  = {}
-            local label = string.format("J%d", dev.joycode_num)
-            js_test_result   = label
-            print(string.format("[UsbMap] Button A joycode test: BUTTON1 detected on %s", label))
-            return true
+        for _, btn_item in ipairs(dev.button_items) do
+            local ok, val = pcall(function() return btn_item.item.current end)
+            if ok and val and val ~= 0 then
+                js_test_active   = false
+                js_test_snapshot = {}
+                js_test_devices  = {}
+                js_code_poller   = nil
+                local label = string.format("J%d", dev.joycode_num)
+                js_test_result   = label
+                print(string.format("[UsbMap] Button A joycode test: %s detected on %s (item.current=%d)",
+                    btn_item.token, label, val))
+                return true
+            end
+        end
+    end
+
+    -- Fallback: drain the switch_code_poller.  This catches a very brief tap
+    -- that has already gone back to 0 by the time item.current is read.
+    -- code_to_token() returns the full "JOYCODE_N_ITEM" string; match the N
+    -- back to one of our known devices.
+    if js_code_poller then
+        local ok_poll, code = pcall(function() return js_code_poller:poll() end)
+        if ok_poll and code then
+            local ok_tok, token = pcall(function()
+                return manager.machine.input:code_to_token(code)
+            end)
+            if ok_tok and token and token ~= "" then
+                local jnum = tonumber(token:match("^JOYCODE_(%d+)_"))
+                if jnum then
+                    for _, dev in ipairs(js_test_devices) do
+                        if dev.joycode_num == jnum then
+                            js_test_active   = false
+                            js_test_snapshot = {}
+                            js_test_devices  = {}
+                            js_code_poller   = nil
+                            local label = string.format("J%d", jnum)
+                            js_test_result   = label
+                            print(string.format(
+                                "[UsbMap] Button A joycode test: detected on %s via code_poller (token=%s)",
+                                label, token))
+                            return true
+                        end
+                    end
+                end
+            end
         end
     end
 
@@ -705,13 +758,12 @@ local function menu_callback(index, event)
         if event == "select" then
             if js_test_active then
                 -- BUTTON1 is mapped to UI_Select, so pressing A triggers this callback
-                -- instead of (or before) the frame-poller.  Try to read the physical
-                -- button state right now while the button is still held down.
+                -- instead of (or before) the frame-poller.  Read item.current right now
+                -- while the button is still held.  If it was a brief tap and already
+                -- released, the code_poller fallback will catch it next poll.
                 if not _poll_js_test_hit() then
-                    -- Button already released before we could read it — cancel.
-                    js_test_active   = false
-                    js_test_snapshot = {}
-                    js_test_devices  = {}
+                    -- Neither path detected it yet — leave test armed so the next
+                    -- menu_populate redraw or frame-notifier poll can still catch it.
                 end
                 return true
             end
@@ -756,6 +808,7 @@ local function on_game_stop()
     js_test_result      = nil
     js_test_snapshot    = {}
     js_test_devices     = {}
+    js_code_poller      = nil
     cached_ioport_tokens = nil
     remap_applied       = false
     pending_frame_remap = false
