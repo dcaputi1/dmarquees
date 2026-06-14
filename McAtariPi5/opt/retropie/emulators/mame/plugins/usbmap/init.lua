@@ -48,7 +48,8 @@ local cached_xinmo_remap  = {}     -- current XinMo remap table, reused on game-
 local cached_xinmo_devices = {}    -- live XinMo devices for this game session
 local xinmo_desired_prefixes = {}  -- desired JOYCODE slots for the two XinMo halves
 local xinmo_player1_joycode = nil  -- live JOYCODE currently assigned to XinMo player 1
-local js_test_active      = false  -- true while joycode test is polling
+local js_test_active  = false  -- true while joycode test is polling
+local js_code_poller  = nil    -- switch_code_poller used for detection
 local cached_ioport_tokens = nil   -- original ioport token strings before usbmap rewrites
 local remap_applied       = false  -- was any remap needed? (for popmessage / reset state)
 local pending_frame_remap = false  -- in-memory remap scheduled for first frame
@@ -261,7 +262,6 @@ local function _build_xinmo_remap(player1_joycode)
 end
 
 local function _arm_js_test()
-    -- verify joystick class exists
     local input = manager.machine.input
     local joyclass = nil
     for _, cls in pairs(input.device_classes) do
@@ -272,47 +272,32 @@ local function _arm_js_test()
         return false
     end
     js_test_active = true
-    print("[UsbMap] Button A joycode test armed")
+    js_code_poller = nil
+    local ok, p = pcall(function() return input:switch_code_poller() end)
+    if ok and p then
+        pcall(function() p:reset() end)
+        js_code_poller = p
+    end
+    print("[UsbMap] Button A joycode test armed (code_poller=" .. tostring(js_code_poller ~= nil) .. ")")
     return true
 end
 
 local poll_call_count = 0
 
 local function _poll_js_test_hit()
-    if not js_test_active then return end
+    if not js_test_active or not js_code_poller then return end
     poll_call_count = poll_call_count + 1
-
-    -- Re-enumerate devices live each poll; stored item userdata references
-    -- may be stale after the frame that enumerate_devices() was called in.
-    local input = manager.machine.input
-    local joyclass = nil
-    for _, cls in pairs(input.device_classes) do
-        if cls.name == "joystick" then joyclass = cls; break end
-    end
-    if not joyclass then return end
-
     if poll_call_count % 60 == 1 then
-        local n = 0; for _ in pairs(joyclass.devices) do n = n + 1 end
-        print(string.format("[UsbMap] poll#%d live devs=%d", poll_call_count, n))
+        print(string.format("[UsbMap] poll#%d", poll_call_count))
     end
-
-    for _, device in pairs(joyclass.devices) do
-        for _, item in pairs(device.items) do
-            local token = tostring(item.token)
-            if token:match("^BUTTON%d") then
-                local ok, val = pcall(function() return item.current end)
-                if ok and val and val ~= 0 then
-                    local jnum = device.devindex + 1
-                    print(string.format("[UsbMap] joycode test: J%d %s current=%d",
-                        jnum, token, val))
-                    pcall(function()
-                        manager.machine:popmessage(string.format("J%d", jnum))
-                    end)
-                    return
-                end
-            end
-        end
-    end
+    local ok, code = pcall(function() return js_code_poller:poll() end)
+    if not ok or not code then return end
+    local ok2, token = pcall(function() return manager.machine.input:code_to_token(code) end)
+    if not ok2 or not token or token == "" then return end
+    local jnum = tonumber(token:match("^JOYCODE_(%d+)_"))
+    if not jnum then return end
+    print(string.format("[UsbMap] joycode test: J%d token=%s", jnum, token))
+    pcall(function() manager.machine:popmessage(string.format("J%d", jnum)) end)
 end
 
 local function _apply_xinmo_player1_assignment(player1_joycode)
