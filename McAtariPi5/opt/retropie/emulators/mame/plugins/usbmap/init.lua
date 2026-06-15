@@ -10,7 +10,7 @@
 -- unit is treated as P1.
 -----------------------------------------------------------
 
-local VERSION = "1.3.2"
+local VERSION = "1.4.0"
 
 local exports = {
     name        = "usbmap",
@@ -278,26 +278,58 @@ local function _arm_js_test()
         pcall(function() p:reset() end)
         js_code_poller = p
     end
-    print("[UsbMap] Button A joycode test armed (code_poller=" .. tostring(js_code_poller ~= nil) .. ")")
+    print("[UsbMap] Button A joycode test armed")
     return true
 end
 
-local poll_call_count = 0
+-- Scan ioport fields for the game action mapped to a given JOYCODE token.
+-- Returns the field display name (e.g. "P1 Button 1") or nil.
+local function _find_ioport_action(token)
+    local input  = manager.machine.input
+    local ioport = manager.machine.ioport
+    local needle = " " .. token .. " "   -- pad for exact-word match
+    local ok0, ports = pcall(function() return ioport.ports end)
+    if not ok0 then return nil end
+    for _, port in pairs(ports) do
+        local ok1, fields = pcall(function() return port.fields end)
+        if ok1 then
+            for _, field in pairs(fields) do
+                local ok2, seq = pcall(function() return field:input_seq(0) end)
+                if ok2 and seq then
+                    local ok3, tok_str = pcall(function() return input:seq_to_tokens(seq) end)
+                    if ok3 and tok_str and tok_str ~= "" then
+                        if (" " .. tok_str .. " "):find(needle, 1, true) then
+                            local ok4, fname = pcall(function() return field.name end)
+                            if ok4 and fname and fname ~= "" then
+                                return fname
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return nil
+end
 
 local function _poll_js_test_hit()
     if not js_test_active or not js_code_poller then return end
-    poll_call_count = poll_call_count + 1
-    if poll_call_count % 60 == 1 then
-        print(string.format("[UsbMap] poll#%d", poll_call_count))
-    end
     local ok, code = pcall(function() return js_code_poller:poll() end)
     if not ok or not code then return end
     local ok2, token = pcall(function() return manager.machine.input:code_to_token(code) end)
     if not ok2 or not token or token == "" then return end
-    local jnum = tonumber(token:match("^JOYCODE_(%d+)_"))
-    if not jnum then return end
-    print(string.format("[UsbMap] joycode test: J%d token=%s", jnum, token))
-    pcall(function() manager.machine:popmessage(string.format("J%d", jnum)) end)
+    if not token:match("^JOYCODE_%d+_") then return end
+
+    -- Human-readable button label from MAME (e.g. "J2 Button 2")
+    local ok3, btn_label = pcall(function() return manager.machine.input:code_name(code) end)
+    local display = (ok3 and btn_label and btn_label ~= "") and btn_label or token
+
+    -- Game action mapped to this physical button (reflects current remap state)
+    local action = _find_ioport_action(token)
+    local msg = action and (display .. " -> " .. action) or display
+
+    print(string.format("[UsbMap] joycode test: %s (token=%s)", msg, token))
+    pcall(function() manager.machine:popmessage(msg) end)
 end
 
 local function _apply_xinmo_player1_assignment(player1_joycode)
@@ -690,10 +722,22 @@ local function menu_populate()
 end
 
 local function menu_callback(index, event)
+    -- index 0 = the MAME-added "Close Menu" footer item (only fires when
+    -- explicitly selected; pressing Back/Escape pops without a callback).
+    if index == 0 and event == "select" then
+        if js_test_active then
+            js_test_active = false
+            js_code_poller = nil
+            pcall(function() manager.machine:popmessage(nil) end)
+        end
+        return false  -- let MAME close the menu normally
+    end
+
     if index == 1 then
         if event == "select" then
             if js_test_active then
                 js_test_active = false
+                js_code_poller = nil
                 pcall(function() manager.machine:popmessage(nil) end)
                 return true
             end
