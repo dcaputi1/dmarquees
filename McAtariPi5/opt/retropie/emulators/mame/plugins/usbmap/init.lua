@@ -10,7 +10,7 @@
 -- unit is treated as P1.
 -----------------------------------------------------------
 
-local VERSION = "1.4.0"
+local VERSION = "1.4.1"
 
 local exports = {
     name        = "usbmap",
@@ -278,7 +278,7 @@ local function _arm_js_test()
         pcall(function() p:reset() end)
         js_code_poller = p
     end
-    print("[UsbMap] Button A joycode test armed")
+    print("[UsbMap] Button hit test armed")
     return true
 end
 
@@ -716,21 +716,22 @@ local function menu_populate()
     local xinmo_state = "P1:" .. p1_j .. " / P2:" .. p2_j
 
     return {
-        { "Button A Joycode Test", js_test_active and "waiting..." or "", "" },
+        { "Button Hit Test", js_test_active and "waiting..." or "", "" },
         { "XinMo Swap", xinmo_state, "" }
     }
 end
 
 local function menu_callback(index, event)
-    -- index 0 = the MAME-added "Close Menu" footer item (only fires when
-    -- explicitly selected; pressing Back/Escape pops without a callback).
-    if index == 0 and event == "select" then
+    -- "back"/"cancel" fire when the user closes the menu via Back/Escape;
+    -- "select" on the Close Menu footer (itemref=0) is handled by MAME
+    -- internally (stack_pop) and never reaches this callback at all.
+    if event == "back" or event == "cancel" then
         if js_test_active then
             js_test_active = false
             js_code_poller = nil
             pcall(function() manager.machine:popmessage(nil) end)
         end
-        return false  -- let MAME close the menu normally
+        return false
     end
 
     if index == 1 then
