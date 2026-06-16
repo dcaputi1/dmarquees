@@ -10,7 +10,7 @@
 -- unit is treated as P1.
 -----------------------------------------------------------
 
-local VERSION = "1.4.1"
+local VERSION = "1.4.2"
 
 local exports = {
     name        = "usbmap",
@@ -750,7 +750,12 @@ local function menu_callback(index, event)
 
     if index == 2 then
         if event == "select" then
-            return _cycle_xinmo_player1_assignment()
+            -- Return two values: (refresh, new_selection).
+            -- Without the second value MAME's binding may misinterpret the
+            -- single `true` as the selection index rather than the refresh
+            -- flag, so the menu is never repopulated and the display stays stale.
+            local ok = _cycle_xinmo_player1_assignment()
+            return ok, 2
         end
 
         return false
