@@ -11,6 +11,8 @@ PI3_PRESENT=true
 MENU_TIMEOUT=60
 BASE_PATH="/opt/retropie/emulators/mame"
 CFG_PATH="$BASE_PATH/cfg"
+PROJECT_CFG="$HOME/IvarArcade/McAtariPi5/opt/retropie/emulators/mame/cfg"
+XINMO_JSON="$HOME/IvarArcade/json/xinmo_mame_stats.json"
 INI_PATH="$BASE_PATH/ini"
 CMD_FIFO="/tmp/dmarquees_cmd"
 PI3_REMOTE_HOST="10.77.77.3"
@@ -211,6 +213,31 @@ send_dmarquees_cmd()
 }
 
 # ==========================================
+#  Restore canonical cfg files from project
+# ==========================================
+restore_cfg_files()
+{
+    # Skip restore if XinMo auto-swap is explicitly disabled;
+    # the user relies on MAME-written cfg values in that mode.
+    if grep -q '"auto_swap"[[:space:]]*:[[:space:]]*false' "$XINMO_JSON" 2>/dev/null; then
+        echo "[autostart] XinMo auto-swap is OFF: skipping cfg restore"
+        return 0
+    fi
+
+    if [ ! -d "$PROJECT_CFG" ]; then
+        echo "[autostart] WARNING: Project cfg source not found: $PROJECT_CFG"
+        return 1
+    fi
+
+    echo "[autostart] Restoring cfg files from project..."
+    if cp -f "$PROJECT_CFG"/*.cfg "$CFG_PATH/"; then
+        echo "[autostart] cfg files restored."
+    else
+        echo "[autostart] WARNING: cfg restore encountered errors."
+    fi
+}
+
+# ==========================================
 #  Pygame frontend wrapper + main menu
 # ==========================================
 run_pic_frontend()
@@ -280,6 +307,7 @@ main_menu()
                     echo "ROL_FLAG=\"-norol\"" > $HOME/.rol_flag
                     emulationstation #auto
                 fi
+                restore_cfg_files
                 continue
                 ;;
             M)
@@ -291,6 +319,7 @@ main_menu()
                 else
                     mame -norol -inipath "/opt/retropie/emulators/mame/ini" -cfg_directory $CFG_PATH -verbose > $HOME/mame.log 2>&1
                 fi
+                restore_cfg_files
                 continue
                 ;;
             C)

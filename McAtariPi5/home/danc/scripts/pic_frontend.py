@@ -153,6 +153,8 @@ PI3_PORT = 5533
 # State file paths
 HOME = os.path.expanduser("~")
 XINMO_STATS_FILE = os.path.join(HOME, "IvarArcade", "json", "xinmo_mame_stats.json")
+PROJECT_CFG      = os.path.join(HOME, "IvarArcade", "McAtariPi5", "opt", "retropie", "emulators", "mame", "cfg")
+MAME_CFG         = "/opt/retropie/emulators/mame/cfg"
 PI5_DUAL_DISPLAY_FILE = os.path.join(HOME, ".pi5_dual_display")
 PI3_PRESENT_FILE = os.path.join(HOME, ".pi3_present")
 PANEL_FILE = os.path.join(HOME, ".panel")
@@ -183,6 +185,12 @@ dual_display = load_state(PI5_DUAL_DISPLAY_FILE, True)
 pi3_present = load_state(PI3_PRESENT_FILE, True)
 panel = load_state(PANEL_FILE, "DC")  # DC, MC, NA
 screen_horizontal = load_state(SCREEN_ORIENTATION_FILE, True)
+try:
+    with open(XINMO_STATS_FILE) as _f:
+        _xs = json.load(_f).get("auto_swap", True)
+    xinmo_auto_swap = bool(_xs) if not isinstance(_xs, bool) else _xs
+except Exception:
+    xinmo_auto_swap = True
 
 # --- NEW: Window/fullscreen mode and dynamic sizing ---
 WINDOWED = True
@@ -388,7 +396,7 @@ def panel_menu():
                     toggle_fullscreen()
 
 def advanced_menu():
-    global dual_display, pi3_present, screen_horizontal
+    global dual_display, pi3_present, screen_horizontal, xinmo_auto_swap
     selected = 0
     running = True
     xinmo_label, xinmo_color = _check_xinmo()
@@ -398,12 +406,17 @@ def advanced_menu():
         reset_xinmo_stats()
         xinmo_label, xinmo_color = _check_xinmo()
 
+    def _do_reset_mame_cfg():
+        reset_mame_cfg()
+
     MENU_ITEMS = [
         ("Pi5 Dual Display:", lambda: toggle_dual_display()),
         ("Pi3 Present:", lambda: toggle_pi3_present()),
         ("Screen Orientation:", lambda: toggle_screen_orientation()),
         ("Panel Image:", lambda: panel_menu()),
         ("Reset XinMo Stats", _do_reset_xinmo),
+        ("XinMo Auto-Swap:", lambda: toggle_xinmo_auto_swap()),
+        ("Reset MAME *.cfg Files", _do_reset_mame_cfg),
         ("Return to Main Menu", lambda: None),
     ]
     while running:
@@ -436,6 +449,8 @@ def advanced_menu():
                 suffix = "Landscape" if screen_horizontal else "Portrait"
             elif "Panel Image" in label:
                 suffix = {"DC":"UltraStick/Spinners", "MC":"Atari/FightStick", "MK":"MarioKart/Wheel", "NA":"None/Blank"}.get(panel, "None/Blank")
+            elif "Auto-Swap" in label:
+                suffix = "ON" if xinmo_auto_swap else "OFF"
             color = SELECT_RECT_COLOR if i == selected else UNSEL_ITEM_RGB
             # menu item: centered at x=240; y = start_y + i * spacing (evenly distributed)
             text = font.render(f"{label} {suffix}", True, color)
@@ -536,9 +551,39 @@ def reset_xinmo_stats():
     try:
         os.makedirs(os.path.dirname(XINMO_STATS_FILE), exist_ok=True)
         with open(XINMO_STATS_FILE, "w") as f:
-            json.dump({"swaps": 0, "last_swap": None}, f)
+            json.dump({"swaps": 0, "last_swap": None, "auto_swap": xinmo_auto_swap}, f)
     except Exception:
         pass
+
+def toggle_xinmo_auto_swap():
+    """Toggle the auto_swap field in xinmo_mame_stats.json and update the global."""
+    global xinmo_auto_swap
+    xinmo_auto_swap = not xinmo_auto_swap
+    try:
+        stats = {"swaps": 0, "last_swap": None}
+        try:
+            with open(XINMO_STATS_FILE) as f:
+                stats = json.load(f)
+        except Exception:
+            pass
+        stats["auto_swap"] = xinmo_auto_swap
+        os.makedirs(os.path.dirname(XINMO_STATS_FILE), exist_ok=True)
+        with open(XINMO_STATS_FILE, "w") as f:
+            json.dump(stats, f)
+    except Exception:
+        pass
+
+def reset_mame_cfg():
+    """Copy all *.cfg from the project source to the deployed MAME cfg directory."""
+    import glob
+    import shutil
+    src_files = glob.glob(os.path.join(PROJECT_CFG, "*.cfg"))
+    if not src_files:
+        print(f"[WARN] reset_mame_cfg: no .cfg files found in {PROJECT_CFG}", file=sys.stderr)
+        return
+    for src in src_files:
+        shutil.copy2(src, MAME_CFG)
+    print(f"[INFO] reset_mame_cfg: restored {len(src_files)} file(s) to {MAME_CFG}", file=sys.stderr)
 
 def _send_pi3_command(cmd):
     """Send a command string to the Pi3 netbridge via TCP. Best-effort; ignores failures."""
