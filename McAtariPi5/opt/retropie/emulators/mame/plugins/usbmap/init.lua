@@ -54,6 +54,8 @@ local cached_ioport_tokens = nil   -- original ioport token strings before usbma
 local remap_applied       = false  -- was any remap needed? (for popmessage / reset state)
 local pending_frame_remap = false  -- in-memory remap scheduled for first frame
 local pending_xinmo_remap_joycode = nil  -- deferred XinMo swap applied on next emulation frame
+local pending_xinmo_warn     = false     -- show "auto-swap disabled but needed" warning on next frame
+local xinmo_auto_swap_enabled = true     -- loaded from JSON; false = do not auto-swap on game start
 local xinmo_verify_countdown = 0         -- frames remaining before post-swap verify
 local xinmo_verify_expected  = {}        -- {desired_prefix -> actual_prefix} expected after swap
 local reset_notifier = nil
@@ -103,6 +105,11 @@ local function _read_xinmo_stats()
     if last_swap and last_swap ~= "" then
         stats.last_swap = last_swap
     end
+    if content:match('"auto_swap"%s*:%s*false') then
+        stats.auto_swap = false
+    elseif content:match('"auto_swap"%s*:%s*true') then
+        stats.auto_swap = true
+    end
     return stats
 end
 
@@ -120,8 +127,10 @@ local function _write_xinmo_stats(stats)
         return false
     end
 
-    local last_swap_json = stats.last_swap and string.format('"%s"', stats.last_swap) or "null"
-    f:write(string.format('{"swaps": %d, "last_swap": %s}\n', stats.swaps or 0, last_swap_json))
+    local last_swap_json  = stats.last_swap and string.format('"%s"', stats.last_swap) or "null"
+    local auto_swap_json  = (stats.auto_swap == false) and "false" or "true"
+    f:write(string.format('{"swaps": %d, "last_swap": %s, "auto_swap": %s}\n',
+        stats.swaps or 0, last_swap_json, auto_swap_json))
     f:close()
     return true
 end
@@ -320,13 +329,9 @@ local function _poll_js_test_hit()
     if not ok2 or not token or token == "" then return end
     if not token:match("^JOYCODE_%d+_") then return end
 
-    -- Human-readable button label from MAME (e.g. "J2 Button 2")
-    local ok3, btn_label = pcall(function() return manager.machine.input:code_name(code) end)
-    local display = (ok3 and btn_label and btn_label ~= "") and btn_label or token
-
     -- Game action mapped to this physical button (reflects current remap state)
     local action = _find_ioport_action(token)
-    local msg = action and (display .. " -> " .. action) or display
+    local msg = action or token
 
     print(string.format("[UsbMap] joycode test: %s (token=%s)", msg, token))
     pcall(function() manager.machine:popmessage(msg) end)
@@ -717,7 +722,8 @@ local function menu_populate()
 
     return {
         { "Button Hit Test", js_test_active and "waiting..." or "", "" },
-        { "XinMo Swap", xinmo_state, "" }
+        { "XinMo Swap", xinmo_state, "" },
+        { "XinMo Auto-Swap", xinmo_auto_swap_enabled and "ON" or "OFF", "" }
     }
 end
 
@@ -761,6 +767,20 @@ local function menu_callback(index, event)
         return false
     end
 
+    if index == 3 then
+        if event == "select" then
+            xinmo_auto_swap_enabled = not xinmo_auto_swap_enabled
+            local stats = _read_xinmo_stats()
+            stats.auto_swap = xinmo_auto_swap_enabled
+            _write_xinmo_stats(stats)
+            print(string.format("[UsbMap] XinMo auto-swap toggled: %s",
+                xinmo_auto_swap_enabled and "ENABLED" or "DISABLED"))
+            return true, 3
+        end
+
+        return false
+    end
+
     return false
 end
 
@@ -784,6 +804,7 @@ local function on_game_stop()
     remap_applied       = false
     pending_frame_remap = false
     pending_xinmo_remap_joycode = nil
+    pending_xinmo_warn      = false
     xinmo_verify_countdown = 0
     xinmo_verify_expected  = {}
 end
@@ -822,8 +843,20 @@ local function on_game_start()
                 cached_xinmo_devices = _copy_array(xinmo_info.devices)
                 xinmo_desired_prefixes = _copy_array(xinmo_info.desired_prefixes)
                 xinmo_player1_joycode = xinmo_info.default_player1_joycode
-                cached_xinmo_remap = {}
+                cached_xinmo_remap = _build_xinmo_remap(xinmo_player1_joycode)
                 log_all_joystick_devices(live_devices, full_remap)
+
+                if _has_entries(cached_xinmo_remap) then
+                    if xinmo_auto_swap_enabled then
+                        print(string.format("[UsbMap] XinMo auto-swap enabled: queuing P1=J%d for first frame",
+                            xinmo_player1_joycode))
+                        pending_xinmo_remap_joycode = xinmo_player1_joycode
+                        remap_applied = true
+                    else
+                        print("[UsbMap] XinMo auto-swap DISABLED: swap is needed but will not be applied")
+                        pending_xinmo_warn = true
+                    end
+                end
 
                 local n = _count_entries(cached_remap)
 
@@ -917,11 +950,24 @@ local function on_first_frame()
         end
     end
 
+    if pending_xinmo_warn then
+        pending_xinmo_warn = false
+        pcall(function() manager.machine:popmessage("UsbMap: XinMo swap needed (auto-swap OFF)") end)
+    end
+
     _poll_js_test_hit()
 end
 
 function usbmap.startplugin()
     print(string.format("[UsbMap] v%s loaded", VERSION))
+    local boot_stats = _read_xinmo_stats()
+    if boot_stats.auto_swap == false then
+        xinmo_auto_swap_enabled = false
+        print("[UsbMap] XinMo auto-swap: DISABLED (from stats file)")
+    else
+        xinmo_auto_swap_enabled = true
+        print("[UsbMap] XinMo auto-swap: ENABLED")
+    end
     reset_notifier = emu.add_machine_reset_notifier(on_machine_reset)
     stop_notifier  = emu.add_machine_stop_notifier(on_game_stop)
     frame_notifier = emu.add_machine_frame_notifier(on_first_frame)
