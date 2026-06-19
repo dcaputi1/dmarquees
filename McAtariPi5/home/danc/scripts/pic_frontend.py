@@ -412,7 +412,7 @@ def advanced_menu():
         xinmo_label, xinmo_color = _check_xinmo()
 
     def _do_reset_mame_cfg():
-        nonlocal mame_cfg_status, mame_cfg_status_time
+        global mame_cfg_status, mame_cfg_status_time
         success, count = reset_mame_cfg()
         if success:
             mame_cfg_status = f"✓ {count} files"
