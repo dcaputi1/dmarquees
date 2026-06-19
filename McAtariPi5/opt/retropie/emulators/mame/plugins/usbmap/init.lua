@@ -352,6 +352,10 @@ local function _apply_xinmo_player1_assignment(player1_joycode)
     if _has_entries(effective_remap) then
         print(string.format("[UsbMap] Applying XinMo Player 1 assignment to J%d", player1_joycode))
         count = apply_remap_to_ioports(effective_remap, true)
+    elseif cached_ioport_tokens ~= nil then
+        -- No swap needed now, but a previous swap may be in effect; restore from baseline.
+        print(string.format("[UsbMap] XinMo Player 1 already matches J%d - restoring baseline", player1_joycode))
+        count = apply_remap_to_ioports({}, true)
     else
         print(string.format("[UsbMap] XinMo Player 1 already matches J%d", player1_joycode))
     end

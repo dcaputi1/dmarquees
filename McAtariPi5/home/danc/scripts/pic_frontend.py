@@ -415,9 +415,9 @@ def advanced_menu():
         global mame_cfg_status, mame_cfg_status_time
         success, count = reset_mame_cfg()
         if success:
-            mame_cfg_status = f"✓ {count} files"
+            mame_cfg_status = f"{count} files"
         else:
-            mame_cfg_status = "✗ Failed"
+            mame_cfg_status = "Failed"
         mame_cfg_status_time = time.time()
 
     MENU_ITEMS = [
