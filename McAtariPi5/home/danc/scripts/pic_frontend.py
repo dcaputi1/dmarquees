@@ -5,7 +5,6 @@ import os
 import socket
 import subprocess
 import sys
-import time
 
 # --- SDL/Pygame environment setup for console/framebuffer ---
 #
@@ -193,9 +192,8 @@ try:
 except Exception:
     xinmo_auto_swap = True
 
-# MAME cfg reset status tracking
-mame_cfg_status = ""  # "" = no recent reset, "✓ N files", or "✗ Failed"
-mame_cfg_status_time = 0  # timestamp for auto-clearing
+# MAME cfg reset count (incremented each run; cleared on advanced_menu entry)
+mame_cfg_reset_count = 0
 
 # --- NEW: Window/fullscreen mode and dynamic sizing ---
 WINDOWED = True
@@ -401,7 +399,8 @@ def panel_menu():
                     toggle_fullscreen()
 
 def advanced_menu():
-    global dual_display, pi3_present, screen_horizontal, xinmo_auto_swap, mame_cfg_status, mame_cfg_status_time
+    global dual_display, pi3_present, screen_horizontal, xinmo_auto_swap, mame_cfg_reset_count
+    mame_cfg_reset_count = 0  # reset count each time the advanced menu is entered
     selected = 0
     running = True
     xinmo_label, xinmo_color = _check_xinmo()
@@ -412,13 +411,10 @@ def advanced_menu():
         xinmo_label, xinmo_color = _check_xinmo()
 
     def _do_reset_mame_cfg():
-        global mame_cfg_status, mame_cfg_status_time
-        success, count = reset_mame_cfg()
+        global mame_cfg_reset_count
+        success, _ = reset_mame_cfg()
         if success:
-            mame_cfg_status = f"{count} files"
-        else:
-            mame_cfg_status = "Failed"
-        mame_cfg_status_time = time.time()
+            mame_cfg_reset_count += 1
 
     MENU_ITEMS = [
         ("Pi5 Dual Display:", lambda: toggle_dual_display()),
@@ -463,10 +459,7 @@ def advanced_menu():
             elif "Auto-Swap" in label:
                 suffix = "ON" if xinmo_auto_swap else "OFF"
             elif "Reset MAME" in label:
-                # Clear status if older than 3 seconds
-                if mame_cfg_status and (time.time() - mame_cfg_status_time) > 3:
-                    mame_cfg_status = ""
-                suffix = mame_cfg_status
+                suffix = f"done ({mame_cfg_reset_count})" if mame_cfg_reset_count > 0 else ""
             color = SELECT_RECT_COLOR if i == selected else UNSEL_ITEM_RGB
             # menu item: centered at x=240; y = start_y + i * spacing (evenly distributed)
             text = font.render(f"{label} {suffix}", True, color)
