@@ -5,6 +5,7 @@ import os
 import socket
 import subprocess
 import sys
+import time
 
 # --- SDL/Pygame environment setup for console/framebuffer ---
 #
@@ -191,6 +192,10 @@ try:
     xinmo_auto_swap = bool(_xs) if not isinstance(_xs, bool) else _xs
 except Exception:
     xinmo_auto_swap = True
+
+# MAME cfg reset status tracking
+mame_cfg_status = ""  # "" = no recent reset, "✓ N files", or "✗ Failed"
+mame_cfg_status_time = 0  # timestamp for auto-clearing
 
 # --- NEW: Window/fullscreen mode and dynamic sizing ---
 WINDOWED = True
@@ -407,7 +412,13 @@ def advanced_menu():
         xinmo_label, xinmo_color = _check_xinmo()
 
     def _do_reset_mame_cfg():
-        reset_mame_cfg()
+        nonlocal mame_cfg_status, mame_cfg_status_time
+        success, count = reset_mame_cfg()
+        if success:
+            mame_cfg_status = f"✓ {count} files"
+        else:
+            mame_cfg_status = "✗ Failed"
+        mame_cfg_status_time = time.time()
 
     MENU_ITEMS = [
         ("Pi5 Dual Display:", lambda: toggle_dual_display()),
@@ -451,6 +462,11 @@ def advanced_menu():
                 suffix = {"DC":"UltraStick/Spinners", "MC":"Atari/FightStick", "MK":"MarioKart/Wheel", "NA":"None/Blank"}.get(panel, "None/Blank")
             elif "Auto-Swap" in label:
                 suffix = "ON" if xinmo_auto_swap else "OFF"
+            elif "Reset MAME" in label:
+                # Clear status if older than 3 seconds
+                if mame_cfg_status and (time.time() - mame_cfg_status_time) > 3:
+                    mame_cfg_status = ""
+                suffix = mame_cfg_status
             color = SELECT_RECT_COLOR if i == selected else UNSEL_ITEM_RGB
             # menu item: centered at x=240; y = start_y + i * spacing (evenly distributed)
             text = font.render(f"{label} {suffix}", True, color)
@@ -574,16 +590,23 @@ def toggle_xinmo_auto_swap():
         pass
 
 def reset_mame_cfg():
-    """Copy all *.cfg from the project source to the deployed MAME cfg directory."""
+    """Copy all *.cfg from the project source to the deployed MAME cfg directory.
+    Returns (success: bool, count: int) tuple."""
     import glob
     import shutil
-    src_files = glob.glob(os.path.join(PROJECT_CFG, "*.cfg"))
-    if not src_files:
-        print(f"[WARN] reset_mame_cfg: no .cfg files found in {PROJECT_CFG}", file=sys.stderr)
-        return
-    for src in src_files:
-        shutil.copy2(src, MAME_CFG)
-    print(f"[INFO] reset_mame_cfg: restored {len(src_files)} file(s) to {MAME_CFG}", file=sys.stderr)
+    try:
+        src_files = glob.glob(os.path.join(PROJECT_CFG, "*.cfg"))
+        if not src_files:
+            print(f"[WARN] reset_mame_cfg: no .cfg files found in {PROJECT_CFG}", file=sys.stderr)
+            return (False, 0)
+        for src in src_files:
+            shutil.copy2(src, MAME_CFG)
+        count = len(src_files)
+        print(f"[INFO] reset_mame_cfg: restored {count} file(s) to {MAME_CFG}", file=sys.stderr)
+        return (True, count)
+    except Exception as e:
+        print(f"[ERROR] reset_mame_cfg: {e}", file=sys.stderr)
+        return (False, 0)
 
 def _send_pi3_command(cmd):
     """Send a command string to the Pi3 netbridge via TCP. Best-effort; ignores failures."""
