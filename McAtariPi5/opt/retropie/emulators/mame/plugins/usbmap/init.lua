@@ -127,7 +127,7 @@ local function _write_xinmo_stats(stats)
         return false
     end
 
-    local last_swap_json  = stats.last_swap and string.format('"\%s"', stats.last_swap) or "null"
+    local last_swap_json  = stats.last_swap and string.format('"%s"', stats.last_swap) or "null"
     local auto_swap_json  = (stats.auto_swap == false) and "false" or "true"
     f:write(string.format('{"swaps": %d, "last_swap": %s, "auto_swap": %s}\n',
         stats.swaps or 0, last_swap_json, auto_swap_json))
