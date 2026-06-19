@@ -10,7 +10,7 @@
 -- unit is treated as P1.
 -----------------------------------------------------------
 
-local VERSION = "1.4.2"
+local VERSION = "1.4.3"
 
 local exports = {
     name        = "usbmap",

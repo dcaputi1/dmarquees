@@ -1,7 +1,7 @@
 {
   "plugin": {
     "name": "usbmap",
-    "version": "1.4.1",
+    "version": "1.4.3",
     "description": "USB Mapper",
     "author": "Dan Caputi",
     "type": "plugin",
