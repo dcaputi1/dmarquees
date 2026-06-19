@@ -401,7 +401,7 @@ def panel_menu():
                     toggle_fullscreen()
 
 def advanced_menu():
-    global dual_display, pi3_present, screen_horizontal, xinmo_auto_swap
+    global dual_display, pi3_present, screen_horizontal, xinmo_auto_swap, mame_cfg_status, mame_cfg_status_time
     selected = 0
     running = True
     xinmo_label, xinmo_color = _check_xinmo()
