@@ -59,6 +59,7 @@ steps:
       danc ALL=(ALL) NOPASSWD: /bin/pkill
       danc ALL=(ALL) NOPASSWD: /usr/bin/stdbuf
       danc ALL=(ALL) NOPASSWD: /bin/systemctl
+      danc ALL=(ALL) NOPASSWD: /usr/bin/ultrastikcmd
 7. reboot (for path to take effect)
 8. clone, build, install ultrastikcmd tool for per-game joystick mapping:
    mkdir -p ~/IvarArcade/tools/linux
@@ -223,3 +224,5 @@ i. Configure direct wired link static IPs (NetworkManager):
         fix: RetroPie autostart / raspi-config boot to desktop auto-login restored
               lightdm/Wayland; keep IvarArcade autostart.sh launching pic_frontend.py
               and use 'sudo systemctl start lightdm' for Exit to X/Wayland Desktop
+6/19/26 [x] need sudoers for ultrastikcmd (called in runcommand scripts)
+            added to /etc/sudoers.d/autostart-nopass (verify path with 'which ultrastikcmd')
