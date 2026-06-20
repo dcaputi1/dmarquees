@@ -539,6 +539,10 @@ static void destroy_dumb_fb(int fd)
     }
 }
 
+// Forward declarations: defined later (after show_panel_marquee dependencies)
+static void prerender_default_panels(void);
+static bool convert_svg_to_png(const char *svg_path, const char *png_path);
+
 static int initialize(void)
 {
     initialize_globals();
@@ -602,6 +606,7 @@ static int initialize(void)
     }
 
     show_default_marquee();     // draw default marquee (RetroPie NA frontend)
+    prerender_default_panels(); // pre-render panel PNGs so game launch is instant
 
     return 0;
 }
@@ -930,6 +935,62 @@ static bool find_panel_map(const char *shortname, ControlPanel panel_type, char 
     return false;
 }
 
+// Returns true if the panel PNG needs to be (re-)generated:
+// missing, or the SVG template is newer than the existing PNG.
+static bool needs_panel_rerender(const char *template_path, const char *png_path)
+{
+    struct stat png_st;
+    if (stat(png_path, &png_st) != 0)
+        return true; // PNG doesn't exist yet
+
+    struct stat tmpl_st;
+    if (stat(template_path, &tmpl_st) != 0)
+        return false; // template missing — nothing to do
+
+    return tmpl_st.st_mtime > png_st.st_mtime; // re-render if template is newer
+}
+
+// Pre-render the three default panel PNGs (no game-specific label substitutions)
+// so that game launches can load the PNG instantly without running rsvg-convert.
+static void prerender_default_panels(void)
+{
+    const struct { const char *template_path; const char *tmp_svg; const char *tmp_png; } panels[] = {
+        { _dcpanel_template, PANEL_TMP_DC_SVG,  PANEL_TMP_DC_PNG  },
+        { _mcpanel_template, PANEL_TMP_MC_SVG,  PANEL_TMP_MC_PNG  },
+        { _mkwheel_template, PANEL_TMP_MKW_SVG, PANEL_TMP_MKW_PNG },
+    };
+
+    for (int i = 0; i < 3; i++)
+    {
+        if (!needs_panel_rerender(panels[i].template_path, panels[i].tmp_png))
+        {
+            ts_printf("dmarquees: panel PNG up-to-date: %s\n", panels[i].tmp_png);
+            continue;
+        }
+
+        char *svg = read_text_file(panels[i].template_path);
+        if (!svg)
+        {
+            ts_fprintf(stderr, "warning: panel template missing for pre-render: %s\n", panels[i].template_path);
+            continue;
+        }
+
+        if (!write_text_file(panels[i].tmp_svg, svg))
+        {
+            free(svg);
+            ts_fprintf(stderr, "warning: failed to write SVG for pre-render: %s\n", panels[i].tmp_svg);
+            continue;
+        }
+        free(svg);
+
+        ts_printf("dmarquees: pre-rendering panel PNG: %s\n", panels[i].tmp_png);
+        if (convert_svg_to_png(panels[i].tmp_svg, panels[i].tmp_png))
+            ts_printf("dmarquees: panel PNG ready: %s\n", panels[i].tmp_png);
+        else
+            ts_fprintf(stderr, "warning: panel pre-render failed: %s\n", panels[i].tmp_png);
+    }
+}
+
 static bool convert_svg_to_png(const char *svg_path, const char *png_path)
 {
     char cmd[PATH_MAX * 2 + 128];
@@ -1007,7 +1068,16 @@ static bool show_panel_marquee(const char *shortname, ControlPanel panel_type)
     }
     free(svg);
 
-    if (!convert_svg_to_png(tmp_svg, tmp_png))
+    // Skip rsvg-convert when the PNG is already up-to-date and no game-specific
+    // label substitutions were applied.  This eliminates the multi-second
+    // conversion delay at game launch, preventing the DRM timing race that
+    // causes the DC panel to show as black on the second monitor in ES mode.
+    bool skip_convert = (applied == 0) && !needs_panel_rerender(template_path, tmp_png);
+    if (skip_convert)
+    {
+        ts_printf("dmarquees: using cached panel PNG (no substitutions): %s\n", tmp_png);
+    }
+    else if (!convert_svg_to_png(tmp_svg, tmp_png))
     {
         ts_fprintf(stderr, "error: svg conversion failed (need rsvg-convert or convert)\n");
         return false;
@@ -1032,7 +1102,14 @@ static bool show_panel_marquee(const char *shortname, ControlPanel panel_type)
 
         memset(fb_map, 0, bo_size);
         scale_and_blit_to_xrgb(image, iw, ih, fbptr, fb_w, fb_h, stride_pixels, 0, false);
-        try_reset_crtc();
+        if (!try_reset_crtc())
+        {
+            // CRTC confirmation failed - game may be initialising DRM.
+            // Schedule a re-blit retry so the panel appears once the game
+            // releases (or stabilises) DRM master.
+            ts_fprintf(stderr, "warning: try_reset_crtc failed for %s panel; scheduling retry\n", panel_label);
+            _ra_init_hold = time(NULL) + 4;
+        }
         snprintf(last_image_path, sizeof(last_image_path), "%s", tmp_png);
     }
 
@@ -1289,12 +1366,9 @@ int main(int argc, char **argv)
         }
         else if (_ra_init_hold && (time(NULL) > _ra_init_hold))
         {
-            ts_printf("dmarquees: retrying crtc now...\n");
-            if (try_reset_crtc())
-                _ra_init_hold = 0;                 // clear hold
-            else
-                _ra_init_hold = time(NULL) + 1;    // try again in 1 second
-
+            ts_printf("dmarquees: retrying CRTC - re-blitting last panel image\n");
+            refresh_current_marquee(); // re-blit + try_reset_crtc internally
+            _ra_init_hold = 0;         // one retry attempt; clear regardless of outcome
             continue;
         }
         else
