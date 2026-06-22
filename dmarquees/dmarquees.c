@@ -932,7 +932,19 @@ static bool find_panel_map(const char *shortname, ControlPanel panel_type, char 
     if (stat(out_path, &st) == 0)
         return true;
 
-    return false;
+    // Fallback: try default.* with the same extension
+    const char *default_name = "default";
+    size_t def_len = strlen(default_name);
+    if (def_len + ext_len + 1 > sizeof(file_name))
+        return false;
+
+    memcpy(file_name, default_name, def_len);
+    memcpy(file_name + def_len, ext, ext_len + 1);
+
+    if (!join_path(out_path, out_size, _labels_dir, file_name))
+        return false;
+
+    return stat(out_path, &st) == 0;
 }
 
 // Returns true if the panel PNG needs to be (re-)generated:
