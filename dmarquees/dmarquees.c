@@ -927,10 +927,18 @@ static bool find_panel_map(const char *shortname, ControlPanel panel_type, char 
     memcpy(file_name + short_len, ext, ext_len + 1);
 
     if (!join_path(out_path, out_size, _labels_dir, file_name))
+    {
+        ts_fprintf(stderr, "find_panel_map: join_path failed for '%s' + '%s'\n", _labels_dir, file_name);
         return false;
+    }
 
+    ts_printf("find_panel_map: trying '%s'\n", out_path);
     if (stat(out_path, &st) == 0)
+    {
+        ts_printf("find_panel_map: found '%s'\n", out_path);
         return true;
+    }
+    ts_printf("find_panel_map: not found (errno=%d)\n", errno);
 
     // Fallback: try default.* with the same extension
     const char *default_name = "default";
@@ -942,9 +950,15 @@ static bool find_panel_map(const char *shortname, ControlPanel panel_type, char 
     memcpy(file_name + def_len, ext, ext_len + 1);
 
     if (!join_path(out_path, out_size, _labels_dir, file_name))
+    {
+        ts_fprintf(stderr, "find_panel_map: join_path failed for default '%s' + '%s'\n", _labels_dir, file_name);
         return false;
+    }
 
-    return stat(out_path, &st) == 0;
+    ts_printf("find_panel_map: trying fallback '%s'\n", out_path);
+    bool found = (stat(out_path, &st) == 0);
+    ts_printf("find_panel_map: fallback %s (errno=%d)\n", found ? "found" : "not found", errno);
+    return found;
 }
 
 // Returns true if the panel PNG needs to be (re-)generated:
