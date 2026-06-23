@@ -1058,7 +1058,8 @@ static bool show_panel_marquee(const char *shortname, ControlPanel panel_type)
 
     char map_path[PATH_MAX];
     int applied = 0;
-    if (find_panel_map(shortname, panel_type, map_path, sizeof(map_path)))
+    bool panel_map_found = find_panel_map(shortname, panel_type, map_path, sizeof(map_path));
+    if (panel_map_found)
     {
         int n = apply_substitutions_from_csv(&svg, map_path);
         if (n >= 0)
@@ -1080,11 +1081,12 @@ static bool show_panel_marquee(const char *shortname, ControlPanel panel_type)
     }
     free(svg);
 
-    // Skip rsvg-convert when the PNG is already up-to-date and no game-specific
-    // label substitutions were applied.  This eliminates the multi-second
-    // conversion delay at game launch, preventing the DRM timing race that
-    // causes the DC panel to show as black on the second monitor in ES mode.
-    bool skip_convert = (applied == 0) && !needs_panel_rerender(template_path, tmp_png);
+    // Skip rsvg-convert only when no panel map was found at all and the PNG is
+    // already up-to-date vs the template.  When a map IS found we must always
+    // regenerate so that game-specific (or default) label substitutions take
+    // effect; reusing a cached PNG from a previous game would show that game's
+    // labels (e.g. PUNCH/KICK from sf.mcp) for a game that doesn't use them.
+    bool skip_convert = !panel_map_found && !needs_panel_rerender(template_path, tmp_png);
     if (skip_convert)
     {
         ts_printf("dmarquees: using cached panel PNG (no substitutions): %s\n", tmp_png);
@@ -1318,14 +1320,13 @@ static void handle_fifo_command(char *cmd_str)
 
         // if we got this far, we're driving the marquee: process rom shortname
         //
+        // Always record the ROM name so that a subsequent panel-toggle command
+        // uses the correct .mcp file — even if this game has no marquee image.
+        snprintf(current_rom_shortname, sizeof(current_rom_shortname), "%s", cmd_str);
         if (!show_game_marquee(cmd_str))
         {
             // Fallback: show default marquee
             show_default_marquee();
-        }
-        else
-        {
-            snprintf(current_rom_shortname, sizeof(current_rom_shortname), "%s", cmd_str);
         }
         break;
 
