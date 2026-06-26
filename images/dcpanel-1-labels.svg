@@ -26,7 +26,7 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:zoom="1.8351564"
-     inkscape:cx="656.89226"
+     inkscape:cx="442.4691"
      inkscape:cy="127.23711"
      inkscape:window-width="1902"
      inkscape:window-height="1153"
@@ -62,7 +62,7 @@
      inkscape:groupmode="layer"
      id="layer1"
      inkscape:label="vector"
-     style="display:inline"
+     style="display:none"
      transform="translate(20.142387,-303.99991)">
     <ellipse
        style="display:inline;fill:none;stroke:#00ff00;stroke-width:0.984801;stroke-opacity:1"
@@ -257,41 +257,41 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.6001px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;dominant-baseline:middle;text-anchor:middle;display:inline;fill:#000000;stroke:#00ff00;stroke-width:0.883341"
-       x="35.63525"
-       y="355.48523"
+       x="33.84264"
+       y="393.7276"
        id="txt-start-1"
        text-anchor="middle"
        dominant-baseline="middle"><tspan
          sodipodi:role="line"
          id="tspan1"
-         x="35.63525"
-         y="355.48523"
+         x="33.84264"
+         y="393.7276"
          style="stroke-width:0.883341">START1</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.6001px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;dominant-baseline:middle;text-anchor:middle;display:inline;fill:#000000;stroke:#00ff00;stroke-width:0.883341"
-       x="119.70337"
-       y="355.51001"
+       x="111.93539"
+       y="394.34995"
        id="txt-start-2"
        text-anchor="middle"
        dominant-baseline="middle"><tspan
          sodipodi:role="line"
          id="tspan2"
-         x="119.70337"
-         y="355.51001"
+         x="111.93539"
+         y="394.34995"
          style="stroke-width:0.883341">START2</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.6001px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;dominant-baseline:middle;text-anchor:middle;display:inline;fill:#000000;stroke:#00ff00;stroke-width:0.883341"
-       x="71.614029"
-       y="458.25394"
+       x="74.004181"
+       y="421.80417"
        id="txt-coin"
        text-anchor="middle"
        dominant-baseline="middle"><tspan
          sodipodi:role="line"
          id="tspan4"
-         x="71.614029"
-         y="458.25394"
+         x="74.004181"
+         y="421.80417"
          style="stroke-width:0.883341">COIN</tspan></text>
     <text
        xml:space="preserve"
