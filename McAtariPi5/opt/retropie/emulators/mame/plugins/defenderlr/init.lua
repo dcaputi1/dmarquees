@@ -34,13 +34,10 @@ end
 
 local defenderlr = exports
 function defenderlr.startplugin()
-	-- These two values can be found in the ioport_type enum
-	-- found in mame at src/emu/ioport.h. They aren't yet exported
-	-- into the lua API AFAIK, so you have to reference that file and
-	-- count up from 0. Of course, you should delete the empty lines and
-	-- comments and let your text editor count for you.
-	local IPT_JOYSTICK_LEFT = 53
-	local IPT_JOYSTICK_RIGHT = 54
+	-- Do not hardcode ioport_type enum ordinals; they can change between MAME versions.
+	-- Resolve types dynamically from ioport token strings.
+	local INPUT_TOKEN_JOYSTICK_LEFT = "P1_JOYSTICK_LEFT"
+	local INPUT_TOKEN_JOYSTICK_RIGHT = "P1_JOYSTICK_RIGHT"
 
 	-- You can use MAME's built-in debugger to look for values that change
 	-- after pressing an input. There's also an interactive lua console.
@@ -56,6 +53,8 @@ function defenderlr.startplugin()
 	local ioport = nil
 	local memory = nil
 	local thrust = nil
+	local input_type_left = nil
+	local input_type_right = nil
 	local last_left_pressed = false
 	local last_right_pressed = false
 	local last_thrust_value = -1
@@ -102,6 +101,101 @@ function defenderlr.startplugin()
 			return "<empty>"
 		end
 		return "<seq_to_tokens error>"
+	end
+
+	local function describe_input_type_entry(entry)
+		if entry == nil then
+			return "<nil>"
+		end
+		local token = "<unknown>"
+		local name = "<unknown>"
+		local player = -1
+		local enum_value = -1
+		local ok_token, token_result = pcall(function() return entry.token end)
+		if ok_token and token_result ~= nil then token = tostring(token_result) end
+		local ok_name, name_result = pcall(function() return entry.name end)
+		if ok_name and name_result ~= nil then name = tostring(name_result) end
+		local ok_player, player_result = pcall(function() return entry.player end)
+		if ok_player and player_result ~= nil then player = tonumber(player_result) or -1 end
+		local ok_type, type_result = pcall(function() return entry.type end)
+		if ok_type and type_result ~= nil then enum_value = tonumber(type_result) or -1 end
+		return string.format("token=%s name=%s player=%d enum=%d", token, name, player, enum_value)
+	end
+
+	local function resolve_input_type_from_token(token)
+		if ioport == nil then
+			diag("resolve_input_type_from_token: ioport unavailable for token %s", tostring(token))
+			return nil
+		end
+
+		local ok_direct, input_type, player = pcall(function()
+			return ioport:token_to_input_type(token)
+		end)
+		if ok_direct and input_type ~= nil then
+			local enum_value = tonumber(input_type)
+			diag("resolve token '%s' direct -> enum=%s player=%s", token, tostring(enum_value), tostring(player))
+			if ioport.types ~= nil then
+				for _, entry in pairs(ioport.types) do
+					local ok_type, entry_type = pcall(function() return entry.type end)
+					local ok_player, entry_player = pcall(function() return entry.player end)
+					if ok_type and ok_player and tonumber(entry_type) == enum_value and tonumber(entry_player) == tonumber(player) then
+						diag("resolve token '%s' matched entry: %s", token, describe_input_type_entry(entry))
+						return entry
+					end
+				end
+				diag("resolve token '%s' could not find matching type entry in ioport.types; falling back to numeric enum", token)
+				return enum_value
+			end
+			return enum_value
+		end
+
+		diag("resolve token '%s' failed via token_to_input_type; scanning ioport.types", token)
+		if ioport.types == nil then
+			diag("resolve token '%s' failed: ioport.types unavailable", token)
+			return nil
+		end
+
+		for _, entry in pairs(ioport.types) do
+			local ok_token, entry_token = pcall(function() return entry.token end)
+			if ok_token and entry_token == token then
+				diag("resolve token '%s' via ioport.types scan matched: %s", token, describe_input_type_entry(entry))
+				return entry
+			end
+		end
+
+		diag("resolve token '%s' failed: no entry matched", token)
+		return nil
+	end
+
+	local function get_type_seq_safe(input_type, label)
+		if ioport == nil then
+			diag("get_type_seq_safe(%s): ioport unavailable", tostring(label))
+			return nil
+		end
+		if input_type == nil then
+			diag("get_type_seq_safe(%s): input_type unavailable", tostring(label))
+			return nil
+		end
+
+		local ok, seq_or_err = pcall(function()
+			return ioport:type_seq(input_type, nil, nil)
+		end)
+		if ok then
+			diag("get_type_seq_safe(%s): resolved to '%s'", tostring(label), seq_to_tokens_safe(seq_or_err))
+			return seq_or_err
+		end
+
+		diag("get_type_seq_safe(%s): first call form failed, retrying with explicit player=0", tostring(label))
+		ok, seq_or_err = pcall(function()
+			return ioport:type_seq(input_type, 0, nil)
+		end)
+		if ok then
+			diag("get_type_seq_safe(%s): resolved via player=0 to '%s'", tostring(label), seq_to_tokens_safe(seq_or_err))
+			return seq_or_err
+		end
+
+		diag("get_type_seq_safe(%s): failed to resolve sequence", tostring(label))
+		return nil
 	end
 
 	local function filter_ignored_joystick_from_seq(seq)
@@ -226,6 +320,8 @@ function defenderlr.startplugin()
 		ioport = nil
 		memory = nil
 		thrust = nil
+		input_type_left = nil
+		input_type_right = nil
 		button_left = nil
 		button_right = nil
 		last_left_pressed = false
@@ -264,14 +360,28 @@ function defenderlr.startplugin()
 				ioport = manager.machine.ioport
 				memory = manager.machine.devices[':maincpu'].spaces['program']
 				thrust = ioport.ports[':IN0'].fields['Thrust']
-				button_left = ioport:type_seq(IPT_JOYSTICK_LEFT, nil, nil)
-				button_right = ioport:type_seq(IPT_JOYSTICK_RIGHT, nil, nil)
+				input_type_left = resolve_input_type_from_token(INPUT_TOKEN_JOYSTICK_LEFT)
+				input_type_right = resolve_input_type_from_token(INPUT_TOKEN_JOYSTICK_RIGHT)
+				diag("resolved left input type: %s", describe_input_type_entry(input_type_left))
+				diag("resolved right input type: %s", describe_input_type_entry(input_type_right))
+
+				button_left = get_type_seq_safe(input_type_left, "left")
+				button_right = get_type_seq_safe(input_type_right, "right")
+				if button_left == nil then
+					diag("WARNING: left sequence unresolved; using empty sequence")
+					button_left = emu.input_seq()
+				end
+				if button_right == nil then
+					diag("WARNING: right sequence unresolved; using empty sequence")
+					button_right = emu.input_seq()
+				end
 				diag("raw left seq=%s", seq_to_tokens_safe(button_left))
 				diag("raw right seq=%s", seq_to_tokens_safe(button_right))
 				button_left = filter_ignored_joystick_from_seq(button_left)
 				button_right = filter_ignored_joystick_from_seq(button_right)
 				diag("filtered left seq=%s", seq_to_tokens_safe(button_left))
 				diag("filtered right seq=%s", seq_to_tokens_safe(button_right))
+				diag("ignored joystick prefix=%s", IGNORED_JOYCODE_PREFIX)
 				diag("using facing_address=0x%04X", facing_address)
 				frame_subscription = emu.add_machine_frame_notifier(process_frame)
 				diag("frame notifier subscribed")

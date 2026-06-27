@@ -1,0 +1,30 @@
+DefenderLR Diagnostics Result (from defenderlr-diags-1.txt)
+Date: 2026-06-27
+
+Summary
+- Plugin initializes correctly for Defender on MAME 0.288.
+- Version gate is not the issue (string and numeric compare both true).
+- Facing address selected is 0xA0BB (expected for Defender).
+- Frame notifier is active (heartbeat logs at 600/1200/1800).
+
+Critical Finding
+- Left/Right input sequences resolved to keyboard keys, not joystick directions:
+  - raw left seq = KEYCODE_J
+  - raw right seq = KEYCODE_L
+- During the run, no left/right press transitions were detected:
+  - heartbeat left=false right=false throughout log
+  - no "input change" events and no LEFT/RIGHT action writes
+
+Conclusion
+- defenderlr logic is running, but it is listening to KEYCODE_J/KEYCODE_L in this environment.
+- If joystick movement is expected to drive the plugin, control bindings/device mapping are likely different on this Trixie deployment versus the Bookworm baseline.
+
+Most likely causes to inspect next
+1. Defender input bindings in MAME cfg/ctrlr map left/right to keyboard keys instead of joystick.
+2. Device/index differences on Trixie changed which physical controller is tied to player controls.
+3. A frontend/remap layer is translating joystick to other inputs before MAME sees IPT_JOYSTICK_LEFT/RIGHT.
+
+Fast verification checklist
+1. In MAME Input (this machine), verify Player 1 Left/Right are bound to joystick directions.
+2. Inspect Defender cfg and ctrlr files for KEYCODE_J/KEYCODE_L overrides.
+3. Re-run with diagnostics and confirm raw left/right seq become JOYCODE_* and "input change" appears when moving stick.
