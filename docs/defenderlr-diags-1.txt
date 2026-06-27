@@ -1,0 +1,17 @@
+[defenderlr] init_plugin rom=defender app_version=0.288
+[defenderlr] version gate app=0.288 target=0.254 string_compare=true numeric_compare=true
+[defenderlr] raw left seq=KEYCODE_J
+[defenderlr] raw right seq=KEYCODE_L
+[defenderlr] filter_ignored_joystick_from_seq: 'KEYCODE_J' => 'KEYCODE_J'
+[defenderlr] filter_ignored_joystick_from_seq: 'KEYCODE_L' => 'KEYCODE_L'
+[defenderlr] filtered left seq=KEYCODE_J
+[defenderlr] filtered right seq=KEYCODE_L
+[defenderlr] using facing_address=0xA0BB
+[defenderlr] frame notifier subscribed
+[defenderlr] action frame=1 idle -> thrust=0
+[defenderlr] heartbeat frame=600 facing=0x86 left=false right=false
+LEDS Plugin: Coin inserted. Credits: 1
+[defenderlr] heartbeat frame=1200 facing=0x00 left=false right=false
+LEDS Plugin: 1 Player start. Credits: 0
+[defenderlr] heartbeat frame=1800 facing=0x03 left=false right=false
+[defenderlr] cleanup complete
