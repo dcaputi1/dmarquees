@@ -18,6 +18,20 @@ local reset_subscription = nil
 local stop_subscription = nil
 local frame_subscription = nil
 
+-- Set to false when diagnostics are no longer needed.
+local DIAG_ENABLED = true
+
+local function diag(fmt, ...)
+	if not DIAG_ENABLED then
+		return
+	end
+	if select('#', ...) > 0 then
+		print(string.format("[defenderlr] " .. fmt, ...))
+	else
+		print("[defenderlr] " .. tostring(fmt))
+	end
+end
+
 local defenderlr = exports
 function defenderlr.startplugin()
 	-- These two values can be found in the ioport_type enum
@@ -42,9 +56,52 @@ function defenderlr.startplugin()
 	local ioport = nil
 	local memory = nil
 	local thrust = nil
+	local last_left_pressed = false
+	local last_right_pressed = false
+	local last_thrust_value = -1
+	local frame_counter = 0
 
 	local function trim(s)
 		return (s:gsub("^%s+", ""):gsub("%s+$", ""))
+	end
+
+	local function parse_version(v)
+		if type(v) ~= "string" then
+			return nil, nil
+		end
+		local major, minor = string.match(v, "^(%d+)%.(%d+)")
+		if major == nil or minor == nil then
+			return nil, nil
+		end
+		return tonumber(major), tonumber(minor)
+	end
+
+	local function version_gte(lhs, rhs)
+		local lhs_major, lhs_minor = parse_version(lhs)
+		local rhs_major, rhs_minor = parse_version(rhs)
+		if lhs_major == nil or rhs_major == nil then
+			return nil
+		end
+		if lhs_major ~= rhs_major then
+			return lhs_major > rhs_major
+		end
+		return lhs_minor >= rhs_minor
+	end
+
+	local function seq_to_tokens_safe(seq)
+		if input == nil or seq == nil then
+			return "<nil>"
+		end
+		local ok, tokens = pcall(function()
+			return input:seq_to_tokens(seq)
+		end)
+		if ok and tokens ~= nil and tokens ~= "" then
+			return tokens
+		end
+		if ok then
+			return "<empty>"
+		end
+		return "<seq_to_tokens error>"
 	end
 
 	local function filter_ignored_joystick_from_seq(seq)
@@ -56,6 +113,7 @@ function defenderlr.startplugin()
 			return input:seq_to_tokens(seq)
 		end)
 		if (not ok_tokens) or tokens == nil or tokens == "" then
+			diag("filter_ignored_joystick_from_seq: unable to tokenize sequence; keeping original")
 			return seq
 		end
 
@@ -82,6 +140,7 @@ function defenderlr.startplugin()
 		end
 
 		if #kept_terms == 0 then
+			diag("filter_ignored_joystick_from_seq: all terms filtered (ignored joystick only)")
 			return emu.input_seq()
 		end
 
@@ -90,15 +149,37 @@ function defenderlr.startplugin()
 			return input:seq_from_tokens(filtered_tokens)
 		end)
 		if ok_seq and filtered_seq ~= nil then
+			diag("filter_ignored_joystick_from_seq: '%s' => '%s'", tokens, filtered_tokens)
 			return filtered_seq
 		end
+
+		diag("filter_ignored_joystick_from_seq: failed to rebuild sequence from '%s'; keeping original", filtered_tokens)
 
 		return seq
 	end
 
 	local function process_frame()
 		if input ~= nil then
-			if input:seq_pressed(button_left) then
+			frame_counter = frame_counter + 1
+			local left_pressed = input:seq_pressed(button_left)
+			local right_pressed = input:seq_pressed(button_right)
+
+			if left_pressed ~= last_left_pressed or right_pressed ~= last_right_pressed then
+				local facing_value = nil
+				local ok_read, read_result = pcall(function()
+					return memory:read_u8(facing_address)
+				end)
+				if ok_read then
+					facing_value = read_result
+				else
+					facing_value = -1
+				end
+				diag("input change frame=%d left=%s right=%s facing_before=0x%02X", frame_counter, tostring(left_pressed), tostring(right_pressed), facing_value)
+				last_left_pressed = left_pressed
+				last_right_pressed = right_pressed
+			end
+
+			if left_pressed then
 				-- You can observe the current facing at address 0xA0BD.
 				-- Originally I tried tracking that address and then triggering
 				-- the Reverse input when the player was facing the wrong way.
@@ -108,11 +189,34 @@ function defenderlr.startplugin()
 				-- (10yard - The facing address for Stargate is 0x9C92)
 				memory:write_u8(facing_address, FACING_LEFT)
 				thrust:set_value(1)
-			elseif input:seq_pressed(button_right) then
+				if last_thrust_value ~= 1 then
+					diag("action frame=%d LEFT -> write facing=0x%02X thrust=1", frame_counter, FACING_LEFT)
+					last_thrust_value = 1
+				end
+			elseif right_pressed then
 				memory:write_u8(facing_address, FACING_RIGHT)
 				thrust:set_value(1)
+				if last_thrust_value ~= 1 then
+					diag("action frame=%d RIGHT -> write facing=0x%02X thrust=1", frame_counter, FACING_RIGHT)
+					last_thrust_value = 1
+				end
 			else
 				thrust:set_value(0)
+				if last_thrust_value ~= 0 then
+					diag("action frame=%d idle -> thrust=0", frame_counter)
+					last_thrust_value = 0
+				end
+			end
+
+			if (frame_counter % 600) == 0 then
+				local ok_read, facing_value = pcall(function()
+					return memory:read_u8(facing_address)
+				end)
+				if ok_read then
+					diag("heartbeat frame=%d facing=0x%02X left=%s right=%s", frame_counter, facing_value, tostring(left_pressed), tostring(right_pressed))
+				else
+					diag("heartbeat frame=%d facing read failed", frame_counter)
+				end
 			end
 		end
 	end
@@ -124,34 +228,58 @@ function defenderlr.startplugin()
 		thrust = nil
 		button_left = nil
 		button_right = nil
+		last_left_pressed = false
+		last_right_pressed = false
+		last_thrust_value = -1
+		frame_counter = 0
 		if frame_subscription ~= nil then
 			frame_subscription:unsubscribe()
+			frame_subscription = nil
 		end
+		diag("cleanup complete")
 		--reset_subscription:unsubscribe()
 		--stop_subscription:unsubscribe()
 	end
 
 	local function init_plugin()
-		if emu.romname() == "defender" or emu.romname() == "stargate" then
-			if emu.romname() == "stargate" then
+		local romname = emu.romname()
+		local app_version = emu.app_version()
+		diag("init_plugin rom=%s app_version=%s", tostring(romname), tostring(app_version))
+
+		if romname == "defender" or romname == "stargate" then
+			if romname == "stargate" then
 				facing_address = 0x9C92
 			else
 				facing_address = 0xA0BB
 			end
-			if emu.app_version() >= "0.254" then
+			local string_gate = (app_version >= "0.254")
+			local numeric_gate = version_gte(app_version, "0.254")
+			diag("version gate app=%s target=0.254 string_compare=%s numeric_compare=%s", tostring(app_version), tostring(string_gate), tostring(numeric_gate))
+			if numeric_gate ~= nil and numeric_gate ~= string_gate then
+				diag("WARNING: version compare mismatch (string vs numeric); plugin currently uses string gate for compatibility")
+			end
+
+			if string_gate then
 				input = manager.machine.input
 				ioport = manager.machine.ioport
 				memory = manager.machine.devices[':maincpu'].spaces['program']
 				thrust = ioport.ports[':IN0'].fields['Thrust']
 				button_left = ioport:type_seq(IPT_JOYSTICK_LEFT, nil, nil)
 				button_right = ioport:type_seq(IPT_JOYSTICK_RIGHT, nil, nil)
+				diag("raw left seq=%s", seq_to_tokens_safe(button_left))
+				diag("raw right seq=%s", seq_to_tokens_safe(button_right))
 				button_left = filter_ignored_joystick_from_seq(button_left)
 				button_right = filter_ignored_joystick_from_seq(button_right)
+				diag("filtered left seq=%s", seq_to_tokens_safe(button_left))
+				diag("filtered right seq=%s", seq_to_tokens_safe(button_right))
+				diag("using facing_address=0x%04X", facing_address)
 				frame_subscription = emu.add_machine_frame_notifier(process_frame)
+				diag("frame notifier subscribed")
 			else
 				print("ERROR: The 'defenderlr' plugin requires MAME version 0.254 or greater.")			
 			end
 		else
+			diag("rom '%s' not supported; cleaning up", tostring(romname))
 			cleanup()
 		end
 	end
