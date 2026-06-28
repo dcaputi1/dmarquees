@@ -268,7 +268,7 @@ end
 -----------------------------------------------------------
 
 function leds.startplugin()
-    print("LEDS Plugin: Initialized (v" .. VERSION .. ")")
+    print("LEDS Plugin: Starting v" .. VERSION)
     set_led_mask(0x00)
 
     cleanup_notifiers()
