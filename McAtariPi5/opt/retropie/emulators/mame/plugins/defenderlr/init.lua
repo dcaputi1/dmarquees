@@ -15,6 +15,7 @@ exports.author = { name = 'Aaron Paden' }
 local reset_subscription = nil
 local stop_subscription = nil
 local frame_subscription = nil
+local control_enabled = true
 
 local defenderlr = exports
 
@@ -102,6 +103,10 @@ function defenderlr.startplugin()
 	end
 
 	local function process_frame()
+		if not control_enabled then
+			return
+		end
+
 		if input ~= nil then
 			if input:seq_pressed(button_left) then
 				-- You can observe the current facing at address 0xA0BD.
@@ -120,6 +125,26 @@ function defenderlr.startplugin()
 				thrust:set_value(0)
 			end
 		end
+	end
+
+	local function menu_populate()
+		return {
+			{ "Defender LR Control", control_enabled and "ON" or "OFF", "" }
+		}
+	end
+
+	local function menu_callback(index, event)
+		if event ~= "select" then
+			return false
+		end
+
+		if index == 1 then
+			control_enabled = not control_enabled
+			print(string.format("DefenderLR Plugin: Control %s", control_enabled and "enabled" or "disabled"))
+			return true, 1
+		end
+
+		return false
 	end
 	
 	local function cleanup()
@@ -167,6 +192,7 @@ function defenderlr.startplugin()
 	end
 	reset_subscription = emu.add_machine_reset_notifier(init_plugin)
 	stop_subscription = emu.add_machine_stop_notifier(cleanup)
+	emu.register_menu(menu_callback, menu_populate, "Defender LR")
 end
 
 return exports
