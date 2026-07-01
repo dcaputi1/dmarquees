@@ -2,31 +2,31 @@
 -- copyright-holders:Aaron Paden
 -- Original idea by Radek Dutkiewicz AKA oomek
 -- http://forum.arcadecontrols.com/index.php?topic=163525.0
+--
+-- 6/28/2026 D.Caputi: dynamically resolve ioport tokens (don't hardcode enum ordinals) to support MAME 0.254 and later.
 
 local exports = {}
 exports.name = 'defenderlr'
-exports.version = '4'
-exports.description = 'Configure left-right controls for Defender (and Stargate)'
+exports.version = '8'
+exports.description = 'Defender/Stargate left-right thrust control'
 exports.license = 'The BSD 3-Clause License'
 exports.author = { name = 'Aaron Paden' }
-
--- Ignore this physical joystick number (JOYCODE_<n>_*) for plugin L/R logic.
-local IGNORED_JOYSTICK_NUMBER = 2
-local IGNORED_JOYCODE_PREFIX = "JOYCODE_" .. tostring(IGNORED_JOYSTICK_NUMBER) .. "_"
 
 local reset_subscription = nil
 local stop_subscription = nil
 local frame_subscription = nil
+local control_enabled = true
 
 local defenderlr = exports
+
 function defenderlr.startplugin()
-	-- These two values can be found in the ioport_type enum
-	-- found in mame at src/emu/ioport.h. They aren't yet exported
-	-- into the lua API AFAIK, so you have to reference that file and
-	-- count up from 0. Of course, you should delete the empty lines and
-	-- comments and let your text editor count for you.
-	local IPT_JOYSTICK_LEFT = 53
-	local IPT_JOYSTICK_RIGHT = 54
+
+	print("DefenderLR Plugin: Starting v" .. exports.version)
+
+	-- ioport_type enum ordinals can change between MAME versions...
+	-- Resolve types dynamically from ioport token strings:
+	local IPT_JOYSTICK_LEFT = "P1_JOYSTICK_LEFT"
+	local IPT_JOYSTICK_RIGHT = "P1_JOYSTICK_RIGHT"
 
 	-- You can use MAME's built-in debugger to look for values that change
 	-- after pressing an input. There's also an interactive lua console.
@@ -43,60 +43,70 @@ function defenderlr.startplugin()
 	local memory = nil
 	local thrust = nil
 
-	local function trim(s)
-		return (s:gsub("^%s+", ""):gsub("%s+$", ""))
-	end
-
-	local function filter_ignored_joystick_from_seq(seq)
-		if seq == nil then
+	local function resolve_input_type_from_token(token)
+		if ioport == nil then
 			return nil
 		end
 
-		local ok_tokens, tokens = pcall(function()
-			return input:seq_to_tokens(seq)
+		local ok_direct, input_type, player = pcall(function()
+			return ioport:token_to_input_type(token)
 		end)
-		if (not ok_tokens) or tokens == nil or tokens == "" then
-			return seq
+		if ok_direct and input_type ~= nil then
+			local enum_value = tonumber(input_type)
+			if ioport.types ~= nil then
+				for _, entry in pairs(ioport.types) do
+					if tonumber(entry.type) == enum_value and tonumber(entry.player) == tonumber(player) then
+						return entry
+					end
+				end
+				return enum_value
+			end
+			return enum_value
 		end
 
-		local kept_terms = {}
-		local start_pos = 1
-		while true do
-			local sep_start, sep_end = string.find(tokens, " OR ", start_pos, true)
-			local term = nil
-			if sep_start ~= nil then
-				term = string.sub(tokens, start_pos, sep_start - 1)
-				start_pos = sep_end + 1
-			else
-				term = string.sub(tokens, start_pos)
-			end
+		if ioport.types == nil then
+			return nil
+		end
 
-			term = trim(term)
-			if term ~= "" and not string.find(term, IGNORED_JOYCODE_PREFIX, 1, true) then
-				table.insert(kept_terms, term)
-			end
-
-			if sep_start == nil then
-				break
+		for _, entry in pairs(ioport.types) do
+			if entry.token == token then
+				return entry
 			end
 		end
 
-		if #kept_terms == 0 then
-			return emu.input_seq()
+		return nil
+	end
+
+	local function get_type_seq_safe(input_type)
+		if ioport == nil then
+			return nil
+		end
+		if input_type == nil then
+			return nil
 		end
 
-		local filtered_tokens = table.concat(kept_terms, " OR ")
-		local ok_seq, filtered_seq = pcall(function()
-			return input:seq_from_tokens(filtered_tokens)
+		local ok, seq_or_err = pcall(function()
+			return ioport:type_seq(input_type, nil, nil)
 		end)
-		if ok_seq and filtered_seq ~= nil then
-			return filtered_seq
+		if ok then
+			return seq_or_err
 		end
 
-		return seq
+		ok, seq_or_err = pcall(function()
+			return ioport:type_seq(input_type, 0, nil)
+		end)
+		if ok then
+			return seq_or_err
+		end
+
+		return nil
 	end
 
 	local function process_frame()
+		if not control_enabled then
+			return
+		end
+
 		if input ~= nil then
 			if input:seq_pressed(button_left) then
 				-- You can observe the current facing at address 0xA0BD.
@@ -116,6 +126,26 @@ function defenderlr.startplugin()
 			end
 		end
 	end
+
+	local function menu_populate()
+		return {
+			{ "Defender LR Control", control_enabled and "ON" or "OFF", "" }
+		}
+	end
+
+	local function menu_callback(index, event)
+		if event ~= "select" then
+			return false
+		end
+
+		if index == 1 then
+			control_enabled = not control_enabled
+			print(string.format("DefenderLR Plugin: Control %s", control_enabled and "enabled" or "disabled"))
+			return true, 1
+		end
+
+		return false
+	end
 	
 	local function cleanup()
 		input = nil
@@ -126,6 +156,7 @@ function defenderlr.startplugin()
 		button_right = nil
 		if frame_subscription ~= nil then
 			frame_subscription:unsubscribe()
+			frame_subscription = nil
 		end
 		--reset_subscription:unsubscribe()
 		--stop_subscription:unsubscribe()
@@ -143,10 +174,14 @@ function defenderlr.startplugin()
 				ioport = manager.machine.ioport
 				memory = manager.machine.devices[':maincpu'].spaces['program']
 				thrust = ioport.ports[':IN0'].fields['Thrust']
-				button_left = ioport:type_seq(IPT_JOYSTICK_LEFT, nil, nil)
-				button_right = ioport:type_seq(IPT_JOYSTICK_RIGHT, nil, nil)
-				button_left = filter_ignored_joystick_from_seq(button_left)
-				button_right = filter_ignored_joystick_from_seq(button_right)
+				button_left = get_type_seq_safe(resolve_input_type_from_token(IPT_JOYSTICK_LEFT))
+				button_right = get_type_seq_safe(resolve_input_type_from_token(IPT_JOYSTICK_RIGHT))
+				if button_left == nil then
+					button_left = emu.input_seq()
+				end
+				if button_right == nil then
+					button_right = emu.input_seq()
+				end
 				frame_subscription = emu.add_machine_frame_notifier(process_frame)
 			else
 				print("ERROR: The 'defenderlr' plugin requires MAME version 0.254 or greater.")			
@@ -157,6 +192,7 @@ function defenderlr.startplugin()
 	end
 	reset_subscription = emu.add_machine_reset_notifier(init_plugin)
 	stop_subscription = emu.add_machine_stop_notifier(cleanup)
+	emu.register_menu(menu_callback, menu_populate, "Defender LR")
 end
 
 return exports
