@@ -1089,4 +1089,68 @@ Q*bert was well received in arcades and among critics. The game was Gottlieb's m
 		<playcount>37</playcount>
 		<lastplayed>20250420T222612</lastplayed>
 	</game>
+	<game>
+		<path>./mk2.zip</path>
+		<name>Mortal Kombat II</name>
+		<favorite>true</favorite>
+		<thumbnail />
+		<image>./media/screenshots/mk2.png</image>
+		<marquee>./media/marquees/mk2.png</marquee>
+		<video>./media/videos/mk2.mp4</video>
+		<rating>0.9</rating>
+		<desc>Mortal Kombat II is the sequel to the original Mortal Kombat, set in the otherworldly realm of Outworld after Shang Tsung convinces his master Shao Kahn to host the next tournament on his home turf. With 12 playable fighters and a host of gruesome new finishing moves — including Babalities and Friendships alongside multiple Fatalities per character — MKII is widely considered the pinnacle of the series. Players must battle through Outworld's warriors to ultimately face Kintaro and the emperor Shao Kahn himself.</desc>
+		<releasedate>19931101T000000</releasedate>
+		<developer>Midway</developer>
+		<publisher>Midway</publisher>
+		<genre>Fight, Fight / Versus</genre>
+		<players>2</players>
+	</game>
+	<game>
+		<path>./mk3.zip</path>
+		<name>Mortal Kombat 3</name>
+		<favorite>true</favorite>
+		<thumbnail />
+		<image>./media/screenshots/mk3.png</image>
+		<marquee>./media/marquees/mk3.png</marquee>
+		<video>./media/videos/mk3.mp4</video>
+		<rating>0.8</rating>
+		<desc>Mortal Kombat 3 abandons the tournament format as Shao Kahn enacts a 10,000-year-old scheme to resurrect his queen Sindel in Earthrealm, allowing him to cross dimensional boundaries and invade Earth. Raiden shields a small band of warriors who must fight through Shao Kahn's extermination squads to save humanity. MK3 introduces a Run button, chain combos, Animality finishing moves, Mercies, and multi-level arenas where uppercuts send opponents crashing through the ceiling.</desc>
+		<releasedate>19950415T000000</releasedate>
+		<developer>Midway</developer>
+		<publisher>Midway</publisher>
+		<genre>Fight, Fight / Versus</genre>
+		<players>2</players>
+	</game>
+	<game>
+		<path>./mk4.zip</path>
+		<name>Mortal Kombat 4</name>
+		<favorite>true</favorite>
+		<thumbnail />
+		<image>./media/screenshots/mk4.png</image>
+		<marquee>./media/marquees/mk4.png</marquee>
+		<video>./media/videos/mk4.mp4</video>
+		<rating>0.7</rating>
+		<desc>Mortal Kombat 4 is the first entry in the series to use fully 3D computer graphics, though gameplay remains on a 2D plane with an optional sidestep. The fallen Elder God Shinnok has escaped the Netherrealm with the aid of the sorcerer Quan Chi and seeks revenge against those who imprisoned him. Earthrealm's warriors must stop Shinnok's conquest of all the realms. MK4 introduces a weapons system allowing each fighter to draw and use a unique weapon, as well as drop-able arena objects.</desc>
+		<releasedate>19970901T000000</releasedate>
+		<developer>Midway</developer>
+		<publisher>Midway</publisher>
+		<genre>Fight, Fight / Versus</genre>
+		<players>2</players>
+	</game>
+	<game>
+		<path>./spnchout.zip</path>
+		<name>Super Punch-Out!!</name>
+		<favorite>true</favorite>
+		<thumbnail />
+		<image>./media/screenshots/spnchout.png</image>
+		<marquee>./media/marquees/spnchout.png</marquee>
+		<video>./media/videos/spnchout.mp4</video>
+		<rating>0.8</rating>
+		<desc>Super Punch-Out!! is the 1984 arcade sequel to Punch-Out!!, developed by Nintendo R&amp;D3. The player controls a wireframe boxer working up through the WVBA ranks, facing a roster of colourful opponents including Bear Hugger, Dragon Chan, Vodka Drunkenski, Great Tiger, and Super Macho Man — many of whom use illegal wrestling or martial arts moves. A super meter fills with successful punches and, when full, allows a devastating power punch. The game saves the three fastest knockout times and increases difficulty with each championship defence.</desc>
+		<releasedate>19841001T000000</releasedate>
+		<developer>Nintendo R&amp;D3</developer>
+		<publisher>Nintendo</publisher>
+		<genre>Sports, Sports / Boxing</genre>
+		<players>1</players>
+	</game>
 </gameList>
