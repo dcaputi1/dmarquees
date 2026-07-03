@@ -2,7 +2,7 @@
 -- Marquee Plugin - Sends FIFO commands to dmarquees daemon
 -----------------------------------------------------------
 
-local VERSION = "1.3.3"
+local VERSION = "1.3.4"
 
 local exports = {
     name = "marquee",
@@ -22,6 +22,13 @@ local input = nil
 local MARQUEE_FIFO = "/tmp/dmarquees_cmd"
 local SENDER_SCRIPT = "/home/danc/scripts/dmarquees-send.sh"
 local SWAP_SCRIPT  = "/home/danc/scripts/swap_banner_art.sh"
+local PANEL_FILE   = "/home/danc/.panel"
+
+local PANEL_OFF = "OFF"
+local PANEL_DC = "DC"
+local PANEL_MC = "MC"
+local PANEL_MK = "MK"
+local PANEL_CYCLE = { PANEL_OFF, PANEL_DC, PANEL_MC, PANEL_MK }
 
 -----------------------------------------------------------
 -- Internal State
@@ -29,8 +36,7 @@ local SWAP_SCRIPT  = "/home/danc/scripts/swap_banner_art.sh"
 
 local reset_subscriber
 local stop_subscriber
-local dc_panel_visible = false
-local mc_panel_visible = false
+local panel_mode = PANEL_OFF
 
 -----------------------------------------------------------
 -- Helper Functions
@@ -89,6 +95,73 @@ local function cleanup_notifiers()
     reset_subscriber, stop_subscriber = nil, nil
 end
 
+local function panel_mode_label(mode)
+    if mode == PANEL_DC then
+        return "DC Panel 1"
+    elseif mode == PANEL_MC then
+        return "MC Atari"
+    elseif mode == PANEL_MK then
+        return "MK Wheel"
+    end
+    return "OFF"
+end
+
+local function panel_mode_file_code(mode)
+    if mode == PANEL_DC then
+        return "DC"
+    elseif mode == PANEL_MC then
+        return "MC"
+    elseif mode == PANEL_MK then
+        return "MK"
+    end
+    return "NA"
+end
+
+local function persist_panel_mode(mode)
+    local file = io.open(PANEL_FILE, "w")
+    if not file then
+        print(string.format("Marquee plugin: Failed to persist panel mode to %s", PANEL_FILE))
+        return false
+    end
+
+    file:write(panel_mode_file_code(mode) .. "\n")
+    file:close()
+    return true
+end
+
+local function next_panel_mode(mode)
+    for i = 1, #PANEL_CYCLE do
+        if PANEL_CYCLE[i] == mode then
+            return PANEL_CYCLE[(i % #PANEL_CYCLE) + 1]
+        end
+    end
+    return PANEL_OFF
+end
+
+local function apply_panel_mode(mode)
+    -- Always clear panel flags first so only one panel type can be active.
+    send_marquee_command("DCPANEL 0")
+    send_marquee_command("MCPANEL 0")
+    send_marquee_command("MKWHEEL 0")
+
+    if mode == PANEL_DC then
+        sync_rom_for_panel()
+        send_marquee_command("DCPANEL 1")
+    elseif mode == PANEL_MC then
+        sync_rom_for_panel()
+        send_marquee_command("MCPANEL 1")
+    elseif mode == PANEL_MK then
+        sync_rom_for_panel()
+        send_marquee_command("MKWHEEL 1")
+    else
+        mode = PANEL_OFF
+    end
+
+    panel_mode = mode
+    persist_panel_mode(panel_mode)
+    print("Marquee plugin: Panel mode set to " .. panel_mode_label(panel_mode))
+end
+
 -----------------------------------------------------------
 -- Event Callbacks
 -----------------------------------------------------------
@@ -97,15 +170,13 @@ local function on_game_start()
     local gamename = current_romname()
     if not gamename then return end
 
-    dc_panel_visible = false
-    mc_panel_visible = false
+    apply_panel_mode(PANEL_OFF)
     print("Marquee plugin: " .. gamename .. " started")
     send_marquee_command(gamename)
 end
 
 local function on_game_stop()
-    dc_panel_visible = false
-    mc_panel_visible = false
+    apply_panel_mode(PANEL_OFF)
     print("Marquee plugin: Game stopped, reset marquee")
     send_marquee_command("CLEAR")
 end
@@ -113,8 +184,7 @@ end
 local function menu_populate()
     return {
         { "Control Panel / Marquee", "SWAP", "" },
-        { "DC Panel 1", dc_panel_visible and "hide" or "show", "" },
-        { "MC Atari Panel", mc_panel_visible and "hide" or "show", "" }
+        { "Spare Monitor Panel", panel_mode_label(panel_mode), "" }
     }
 end
 
@@ -128,32 +198,7 @@ local function menu_callback(index, event)
         print("Marquee plugin: SWAP index " .. tostring(index) .. " event " .. tostring(event))
         return false
     elseif index == 2 then
-        dc_panel_visible = not dc_panel_visible
-        if dc_panel_visible then
-            if mc_panel_visible then
-                mc_panel_visible = false
-                send_marquee_command("MCPANEL 0")
-            end
-            sync_rom_for_panel()
-            send_marquee_command("DCPANEL 1")
-        else
-            send_marquee_command("DCPANEL 0")
-        end
-        print("Marquee plugin: DC panel " .. (dc_panel_visible and "shown" or "hidden"))
-        return true
-    elseif index == 3 then
-        mc_panel_visible = not mc_panel_visible
-        if mc_panel_visible then
-            if dc_panel_visible then
-                dc_panel_visible = false
-                send_marquee_command("DCPANEL 0")
-            end
-            sync_rom_for_panel()
-            send_marquee_command("MCPANEL 1")
-        else
-            send_marquee_command("MCPANEL 0")
-        end
-        print("Marquee plugin: MC panel " .. (mc_panel_visible and "shown" or "hidden"))
+        apply_panel_mode(next_panel_mode(panel_mode))
         return true
     end
 
