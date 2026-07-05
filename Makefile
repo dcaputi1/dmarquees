@@ -31,6 +31,27 @@ analyze_games:
 install: all
 	@echo "Installing IvarArcade components..."
 	@mkdir -p $(DMARQUEES_BIN_DIR)
+
+	@# Ask dmarquees to exit cleanly via FIFO before updating binaries
+	@if pgrep -x dmarquees >/dev/null 2>&1; then \
+		echo "Stopping running dmarquees via /tmp/dmarquees_cmd..."; \
+		echo "EXIT" > /tmp/dmarquees_cmd || true; \
+		for i in 1 2 3 4 5 6 7 8 9 10; do \
+			if ! pgrep -x dmarquees >/dev/null 2>&1; then \
+				break; \
+			fi; \
+			sleep 0.1; \
+		done; \
+		if pgrep -x dmarquees >/dev/null 2>&1; then \
+			echo "dmarquees still running after EXIT; forcing stop..."; \
+			pkill -9 -x dmarquees || true; \
+			if pgrep -x dmarquees >/dev/null 2>&1; then \
+				echo "Warning: unable to stop dmarquees; install may hit text file busy."; \
+			fi; \
+		fi; \
+	else \
+		echo "No running dmarquees process found."; \
+	fi
 	
 	@# Install dmarquees binary
 	@if [ ! -f $(DMARQUEES_BIN_DIR)/dmarquees ] || [ dmarquees/dmarquees -nt $(DMARQUEES_BIN_DIR)/dmarquees ]; then \
@@ -66,6 +87,27 @@ install: all
 install-force: all
 	@echo "Installing IvarArcade components (forcing overwrites)..."
 	@mkdir -p $(DMARQUEES_BIN_DIR)
+
+	@# Ask dmarquees to exit cleanly via FIFO before updating binaries
+	@if pgrep -x dmarquees >/dev/null 2>&1; then \
+		echo "Stopping running dmarquees via /tmp/dmarquees_cmd..."; \
+		echo "EXIT" > /tmp/dmarquees_cmd || true; \
+		for i in 1 2 3 4 5 6 7 8 9 10; do \
+			if ! pgrep -x dmarquees >/dev/null 2>&1; then \
+				break; \
+			fi; \
+			sleep 0.1; \
+		done; \
+		if pgrep -x dmarquees >/dev/null 2>&1; then \
+			echo "dmarquees still running after EXIT; forcing stop..."; \
+			pkill -9 -x dmarquees || true; \
+			if pgrep -x dmarquees >/dev/null 2>&1; then \
+				echo "Warning: unable to stop dmarquees; install may hit text file busy."; \
+			fi; \
+		fi; \
+	else \
+		echo "No running dmarquees process found."; \
+	fi
 	
 	@# Force install dmarquees binary
 	@cp -fp dmarquees/dmarquees $(DMARQUEES_BIN_DIR)/ && echo "Installed: $(DMARQUEES_BIN_DIR)/dmarquees"
