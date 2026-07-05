@@ -1322,8 +1322,10 @@ static void handle_fifo_command(char *cmd_str)
             {
                 ControlPanel pt = use_dc ? eULTRA_DC : (use_mc ? eATARI_MC : eWHEEL_MK);
                 show_panel_marquee(cmd_str, pt);
-                break;
             }
+
+            // In splash mode, never fall through to game marquee rendering.
+            break;
         }
 
         // if we got this far, we're driving the marquee: process rom shortname

@@ -184,11 +184,10 @@ end
 local function menu_populate()
     if in_panel_submenu then
         return {
-            { "None/Blank", panel_mode == PANEL_NA and "*" or "", "" },
-            { "UltraStick / Spinners", panel_mode == PANEL_DC and "*" or "", "" },
-            { "Atari / FightStick", panel_mode == PANEL_MC and "*" or "", "" },
-            { "MarioKart / Wheel", panel_mode == PANEL_MK and "*" or "", "" },
-            { "Back", "", "" }
+            { "UltraStick / Spinners", panel_mode == PANEL_DC and "ON" or "--", "" },
+            { "Atari / FightStick", panel_mode == PANEL_MC and "ON" or "--", "" },
+            { "MarioKart / Wheel", panel_mode == PANEL_MK and "ON" or "--", "" },
+            { "None/Blank", panel_mode == PANEL_NA and "ON" or "--", "" }
         }
     end
 
@@ -206,22 +205,19 @@ local function menu_callback(index, event)
     if in_panel_submenu then
         if index == 1 then
             in_panel_submenu = false
-            apply_panel_mode(PANEL_NA)
+            apply_panel_mode(PANEL_DC)
             return true
         elseif index == 2 then
             in_panel_submenu = false
-            apply_panel_mode(PANEL_DC)
+            apply_panel_mode(PANEL_MC)
             return true
         elseif index == 3 then
             in_panel_submenu = false
-            apply_panel_mode(PANEL_MC)
+            apply_panel_mode(PANEL_MK)
             return true
         elseif index == 4 then
             in_panel_submenu = false
-            apply_panel_mode(PANEL_MK)
-            return true
-        elseif index == 5 then
-            in_panel_submenu = false
+            apply_panel_mode(PANEL_NA)
             return true
         end
         return false
