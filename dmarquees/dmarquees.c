@@ -222,7 +222,16 @@ static bool read_bool_file(const char *path, bool default_value)
     char token[MAX_TOKEN] = {0};
     if (!read_token_file(path, token, sizeof(token)))
         return default_value;
-    return strcasecmp(token, "true") == 0;
+
+    if (strcasecmp(token, "true") == 0 || strcmp(token, "1") == 0 ||
+        strcasecmp(token, "on") == 0 || strcasecmp(token, "yes") == 0)
+        return true;
+
+    if (strcasecmp(token, "false") == 0 || strcmp(token, "0") == 0 ||
+        strcasecmp(token, "off") == 0 || strcasecmp(token, "no") == 0)
+        return false;
+
+    return default_value;
 }
 
 static void initialize_globals()
@@ -230,7 +239,7 @@ static void initialize_globals()
 
     // Set _this_is_pi5 based on hostname
     char hostname[11] = {0};
-    if (gethostname(hostname, sizeof(hostname)) == 0 && strcmp(hostname, _PI5_HOSTNAME) == 0) {
+    if (gethostname(hostname, sizeof(hostname)) == 0 && strcasecmp(hostname, _PI5_HOSTNAME) == 0) {
         _this_is_pi5 = true;
     } else {
         _this_is_pi5 = false;
