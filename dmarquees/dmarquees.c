@@ -1132,7 +1132,7 @@ static bool show_panel_marquee(const char *shortname, ControlPanel panel_type)
         int stride_pixels = stride / 4;
 
         memset(fb_map, 0, bo_size);
-        scale_and_blit_to_xrgb(image, iw, ih, fbptr, fb_w, fb_h, stride_pixels, 0, false);
+        scale_and_blit_to_xrgb(image, iw, ih, fbptr, fb_w, fb_h, stride_pixels, 0, true);
         if (!try_reset_crtc())
         {
             // CRTC confirmation failed - game may be initialising DRM.
