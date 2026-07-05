@@ -183,7 +183,7 @@ def save_state(path, value):
 # Initial state
 dual_display = load_state(PI5_DUAL_DISPLAY_FILE, True)
 pi3_present = load_state(PI3_PRESENT_FILE, True)
-panel = load_state(PANEL_FILE, "DC")  # DC, MC, NA
+panel = load_state(PANEL_FILE, "DC")  # DC, MC, MK, NA
 screen_horizontal = load_state(SCREEN_ORIENTATION_FILE, True)
 try:
     with open(XINMO_STATS_FILE) as _f:

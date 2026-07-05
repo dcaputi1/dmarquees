@@ -24,11 +24,10 @@ local SENDER_SCRIPT = "/home/danc/scripts/dmarquees-send.sh"
 local SWAP_SCRIPT  = "/home/danc/scripts/swap_banner_art.sh"
 local PANEL_FILE   = "/home/danc/.panel"
 
-local PANEL_OFF = "OFF"
+local PANEL_NA = "NA"
 local PANEL_DC = "DC"
 local PANEL_MC = "MC"
 local PANEL_MK = "MK"
-local PANEL_CYCLE = { PANEL_OFF, PANEL_DC, PANEL_MC, PANEL_MK }
 
 -----------------------------------------------------------
 -- Internal State
@@ -36,7 +35,8 @@ local PANEL_CYCLE = { PANEL_OFF, PANEL_DC, PANEL_MC, PANEL_MK }
 
 local reset_subscriber
 local stop_subscriber
-local panel_mode = PANEL_OFF
+local panel_mode = PANEL_NA
+local in_panel_submenu = false
 
 -----------------------------------------------------------
 -- Helper Functions
@@ -46,8 +46,8 @@ local function shell_quote(text)
     return "'" .. tostring(text):gsub("'", "'\\''") .. "'"
 end
 
-local function send_marquee_command(text)
-    -- Send to Pi3 via sender script (for marquee display)
+local function send_remote_command(text)
+    -- Send to Pi3 via sender script (for main marquee display)
     local sender = io.open(SENDER_SCRIPT, "r")
     if sender then
         sender:close()
@@ -58,8 +58,10 @@ local function send_marquee_command(text)
             print(string.format("Marquee plugin: Sender failed for '%s'", text))
         end
     end
+end
 
-    -- Always also write to local FIFO so Pi5 dmarquees can show panel art
+local function send_local_command(text)
+    -- Write to local FIFO so Pi5 dmarquees can drive the spare monitor panel art
     local fifo = io.open(MARQUEE_FIFO, "w")
     if fifo then
         fifo:write(text .. "\n")
@@ -68,6 +70,11 @@ local function send_marquee_command(text)
     else
         print(string.format("Marquee plugin: Failed to write to local FIFO %s for '%s'", MARQUEE_FIFO, text))
     end
+end
+
+local function send_marquee_command(text)
+    send_remote_command(text)
+    send_local_command(text)
 end
 
 local function current_romname()
@@ -85,7 +92,8 @@ local function sync_rom_for_panel()
         return false
     end
 
-    send_marquee_command(gamename)
+    -- Panel sync should only target the local Pi5 daemon.
+    send_local_command(gamename)
     return true
 end
 
@@ -103,7 +111,7 @@ local function panel_mode_label(mode)
     elseif mode == PANEL_MK then
         return "MK Wheel"
     end
-    return "OFF"
+    return "None/Blank"
 end
 
 local function panel_mode_file_code(mode)
@@ -115,6 +123,22 @@ local function panel_mode_file_code(mode)
         return "MK"
     end
     return "NA"
+end
+
+local function load_panel_mode()
+    local file = io.open(PANEL_FILE, "r")
+    if not file then
+        return PANEL_NA
+    end
+
+    local value = file:read("*l") or ""
+    file:close()
+    value = tostring(value):upper()
+
+    if value == PANEL_DC or value == PANEL_MC or value == PANEL_MK then
+        return value
+    end
+    return PANEL_NA
 end
 
 local function persist_panel_mode(mode)
@@ -129,36 +153,14 @@ local function persist_panel_mode(mode)
     return true
 end
 
-local function next_panel_mode(mode)
-    for i = 1, #PANEL_CYCLE do
-        if PANEL_CYCLE[i] == mode then
-            return PANEL_CYCLE[(i % #PANEL_CYCLE) + 1]
-        end
-    end
-    return PANEL_OFF
-end
-
 local function apply_panel_mode(mode)
-    -- Always clear panel flags first so only one panel type can be active.
-    send_marquee_command("DCPANEL 0")
-    send_marquee_command("MCPANEL 0")
-    send_marquee_command("MKWHEEL 0")
-
-    if mode == PANEL_DC then
-        sync_rom_for_panel()
-        send_marquee_command("DCPANEL 1")
-    elseif mode == PANEL_MC then
-        sync_rom_for_panel()
-        send_marquee_command("MCPANEL 1")
-    elseif mode == PANEL_MK then
-        sync_rom_for_panel()
-        send_marquee_command("MKWHEEL 1")
-    else
-        mode = PANEL_OFF
+    if mode ~= PANEL_DC and mode ~= PANEL_MC and mode ~= PANEL_MK then
+        mode = PANEL_NA
     end
 
     panel_mode = mode
     persist_panel_mode(panel_mode)
+    sync_rom_for_panel()
     print("Marquee plugin: Panel mode set to " .. panel_mode_label(panel_mode))
 end
 
@@ -170,18 +172,26 @@ local function on_game_start()
     local gamename = current_romname()
     if not gamename then return end
 
-    apply_panel_mode(PANEL_OFF)
     print("Marquee plugin: " .. gamename .. " started")
     send_marquee_command(gamename)
 end
 
 local function on_game_stop()
-    apply_panel_mode(PANEL_OFF)
     print("Marquee plugin: Game stopped, reset marquee")
     send_marquee_command("CLEAR")
 end
 
 local function menu_populate()
+    if in_panel_submenu then
+        return {
+            { "None/Blank", panel_mode == PANEL_NA and "*" or "", "" },
+            { "UltraStick / Spinners", panel_mode == PANEL_DC and "*" or "", "" },
+            { "Atari / FightStick", panel_mode == PANEL_MC and "*" or "", "" },
+            { "MarioKart / Wheel", panel_mode == PANEL_MK and "*" or "", "" },
+            { "Back", "", "" }
+        }
+    end
+
     return {
         { "Control Panel / Marquee", "SWAP", "" },
         { "Spare Monitor Panel", panel_mode_label(panel_mode), "" }
@@ -193,12 +203,36 @@ local function menu_callback(index, event)
         return false
     end
 
+    if in_panel_submenu then
+        if index == 1 then
+            in_panel_submenu = false
+            apply_panel_mode(PANEL_NA)
+            return true
+        elseif index == 2 then
+            in_panel_submenu = false
+            apply_panel_mode(PANEL_DC)
+            return true
+        elseif index == 3 then
+            in_panel_submenu = false
+            apply_panel_mode(PANEL_MC)
+            return true
+        elseif index == 4 then
+            in_panel_submenu = false
+            apply_panel_mode(PANEL_MK)
+            return true
+        elseif index == 5 then
+            in_panel_submenu = false
+            return true
+        end
+        return false
+    end
+
     if index == 1 then
         os.execute(SWAP_SCRIPT)
         print("Marquee plugin: SWAP index " .. tostring(index) .. " event " .. tostring(event))
         return false
     elseif index == 2 then
-        apply_panel_mode(next_panel_mode(panel_mode))
+        in_panel_submenu = true
         return true
     end
 
@@ -211,6 +245,8 @@ end
 
 function marquee.startplugin()
     print("Marquee Plugin: Initialized (v" .. VERSION .. ")")
+
+    panel_mode = load_panel_mode()
 
     cleanup_notifiers()
     reset_subscriber = emu.add_machine_reset_notifier(on_game_start)

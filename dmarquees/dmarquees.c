@@ -61,7 +61,6 @@
 #define PREFERRED_W 1920
 #define PREFERRED_H 1080
 #define FIFO_RETRY_DELAY_MSEC 250
-#define CRTC_RESET_HOLD_SEC   10
 #define PANEL_TMP_DC_SVG "/tmp/dmarquees_dcpanel.svg"
 #define PANEL_TMP_DC_PNG "/tmp/dmarquees_dcpanel.png"
 #define PANEL_TMP_MC_SVG "/tmp/dmarquees_mcpanel.svg"
@@ -88,7 +87,6 @@ bool _this_is_pi5 = false;
 bool _pi5_dual_display = false;
 bool _pi3_present = false;
 FrontendMode _frontend_mode = eNA;
-ControlPanel _control_panel = ePANEL_NA;
 bool _splash_mode = false;
 char _drm_device_path[128] = "";
 char _drm_connector_name[32] = "";
@@ -96,7 +94,6 @@ static time_t _ra_init_hold = 0;
 static uint8_t* image = NULL;
 static char last_image_path[PATH_MAX] = {0};
 static char current_rom_shortname[128] = {0};
-static char _szPanel[3] = {0};
 
 static const char* _image_dir = HOME_PATH "/mnt/marquees";
 static const char* _image_dir_alt = HOME_PATH "/RetroPie/roms/mame/media/marquees";
@@ -254,9 +251,6 @@ static void initialize_globals()
         strncpy(_drm_connector_name, "HDMI-A-2", sizeof(_drm_connector_name));
         strncpy(_drm_device_path, "/dev/dri/card1", sizeof(_drm_device_path));
     }
-
-    read_token_file(_panel_file, _szPanel, sizeof(_szPanel));
-    _control_panel = toControlPanel(_szPanel);
 }
 
 // Draw the default marquee. Clears screen to black first.
@@ -1321,9 +1315,9 @@ static void handle_fifo_command(char *cmd_str)
             read_token_file(_panel_file, panel_code, sizeof(panel_code));
             ts_printf("dmarquees: splash ROM '%s', .panel='%s'\n", cmd_str, panel_code);
 
-            bool use_dc = (strcmp(panel_code, "DC") == 0);
-            bool use_mc = (strcmp(panel_code, "MC") == 0);
-            bool use_mk = (strcmp(panel_code, "MK") == 0);
+            bool use_dc = (strcasecmp(panel_code, "DC") == 0);
+            bool use_mc = (strcasecmp(panel_code, "MC") == 0);
+            bool use_mk = (strcasecmp(panel_code, "MK") == 0);
             if (use_dc || use_mc || use_mk)
             {
                 ControlPanel pt = use_dc ? eULTRA_DC : (use_mc ? eATARI_MC : eWHEEL_MK);
@@ -1352,6 +1346,9 @@ static void handle_fifo_command(char *cmd_str)
 
 int main(int argc, char **argv)
 {
+    (void)argc;
+    (void)argv;
+
     ts_printf("dmarquees: v%s starting...\n", VERSION);
 
     _frontend_mode = eNA;
