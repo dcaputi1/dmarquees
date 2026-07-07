@@ -47,14 +47,11 @@ if [[ -n "$ROM" ]]; then
     fi
 
     # Send ROM short name to dmarquees-send.sh
-    # NOTE: RACE CONDITION - do this last and also note,
-    # dmarquees ignores rom commands in RA mode unless sent from here with "RC:" prepended
-
 	echo "input $romzip : sending $command to dmarquees" >> /tmp/rc.out
 
     if [[ -x "$SENDER_SCRIPT" ]]; then
-        "$SENDER_SCRIPT" "RC:$command"
+        "$SENDER_SCRIPT" "$command"
     fi
 
-    echo "RC:$command" > "$CMD_FIFO"
+    echo "$command" > "$CMD_FIFO"
 fi

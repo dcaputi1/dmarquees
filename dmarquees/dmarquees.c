@@ -1300,13 +1300,6 @@ static void handle_fifo_command(char *cmd_str)
 
     case CMD_ROM:
 
-        // Strip optional RC: prefix (marks command from runcommand launch source).
-        if (!strncmp(cmd_str, "RC:", 3))
-            cmd_str += 3;
-        // In RA mode ignore ROM name without "RC:" (marquee plugin conflicts with DRM master)
-        else if (_frontend_mode == eRA)
-            break;
-
         // special case: punchout (dual screen) - allow possible 2nd screen usage
         if (_this_is_pi5 && !_pi3_present && _pi5_dual_display && game_has_multiple_screens(cmd_str))
         {
