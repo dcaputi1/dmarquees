@@ -111,7 +111,7 @@ local function panel_mode_label(mode)
     elseif mode == PANEL_MK then
         return "MK Wheel"
     end
-    return "None/Blank"
+    return "NONE"
 end
 
 local function panel_mode_file_code(mode)
@@ -187,7 +187,7 @@ local function menu_populate()
             { "UltraStick / Spinners", panel_mode == PANEL_DC and "ON" or "--", "" },
             { "Atari / FightStick", panel_mode == PANEL_MC and "ON" or "--", "" },
             { "MarioKart / Wheel", panel_mode == PANEL_MK and "ON" or "--", "" },
-            { "None/Blank", panel_mode == PANEL_NA and "ON" or "--", "" }
+            { "No Panel Image", panel_mode == PANEL_NA and "ON" or "--", "" }
         }
     end
 

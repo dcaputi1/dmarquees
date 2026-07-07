@@ -224,11 +224,11 @@ ControlPanel toControlPanel(const char *s)
 {
     if (s)
     {
-        if (strcmp(s, "MC") == 0)
+        if (strcasecmp(s, "MC") == 0)
             return eATARI_MC;
-        if (strcmp(s, "DC") == 0)
+        if (strcasecmp(s, "DC") == 0)
             return eULTRA_DC;
-        if (strcmp(s, "MK") == 0)
+        if (strcasecmp(s, "MK") == 0)
             return eWHEEL_MK;
     }
     return ePANEL_NA;
@@ -252,42 +252,8 @@ CommandType toCommandType(const char *s)
         return CMD_RESET;
     if (strcmp(s, "REFRESH") == 0)
         return CMD_REFRESH;
-    if (strcmp(s, "DCPANEL") == 0)
-        return CMD_DCPANEL;
-    if (strcmp(s, "MCPANEL") == 0)
-        return CMD_MCPANEL;
-    if (strcmp(s, "MKWHEEL") == 0)
-        return CMD_MKWHEEL;
     // If not a known command, treat as ROM
     return CMD_ROM;
-}
-
-const char *fromCommandType(CommandType c)
-{
-    switch (c)
-    {
-    case CMD_EXIT:
-        return "EXIT";
-    case CMD_CLEAR:
-        return "CLEAR";
-    case CMD_RA:
-        return "RA";
-    case CMD_SA:
-        return "SA";
-    case CMD_RESET:
-        return "RESET";
-    case CMD_REFRESH:
-        return "REFRESH";
-    case CMD_DCPANEL:
-        return "DCPANEL";
-    case CMD_MCPANEL:
-        return "MCPANEL";
-    case CMD_MKWHEEL:
-        return "MKWHEEL";
-    case CMD_ROM:
-    default:
-        return "ROM";
-    }
 }
 
 // Get current timestamp in HH:MM:SS.mmm format

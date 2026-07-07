@@ -93,7 +93,6 @@ char _drm_connector_name[32] = "";
 static time_t _ra_init_hold = 0;
 static uint8_t* image = NULL;
 static char last_image_path[PATH_MAX] = {0};
-static char current_rom_shortname[128] = {0};
 
 static const char* _image_dir = HOME_PATH "/mnt/marquees";
 static const char* _image_dir_alt = HOME_PATH "/RetroPie/roms/mame/media/marquees";
@@ -1148,23 +1147,6 @@ static bool show_panel_marquee(const char *shortname, ControlPanel panel_type)
     return true;
 }
 
-static bool toggle_panel_display(ControlPanel panel_type, bool panel_on)
-{
-    const char *panel_name = fromCommandType(
-        panel_type == eULTRA_DC ? CMD_DCPANEL :
-        panel_type == eATARI_MC ? CMD_MCPANEL : CMD_MKWHEEL);
-    if (current_rom_shortname[0] == '\0')
-    {
-        ts_fprintf(stderr, "warning: %s ignored - no tracked ROM yet\n", panel_name);
-        return false;
-    }
-
-    if (panel_on)
-        return show_panel_marquee(current_rom_shortname, panel_type);
-
-    return show_game_marquee(current_rom_shortname);
-}
-
 static void refresh_current_marquee(void)
 {
     if (!fb_map)
@@ -1253,51 +1235,6 @@ static void handle_fifo_command(char *cmd_str)
         refresh_current_marquee();
         break;
 
-    case CMD_DCPANEL:
-        if (_splash_mode)
-        {
-            ts_printf("dmarquees: splash mode - DCPANEL ignored\n");
-            break;
-        }
-        if (parsed < 2 || (strcmp(arg, "0") != 0 && strcmp(arg, "1") != 0))
-        {
-            ts_fprintf(stderr, "warning: DCPANEL requires 0 or 1 (e.g. DCPANEL 1)\n");
-            break;
-        }
-        if (!toggle_panel_display(eULTRA_DC, strcmp(arg, "1") == 0))
-            show_default_marquee();
-        break;
-
-    case CMD_MCPANEL:
-        if (_splash_mode)
-        {
-            ts_printf("dmarquees: splash mode - MCPANEL ignored\n");
-            break;
-        }
-        if (parsed < 2 || (strcmp(arg, "0") != 0 && strcmp(arg, "1") != 0))
-        {
-            ts_fprintf(stderr, "warning: MCPANEL requires 0 or 1 (e.g. MCPANEL 1)\n");
-            break;
-        }
-        if (!toggle_panel_display(eATARI_MC, strcmp(arg, "1") == 0))
-            show_default_marquee();
-        break;
-
-    case CMD_MKWHEEL:
-        if (_splash_mode)
-        {
-            ts_printf("dmarquees: splash mode - MKWHEEL ignored\n");
-            break;
-        }
-        if (parsed < 2 || (strcmp(arg, "0") != 0 && strcmp(arg, "1") != 0))
-        {
-            ts_fprintf(stderr, "warning: MKWHEEL requires 0 or 1 (e.g. MKWHEEL 1)\n");
-            break;
-        }
-        if (!toggle_panel_display(eWHEEL_MK, strcmp(arg, "1") == 0))
-            show_default_marquee();
-        break;
-
     case CMD_ROM:
 
         // special case: punchout (dual screen) - allow possible 2nd screen usage
@@ -1317,24 +1254,17 @@ static void handle_fifo_command(char *cmd_str)
             read_token_file(_panel_file, panel_code, sizeof(panel_code));
             ts_printf("dmarquees: splash ROM '%s', .panel='%s'\n", cmd_str, panel_code);
 
-            bool use_dc = (strcasecmp(panel_code, "DC") == 0);
-            bool use_mc = (strcasecmp(panel_code, "MC") == 0);
-            bool use_mk = (strcasecmp(panel_code, "MK") == 0);
-            if (use_dc || use_mc || use_mk)
-            {
-                ControlPanel pt = use_dc ? eULTRA_DC : (use_mc ? eATARI_MC : eWHEEL_MK);
-                show_panel_marquee(cmd_str, pt);
-            }
+            ControlPanel panel_type = toControlPanel(panel_code);
+            if (panel_type != ePANEL_NA)
+                show_panel_marquee(cmd_str, panel_type);
+            else
+                show_default_marquee(); // NA (or unknown) show centered default splash art.
 
             // In splash mode, never fall through to game marquee rendering.
             break;
         }
 
         // if we got this far, we're driving the marquee: process rom shortname
-        //
-        // Always record the ROM name so that a subsequent panel-toggle command
-        // uses the correct .mcp file — even if this game has no marquee image.
-        snprintf(current_rom_shortname, sizeof(current_rom_shortname), "%s", cmd_str);
         if (!show_game_marquee(cmd_str))
         {
             // Fallback: show default marquee

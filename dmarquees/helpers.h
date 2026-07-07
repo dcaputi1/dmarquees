@@ -43,14 +43,10 @@ typedef enum
     CMD_NA = 4,
     CMD_RESET = 5,
     CMD_REFRESH = 6,
-    CMD_ROM = 7,
-    CMD_DCPANEL = 8,
-    CMD_MCPANEL = 9,
-    CMD_MKWHEEL = 10
+    CMD_ROM = 7
 } CommandType;
 
 CommandType toCommandType(const char *s);
-const char *fromCommandType(CommandType c);
 
 uint8_t *load_png_rgba(const char *path, int *out_w, int *out_h);
 bool game_has_multiple_screens(const char *romname);
