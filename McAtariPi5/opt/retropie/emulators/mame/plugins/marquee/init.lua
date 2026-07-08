@@ -2,14 +2,14 @@
 -- Marquee Plugin - Sends FIFO commands to dmarquees daemon
 -----------------------------------------------------------
 
-local VERSION = "1.3.4"
+local VERSION = "1.4.0"
 
 local exports = {
     name = "marquee",
     version = VERSION,
     description = "Marquee display plugin",
     license = "MIT",
-    author = { name = "DanC ChatGPT" }
+    author = { name = "Dan Caputi" }
 }
 
 local marquee = exports
