@@ -160,6 +160,7 @@ PI3_PRESENT_FILE = os.path.join(HOME, ".pi3_present")
 PANEL_FILE = os.path.join(HOME, ".panel")
 CTRLR_FILE = os.path.join(HOME, ".ctrlr")
 SCREEN_ORIENTATION_FILE = os.path.join(HOME, ".horizontal")
+AUTO_CFG_RESTORE_FILE = os.path.join(HOME, ".auto_cfg_restore")
 DEF_KEY_FILE = os.path.join(HOME, ".def_key")
 DEFAULT_CTRLR_CFG = "allctrlrs.cfg"
 CTRLR_DIR = "/opt/retropie/emulators/mame/ctrlr"
@@ -189,6 +190,7 @@ pi3_present = load_state(PI3_PRESENT_FILE, True)
 panel = load_state(PANEL_FILE, "DC")  # DC, MC, MK, NA
 ctrlr_cfg = load_state(CTRLR_FILE, DEFAULT_CTRLR_CFG)
 screen_horizontal = load_state(SCREEN_ORIENTATION_FILE, True)
+auto_cfg_restore = load_state(AUTO_CFG_RESTORE_FILE, True)
 try:
     with open(XINMO_STATS_FILE) as _f:
         _xs = json.load(_f).get("auto_swap", True)
@@ -484,7 +486,7 @@ def ctrlr_menu():
                     toggle_fullscreen()
 
 def advanced_menu():
-    global dual_display, pi3_present, screen_horizontal, xinmo_auto_swap, mame_cfg_reset_count, ctrlr_cfg
+    global dual_display, pi3_present, screen_horizontal, xinmo_auto_swap, mame_cfg_reset_count, ctrlr_cfg, auto_cfg_restore
     mame_cfg_reset_count = 0  # reset count each time the advanced menu is entered
     selected = 0
     running = True
@@ -501,15 +503,22 @@ def advanced_menu():
         if success:
             mame_cfg_reset_count += 1
 
+    def _do_toggle_auto_cfg_restore():
+        toggle_auto_cfg_restore()
+
+    def _do_toggle_xinmo_auto_swap():
+        toggle_xinmo_auto_swap()
+
     MENU_ITEMS = [
         ("Pi5 Dual Display:", lambda: toggle_dual_display()),
         ("Pi3 Present:", lambda: toggle_pi3_present()),
         ("Screen Orientation:", lambda: toggle_screen_orientation()),
         ("Panel Image:", lambda: panel_menu()),
         ("Select CTRLR Cfg:", lambda: ctrlr_menu()),
+        ("Auto XinMo Swap:", _do_toggle_xinmo_auto_swap),
         ("Reset XinMo Stats", _do_reset_xinmo),
-        ("XinMo Auto-Swap:", lambda: toggle_xinmo_auto_swap()),
-        ("Reset MAME *.cfg Files", _do_reset_mame_cfg),
+        ("Auto CFG File Restore:", _do_toggle_auto_cfg_restore),
+        ("Restore MAME CFG Files", _do_reset_mame_cfg),
         ("Return to Main Menu", lambda: None),
     ]
     while running:
@@ -544,9 +553,11 @@ def advanced_menu():
                 suffix = {"DC":"UltraStick/Spinners", "MC":"Atari/FightStick", "MK":"MarioKart/Wheel", "NA":"None/Blank"}.get(panel, "None/Blank")
             elif "Select CTRLR Cfg" in label:
                 suffix = ctrlr_cfg
-            elif "Auto-Swap" in label:
+            elif "Auto CFG File Restore" in label:
+                suffix = "ON" if auto_cfg_restore else "OFF"
+            elif "XinMo Swap" in label or "Auto-Swap" in label:
                 suffix = "ON" if xinmo_auto_swap else "OFF"
-            elif "Reset MAME" in label:
+            elif "Restore MAME" in label or "Reset MAME" in label:
                 suffix = f"done ({mame_cfg_reset_count})" if mame_cfg_reset_count > 0 else ""
             color = SELECT_RECT_COLOR if i == selected else UNSEL_ITEM_RGB
             # menu item: centered at x=240; y = start_y + i * spacing (evenly distributed)
@@ -560,7 +571,10 @@ def advanced_menu():
                 pygame.draw.rect(base_surface, SELECT_RECT_COLOR, hit_rect, BORDER_PX)
         # status bar: XinMo status on the left, auto-select indicator on the right
         xinmo_surf = font.render(xinmo_label, True, xinmo_color)
-        auto_surf  = font.render("Auto-select: OFF", True, LT_GRAY_RGB)
+        if xinmo_auto_swap and not auto_cfg_restore:
+            auto_surf = font.render("WARN: XinMo+CFG OFF", True, RED_RGB)
+        else:
+            auto_surf = font.render("Auto-select: OFF", True, LT_GRAY_RGB)
         xinmo_rect = xinmo_surf.get_rect(midleft=(BORDER_SZ + 6, 460))
         auto_rect  = auto_surf.get_rect(midright=(full_w - BORDER_SZ - 6, 460))
         base_surface.blit(xinmo_surf, xinmo_rect)
@@ -656,6 +670,8 @@ def toggle_xinmo_auto_swap():
     """Toggle the auto_swap field in xinmo_mame_stats.json and update the global."""
     global xinmo_auto_swap
     xinmo_auto_swap = not xinmo_auto_swap
+    if xinmo_auto_swap and not auto_cfg_restore:
+        print("[WARN] XinMo auto-swap is ON while Auto CFG file restore is OFF.", file=sys.stderr)
     try:
         stats = {"swaps": 0, "last_swap": None}
         try:
@@ -669,6 +685,12 @@ def toggle_xinmo_auto_swap():
             json.dump(stats, f)
     except Exception:
         pass
+
+def toggle_auto_cfg_restore():
+    """Toggle restoration of canonical MAME cfg files after ES/MAME exits."""
+    global auto_cfg_restore
+    auto_cfg_restore = not auto_cfg_restore
+    save_state(AUTO_CFG_RESTORE_FILE, auto_cfg_restore)
 
 def reset_mame_cfg():
     """Copy all *.cfg from the project source to the deployed MAME cfg directory.

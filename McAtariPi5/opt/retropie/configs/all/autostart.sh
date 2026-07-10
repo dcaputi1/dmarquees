@@ -12,7 +12,6 @@ MENU_TIMEOUT=60
 BASE_PATH="/opt/retropie/emulators/mame"
 CFG_PATH="$BASE_PATH/cfg"
 PROJECT_CFG="$HOME/IvarArcade/McAtariPi5/opt/retropie/emulators/mame/cfg"
-XINMO_JSON="$HOME/IvarArcade/json/xinmo_mame_stats.json"
 INI_PATH="$BASE_PATH/ini"
 CMD_FIFO="/tmp/dmarquees_cmd"
 PI3_REMOTE_HOST="10.77.77.3"
@@ -21,6 +20,7 @@ MOUNTED_GAME_ART="marquees" # or "cpanel"
 PANEL="DC"
 CTRLR_CFG="allctrlrs.cfg"
 SCREEN_HORIZONTAL=true
+AUTO_CFG_RESTORE=true
 
 DEBUG=""  # "1" to enable debug waits, "" disables
 AUTOSTART_LOG="$HOME/autostart.log"
@@ -89,11 +89,20 @@ load_persisted_options()
         echo "$SCREEN_HORIZONTAL" > "$SCREEN_HORIZONTAL_FILE"
     fi
 
+    AUTO_CFG_RESTORE_FILE="$HOME/.auto_cfg_restore"
+    if [ -f "$AUTO_CFG_RESTORE_FILE" ]; then
+        AUTO_CFG_RESTORE=$(<"$AUTO_CFG_RESTORE_FILE")
+    else
+        AUTO_CFG_RESTORE=true
+        echo "$AUTO_CFG_RESTORE" > "$AUTO_CFG_RESTORE_FILE"
+    fi
+
     # Debug: Show all three variables and wait for user
     echo "[autostart] PI5_HOSTNAME: $PI5_HOSTNAME"
     echo "[autostart] THIS_IS_PI5: $THIS_IS_PI5"
     echo "[autostart] PI5_DUAL_DISPLAY: $PI5_DUAL_DISPLAY"
     echo "[autostart] CTRLR_CFG: $CTRLR_CFG"
+    echo "[autostart] AUTO_CFG_RESTORE: $AUTO_CFG_RESTORE"
     debug_wait
 }
 
@@ -233,10 +242,8 @@ send_dmarquees_cmd()
 # ==========================================
 restore_cfg_files()
 {
-    # Skip restore if XinMo auto-swap is explicitly disabled;
-    # the user relies on MAME-written cfg values in that mode.
-    if grep -q '"auto_swap"[[:space:]]*:[[:space:]]*false' "$XINMO_JSON" 2>/dev/null; then
-        echo "[autostart] XinMo auto-swap is OFF: skipping cfg restore"
+    if [ "$AUTO_CFG_RESTORE" != true ]; then
+        echo "[autostart] Auto CFG file restore is OFF: skipping cfg restore"
         return 0
     fi
 
