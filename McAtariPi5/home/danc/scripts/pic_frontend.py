@@ -158,8 +158,11 @@ MAME_CFG         = "/opt/retropie/emulators/mame/cfg"
 PI5_DUAL_DISPLAY_FILE = os.path.join(HOME, ".pi5_dual_display")
 PI3_PRESENT_FILE = os.path.join(HOME, ".pi3_present")
 PANEL_FILE = os.path.join(HOME, ".panel")
+CTRLR_FILE = os.path.join(HOME, ".ctrlr")
 SCREEN_ORIENTATION_FILE = os.path.join(HOME, ".horizontal")
 DEF_KEY_FILE = os.path.join(HOME, ".def_key")
+DEFAULT_CTRLR_CFG = "allctrlrs.cfg"
+CTRLR_DIR = "/opt/retropie/emulators/mame/ctrlr"
 
 # Load or initialize state
 def load_state(path, default):
@@ -184,6 +187,7 @@ def save_state(path, value):
 dual_display = load_state(PI5_DUAL_DISPLAY_FILE, True)
 pi3_present = load_state(PI3_PRESENT_FILE, True)
 panel = load_state(PANEL_FILE, "DC")  # DC, MC, MK, NA
+ctrlr_cfg = load_state(CTRLR_FILE, DEFAULT_CTRLR_CFG)
 screen_horizontal = load_state(SCREEN_ORIENTATION_FILE, True)
 try:
     with open(XINMO_STATS_FILE) as _f:
@@ -398,8 +402,89 @@ def panel_menu():
                 elif event.key == pygame.K_F11:
                     toggle_fullscreen()
 
+def _list_ctrlr_cfg_files():
+    try:
+        cfgs = [
+            name
+            for name in os.listdir(CTRLR_DIR)
+            if name.lower().endswith(".cfg") and os.path.isfile(os.path.join(CTRLR_DIR, name))
+        ]
+    except Exception:
+        cfgs = []
+    if DEFAULT_CTRLR_CFG not in cfgs:
+        cfgs.append(DEFAULT_CTRLR_CFG)
+    return sorted(cfgs, key=str.lower)
+
+def ctrlr_menu():
+    global ctrlr_cfg, screen_horizontal
+    options = _list_ctrlr_cfg_files()
+    idx = options.index(ctrlr_cfg) if ctrlr_cfg in options else 0
+    running = True
+    while running:
+        base_surface = pygame.Surface((MENU_W, MENU_H))
+        base_surface.fill(MENU_BG_COLOR)
+        full_w = base_surface.get_width()
+        full_h = base_surface.get_height()
+
+        title = font.render("Select CTRLR Cfg", True, CYAN_RGB)
+        title_rect = title.get_rect(center=(240, 40))
+        base_surface.blit(title, title_rect)
+        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(BORDER_SZ + 5, title_rect.top - 4, full_w - 2*(BORDER_SZ + 5), title_rect.height + 8), BORDER_PX)
+        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(BORDER_SZ, title_rect.top - 9, full_w - 2*BORDER_SZ, title_rect.height + 18), BORDER_PX)
+
+        item_count = len(options)
+        start_y = 100
+        spacing = (480 - start_y - 40) // max(item_count, 1)
+        item_rects = []
+        for i, label in enumerate(options):
+            color = SELECT_RECT_COLOR if i == idx else UNSEL_ITEM_RGB
+            text = font.render(label, True, color)
+            text_rect = text.get_rect(center=(240, start_y + i*spacing))
+            base_surface.blit(text, text_rect)
+            hit_rect = pygame.Rect(BORDER_SZ, text_rect.top - 3, full_w - 2*BORDER_SZ, text_rect.height + 6)
+            item_rects.append(hit_rect)
+            if i == idx:
+                pygame.draw.rect(base_surface, SELECT_RECT_COLOR, hit_rect, BORDER_PX)
+
+        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, 0, full_w, full_h), BORDER_PX)
+        if screen_horizontal:
+            screen.fill(SCREEN_BG_COLOR)
+            screen.blit(base_surface, ((screen.get_width()-MENU_W)//2, (screen.get_height()-MENU_H)//2))
+        else:
+            rotated = pygame.transform.rotate(base_surface, 90)
+            rect = rotated.get_rect(center=screen.get_rect().center)
+            screen.fill(SCREEN_BG_COLOR)
+            screen.blit(rotated, rect)
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit(0)
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                off_x = (screen.get_width() - MENU_W) // 2
+                off_y = (screen.get_height() - MENU_H) // 2
+                hit = _hit_index(event.pos, item_rects, off_x, off_y, not screen_horizontal)
+                if hit >= 0:
+                    idx = hit
+                    ctrlr_cfg = options[idx]
+                    save_state(CTRLR_FILE, ctrlr_cfg)
+                    running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    idx = (idx - 1) % len(options)
+                elif event.key == pygame.K_DOWN:
+                    idx = (idx + 1) % len(options)
+                elif event.key in (pygame.K_RETURN, pygame.K_SPACE):
+                    ctrlr_cfg = options[idx]
+                    save_state(CTRLR_FILE, ctrlr_cfg)
+                    running = False
+                elif event.key == pygame.K_ESCAPE:
+                    running = False
+                elif event.key == pygame.K_F11:
+                    toggle_fullscreen()
+
 def advanced_menu():
-    global dual_display, pi3_present, screen_horizontal, xinmo_auto_swap, mame_cfg_reset_count
+    global dual_display, pi3_present, screen_horizontal, xinmo_auto_swap, mame_cfg_reset_count, ctrlr_cfg
     mame_cfg_reset_count = 0  # reset count each time the advanced menu is entered
     selected = 0
     running = True
@@ -421,6 +506,7 @@ def advanced_menu():
         ("Pi3 Present:", lambda: toggle_pi3_present()),
         ("Screen Orientation:", lambda: toggle_screen_orientation()),
         ("Panel Image:", lambda: panel_menu()),
+        ("Select CTRLR Cfg:", lambda: ctrlr_menu()),
         ("Reset XinMo Stats", _do_reset_xinmo),
         ("XinMo Auto-Swap:", lambda: toggle_xinmo_auto_swap()),
         ("Reset MAME *.cfg Files", _do_reset_mame_cfg),
@@ -456,6 +542,8 @@ def advanced_menu():
                 suffix = "Landscape" if screen_horizontal else "Portrait"
             elif "Panel Image" in label:
                 suffix = {"DC":"UltraStick/Spinners", "MC":"Atari/FightStick", "MK":"MarioKart/Wheel", "NA":"None/Blank"}.get(panel, "None/Blank")
+            elif "Select CTRLR Cfg" in label:
+                suffix = ctrlr_cfg
             elif "Auto-Swap" in label:
                 suffix = "ON" if xinmo_auto_swap else "OFF"
             elif "Reset MAME" in label:

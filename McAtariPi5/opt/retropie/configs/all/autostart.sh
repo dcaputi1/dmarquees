@@ -19,6 +19,7 @@ PI3_REMOTE_HOST="10.77.77.3"
 PI3_REMOTE_PORT="5533"
 MOUNTED_GAME_ART="marquees" # or "cpanel"
 PANEL="DC"
+CTRLR_CFG="allctrlrs.cfg"
 SCREEN_HORIZONTAL=true
 
 DEBUG=""  # "1" to enable debug waits, "" disables
@@ -30,6 +31,14 @@ debug_wait()
         echo "Press ENTER to continue..."
         read -r _
     fi
+}
+
+resolve_ctrlr_name()
+{
+    local cfg_name="$1"
+    cfg_name="${cfg_name##*/}"
+    cfg_name="${cfg_name%.cfg}"
+    echo "$cfg_name"
 }
 
 load_persisted_options()
@@ -66,6 +75,12 @@ load_persisted_options()
         echo "$PANEL" > "$HOME/.panel"
     fi
 
+    if [[ -f $HOME/.ctrlr ]]; then
+        CTRLR_CFG=$(<"$HOME/.ctrlr")
+    else
+        echo "$CTRLR_CFG" > "$HOME/.ctrlr"
+    fi
+
     SCREEN_HORIZONTAL_FILE="$HOME/.horizontal"
     if [ -f "$SCREEN_HORIZONTAL_FILE" ]; then
         SCREEN_HORIZONTAL=$(<"$SCREEN_HORIZONTAL_FILE")
@@ -78,6 +93,7 @@ load_persisted_options()
     echo "[autostart] PI5_HOSTNAME: $PI5_HOSTNAME"
     echo "[autostart] THIS_IS_PI5: $THIS_IS_PI5"
     echo "[autostart] PI5_DUAL_DISPLAY: $PI5_DUAL_DISPLAY"
+    echo "[autostart] CTRLR_CFG: $CTRLR_CFG"
     debug_wait
 }
 
@@ -314,10 +330,12 @@ main_menu()
                 send_dmarquees_cmd "SA"
                 echo "Running MAME... .horizontal = $SCREEN_HORIZONTAL"
                 debug_wait
+                local CTRLR_NAME
+                CTRLR_NAME=$(resolve_ctrlr_name "$CTRLR_CFG")
                 if [ "$SCREEN_HORIZONTAL" = false ]; then
-                    mame -rol -inipath "/opt/retropie/emulators/mame/ini;/opt/retropie/emulators/mame/ini_horz_ror" -cfg_directory $CFG_PATH -verbose > $HOME/mame.log 2>&1
+                    mame -rol -inipath "/opt/retropie/emulators/mame/ini;/opt/retropie/emulators/mame/ini_horz_ror" -cfg_directory "$CFG_PATH" -ctrlr "$CTRLR_NAME" -verbose > "$HOME/mame.log" 2>&1
                 else
-                    mame -norol -inipath "/opt/retropie/emulators/mame/ini" -cfg_directory $CFG_PATH -verbose > $HOME/mame.log 2>&1
+                    mame -norol -inipath "/opt/retropie/emulators/mame/ini" -cfg_directory "$CFG_PATH" -ctrlr "$CTRLR_NAME" -verbose > "$HOME/mame.log" 2>&1
                 fi
                 restore_cfg_files
                 continue
