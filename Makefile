@@ -158,7 +158,7 @@ help:
 
 	@echo "  clean         - Remove all build artifacts"
 	@echo "  uninstall     - Remove installed files (untested)"
-	@echo "  sync-back     - Copies lr-mame/MAME config from /opt/ to ./McAtariPi5"
+	@echo "  sync-back     - Syncs deployed /opt/retropie MAME cfg/ctrlr updates back to ./McAtariPi5"
 	@echo "  help          - Show this help message"
 	@echo ""
 	@echo "Variables:"
@@ -192,7 +192,8 @@ sync-back:
 
 	# --- config knobs you maintain ---
 	# 1) Where NEW files are allowed to be created (relative to $$MAME_DIR)
-	NEW_FILE_DIRS=(cfg)
+	# Include ctrlr so newly created controller profiles can be synced back.
+	NEW_FILE_DIRS=(cfg ctrlr)
 	# 2) Useful sections for XML .cfg files
 	USEFUL_CFG_SECTIONS=(input video)
 
