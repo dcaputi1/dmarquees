@@ -164,6 +164,7 @@ AUTO_CFG_RESTORE_FILE = os.path.join(HOME, ".auto_cfg_restore")
 DEF_KEY_FILE = os.path.join(HOME, ".def_key")
 DEFAULT_CTRLR_CFG = "allctrlrs.cfg"
 CTRLR_DIR = "/opt/retropie/emulators/mame/ctrlr"
+MERGE_SCRIPT = os.path.join(HOME, "scripts", "merge_cfg_to_ctrlr.py")
 
 # Load or initialize state
 def load_state(path, default):
@@ -485,12 +486,86 @@ def ctrlr_menu():
                 elif event.key == pygame.K_F11:
                     toggle_fullscreen()
 
+def select_ctrlr_cfg_menu(title_text, current_cfg):
+    global screen_horizontal
+    options = _list_ctrlr_cfg_files()
+    if not options:
+        return None
+
+    idx = options.index(current_cfg) if current_cfg in options else 0
+    running = True
+    selected_cfg = None
+
+    while running:
+        base_surface = pygame.Surface((MENU_W, MENU_H))
+        base_surface.fill(MENU_BG_COLOR)
+        full_w = base_surface.get_width()
+        full_h = base_surface.get_height()
+
+        title = font.render(title_text, True, CYAN_RGB)
+        title_rect = title.get_rect(center=(240, 40))
+        base_surface.blit(title, title_rect)
+        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(BORDER_SZ + 5, title_rect.top - 4, full_w - 2*(BORDER_SZ + 5), title_rect.height + 8), BORDER_PX)
+        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(BORDER_SZ, title_rect.top - 9, full_w - 2*BORDER_SZ, title_rect.height + 18), BORDER_PX)
+
+        item_count = len(options)
+        start_y = 100
+        spacing = (480 - start_y - 40) // max(item_count, 1)
+        item_rects = []
+        for i, label in enumerate(options):
+            color = SELECT_RECT_COLOR if i == idx else UNSEL_ITEM_RGB
+            text = font.render(label, True, color)
+            text_rect = text.get_rect(center=(240, start_y + i*spacing))
+            base_surface.blit(text, text_rect)
+            hit_rect = pygame.Rect(BORDER_SZ, text_rect.top - 3, full_w - 2*BORDER_SZ, text_rect.height + 6)
+            item_rects.append(hit_rect)
+            if i == idx:
+                pygame.draw.rect(base_surface, SELECT_RECT_COLOR, hit_rect, BORDER_PX)
+
+        pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, 0, full_w, full_h), BORDER_PX)
+        if screen_horizontal:
+            screen.fill(SCREEN_BG_COLOR)
+            screen.blit(base_surface, ((screen.get_width()-MENU_W)//2, (screen.get_height()-MENU_H)//2))
+        else:
+            rotated = pygame.transform.rotate(base_surface, 90)
+            rect = rotated.get_rect(center=screen.get_rect().center)
+            screen.fill(SCREEN_BG_COLOR)
+            screen.blit(rotated, rect)
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit(0)
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                off_x = (screen.get_width() - MENU_W) // 2
+                off_y = (screen.get_height() - MENU_H) // 2
+                hit = _hit_index(event.pos, item_rects, off_x, off_y, not screen_horizontal)
+                if hit >= 0:
+                    idx = hit
+                    selected_cfg = options[idx]
+                    running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    idx = (idx - 1) % len(options)
+                elif event.key == pygame.K_DOWN:
+                    idx = (idx + 1) % len(options)
+                elif event.key in (pygame.K_RETURN, pygame.K_SPACE):
+                    selected_cfg = options[idx]
+                    running = False
+                elif event.key == pygame.K_ESCAPE:
+                    running = False
+                elif event.key == pygame.K_F11:
+                    toggle_fullscreen()
+
+    return selected_cfg
+
 def advanced_menu():
     global dual_display, pi3_present, screen_horizontal, xinmo_auto_swap, mame_cfg_reset_count, ctrlr_cfg, auto_cfg_restore
     mame_cfg_reset_count = 0  # reset count each time the advanced menu is entered
     selected = 0
     running = True
     xinmo_label, xinmo_color = _check_xinmo()
+    merge_cfg_status = ""
 
     def _do_reset_xinmo():
         nonlocal xinmo_label, xinmo_color
@@ -509,12 +584,62 @@ def advanced_menu():
     def _do_toggle_xinmo_auto_swap():
         toggle_xinmo_auto_swap()
 
+    def _do_merge_auto_cfg_to_ctrlr():
+        nonlocal merge_cfg_status
+
+        target_cfg = select_ctrlr_cfg_menu("Merge Target CTRLR", ctrlr_cfg)
+        if not target_cfg:
+            merge_cfg_status = "cancelled"
+            return
+
+        target_path = os.path.join(CTRLR_DIR, target_cfg)
+        try:
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    MERGE_SCRIPT,
+                    "--target",
+                    target_path,
+                    "--source-dir",
+                    MAME_CFG,
+                ],
+                check=False,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+        except Exception as e:
+            print(f"[ERROR] merge_auto_cfg_to_ctrlr launch failed: {e}", file=sys.stderr)
+            merge_cfg_status = "error"
+            return
+
+        if proc.returncode == 0:
+            summary_line = ((proc.stdout or "").strip().splitlines() or [""])[-1]
+            parts = {}
+            for token in summary_line.split():
+                if "=" in token:
+                    key, value = token.split("=", 1)
+                    parts[key.strip()] = value.strip()
+            merge_cfg_status = "ok"
+            if parts:
+                merge_cfg_status = (
+                    f"ok s{parts.get('systems', '?')} "
+                    f"a{parts.get('added', '?')} "
+                    f"r{parts.get('replaced', '?')}"
+                )
+            print(f"[INFO] merge_auto_cfg_to_ctrlr: {merge_cfg_status}", file=sys.stderr)
+        else:
+            err_line = ((proc.stderr or "").strip().splitlines() or ["merge failed"])[-1]
+            merge_cfg_status = f"ERR: {err_line[:40]}"
+            print(f"[ERROR] merge_auto_cfg_to_ctrlr: {proc.stderr}", file=sys.stderr)
+
     MENU_ITEMS = [
         ("Pi5 Dual Display:", lambda: toggle_dual_display()),
         ("Pi3 Present:", lambda: toggle_pi3_present()),
         ("Screen Orientation:", lambda: toggle_screen_orientation()),
         ("Panel Image:", lambda: panel_menu()),
         ("Select CTRLR Cfg:", lambda: ctrlr_menu()),
+        ("Merge Auto CFG -> CTRLR", _do_merge_auto_cfg_to_ctrlr),
         ("Auto XinMo Swap:", _do_toggle_xinmo_auto_swap),
         ("Reset XinMo Stats", _do_reset_xinmo),
         ("Auto CFG File Restore:", _do_toggle_auto_cfg_restore),
@@ -553,6 +678,8 @@ def advanced_menu():
                 suffix = {"DC":"UltraStick/Spinners", "MC":"Atari/FightStick", "MK":"MarioKart/Wheel", "NA":"None/Blank"}.get(panel, "None/Blank")
             elif "Select CTRLR Cfg" in label:
                 suffix = ctrlr_cfg
+            elif "Merge Auto CFG" in label:
+                suffix = merge_cfg_status
             elif "Auto CFG File Restore" in label:
                 suffix = "ON" if auto_cfg_restore else "OFF"
             elif "XinMo Swap" in label or "Auto-Swap" in label:
