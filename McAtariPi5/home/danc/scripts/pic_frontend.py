@@ -160,7 +160,6 @@ PI3_PRESENT_FILE = os.path.join(HOME, ".pi3_present")
 PANEL_FILE = os.path.join(HOME, ".panel")
 CTRLR_FILE = os.path.join(HOME, ".ctrlr")
 SCREEN_ORIENTATION_FILE = os.path.join(HOME, ".horizontal")
-AUTO_CFG_RESTORE_FILE = os.path.join(HOME, ".auto_cfg_restore")
 DEF_KEY_FILE = os.path.join(HOME, ".def_key")
 DEFAULT_CTRLR_CFG = "allctrlrs.cfg"
 CTRLR_DIR = "/opt/retropie/emulators/mame/ctrlr"
@@ -191,7 +190,6 @@ pi3_present = load_state(PI3_PRESENT_FILE, True)
 panel = load_state(PANEL_FILE, "DC")  # DC, MC, MK, NA
 ctrlr_cfg = load_state(CTRLR_FILE, DEFAULT_CTRLR_CFG)
 screen_horizontal = load_state(SCREEN_ORIENTATION_FILE, True)
-auto_cfg_restore = load_state(AUTO_CFG_RESTORE_FILE, True)
 try:
     with open(XINMO_STATS_FILE) as _f:
         _xs = json.load(_f).get("auto_swap", True)
@@ -560,7 +558,7 @@ def select_ctrlr_cfg_menu(title_text, current_cfg):
     return selected_cfg
 
 def advanced_menu():
-    global dual_display, pi3_present, screen_horizontal, xinmo_auto_swap, mame_cfg_reset_count, ctrlr_cfg, auto_cfg_restore
+    global dual_display, pi3_present, screen_horizontal, xinmo_auto_swap, mame_cfg_reset_count, ctrlr_cfg
     mame_cfg_reset_count = 0  # reset count each time the advanced menu is entered
     selected = 0
     running = True
@@ -572,14 +570,11 @@ def advanced_menu():
         reset_xinmo_stats()
         xinmo_label, xinmo_color = _check_xinmo()
 
-    def _do_reset_mame_cfg():
+    def _do_delete_mame_cfg():
         global mame_cfg_reset_count
-        success, _ = reset_mame_cfg()
+        success, _ = delete_mame_cfg()
         if success:
             mame_cfg_reset_count += 1
-
-    def _do_toggle_auto_cfg_restore():
-        toggle_auto_cfg_restore()
 
     def _do_toggle_xinmo_auto_swap():
         toggle_xinmo_auto_swap()
@@ -642,8 +637,7 @@ def advanced_menu():
         ("Merge Auto CFG -> CTRLR", _do_merge_auto_cfg_to_ctrlr),
         ("Auto XinMo Swap:", _do_toggle_xinmo_auto_swap),
         ("Reset XinMo Stats", _do_reset_xinmo),
-        ("Auto CFG File Restore:", _do_toggle_auto_cfg_restore),
-        ("Restore MAME CFG Files", _do_reset_mame_cfg),
+        ("Delete MAME CFG FIles", _do_delete_mame_cfg),
         ("Return to Main Menu", lambda: None),
     ]
     while running:
@@ -678,10 +672,6 @@ def advanced_menu():
                 suffix = {"DC":"UltraStick/Spinners", "MC":"Atari/FightStick", "MK":"MarioKart/Wheel", "NA":"None/Blank"}.get(panel, "None/Blank")
             elif "Select CTRLR Cfg" in label:
                 suffix = ctrlr_cfg
-            elif "Merge Auto CFG" in label:
-                suffix = merge_cfg_status
-            elif "Auto CFG File Restore" in label:
-                suffix = "ON" if auto_cfg_restore else "OFF"
             elif "XinMo Swap" in label or "Auto-Swap" in label:
                 suffix = "ON" if xinmo_auto_swap else "OFF"
             elif "Restore MAME" in label or "Reset MAME" in label:
@@ -698,10 +688,7 @@ def advanced_menu():
                 pygame.draw.rect(base_surface, SELECT_RECT_COLOR, hit_rect, BORDER_PX)
         # status bar: XinMo status on the left, auto-select indicator on the right
         xinmo_surf = font.render(xinmo_label, True, xinmo_color)
-        if xinmo_auto_swap and not auto_cfg_restore:
-            auto_surf = font.render("WARN: XinMo+CFG OFF", True, RED_RGB)
-        else:
-            auto_surf = font.render("Auto-select: OFF", True, LT_GRAY_RGB)
+        auto_surf = font.render("Auto-select: OFF", True, LT_GRAY_RGB)
         xinmo_rect = xinmo_surf.get_rect(midleft=(BORDER_SZ + 6, 460))
         auto_rect  = auto_surf.get_rect(midright=(full_w - BORDER_SZ - 6, 460))
         base_surface.blit(xinmo_surf, xinmo_rect)
@@ -710,6 +697,16 @@ def advanced_menu():
         status_bottom = max(xinmo_rect.bottom, auto_rect.bottom) + 3
         timer_rect = pygame.Rect(BORDER_SZ, status_top, full_w - 2*BORDER_SZ, status_bottom - status_top)
         _draw_dotted_rect(base_surface, LT_GRAY_RGB, timer_rect)
+        if merge_cfg_status:
+            if merge_cfg_status.startswith("ok"):
+                merge_color = GREEN_RGB
+            elif merge_cfg_status.startswith("ERR"):
+                merge_color = RED_RGB
+            else:
+                merge_color = LT_GRAY_RGB
+            merge_surf = font.render(merge_cfg_status, True, merge_color)
+            merge_rect = merge_surf.get_rect(bottomright=(full_w - BORDER_SZ - 6, full_h - BORDER_SZ - 6))
+            base_surface.blit(merge_surf, merge_rect)
         # menu border: cyan outline drawn at the inner edge of the menu surface
         # (negative coords are clipped by pygame, so draw at (0,0) not (-3,-3))
         pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, 0, full_w, full_h), BORDER_PX)
@@ -797,8 +794,6 @@ def toggle_xinmo_auto_swap():
     """Toggle the auto_swap field in xinmo_mame_stats.json and update the global."""
     global xinmo_auto_swap
     xinmo_auto_swap = not xinmo_auto_swap
-    if xinmo_auto_swap and not auto_cfg_restore:
-        print("[WARN] XinMo auto-swap is ON while Auto CFG file restore is OFF.", file=sys.stderr)
     try:
         stats = {"swaps": 0, "last_swap": None}
         try:
@@ -813,29 +808,29 @@ def toggle_xinmo_auto_swap():
     except Exception:
         pass
 
-def toggle_auto_cfg_restore():
-    """Toggle restoration of canonical MAME cfg files after ES/MAME exits."""
-    global auto_cfg_restore
-    auto_cfg_restore = not auto_cfg_restore
-    save_state(AUTO_CFG_RESTORE_FILE, auto_cfg_restore)
-
-def reset_mame_cfg():
-    """Copy all *.cfg from the project source to the deployed MAME cfg directory.
+def delete_mame_cfg():
+    """Delete the deployed MAME cfg directory contents.
     Returns (success: bool, count: int) tuple."""
-    import glob
     import shutil
     try:
-        src_files = glob.glob(os.path.join(PROJECT_CFG, "*.cfg"))
-        if not src_files:
-            print(f"[WARN] reset_mame_cfg: no .cfg files found in {PROJECT_CFG}", file=sys.stderr)
-            return (False, 0)
-        for src in src_files:
-            shutil.copy2(src, MAME_CFG)
-        count = len(src_files)
-        print(f"[INFO] reset_mame_cfg: restored {count} file(s) to {MAME_CFG}", file=sys.stderr)
-        return (True, count)
+        removed = 0
+        if os.path.isdir(MAME_CFG):
+            for name in os.listdir(MAME_CFG):
+                path = os.path.join(MAME_CFG, name)
+                try:
+                    if os.path.isdir(path):
+                        shutil.rmtree(path)
+                    else:
+                        os.unlink(path)
+                    removed += 1
+                except FileNotFoundError:
+                    pass
+            print(f"[INFO] delete_mame_cfg: removed {removed} item(s) from {MAME_CFG}", file=sys.stderr)
+            return (True, removed)
+        print(f"[INFO] delete_mame_cfg: {MAME_CFG} does not exist; nothing to delete", file=sys.stderr)
+        return (True, 0)
     except Exception as e:
-        print(f"[ERROR] reset_mame_cfg: {e}", file=sys.stderr)
+        print(f"[ERROR] delete_mame_cfg: {e}", file=sys.stderr)
         return (False, 0)
 
 def _send_pi3_command(cmd):
