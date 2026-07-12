@@ -66,9 +66,18 @@ def _sig(elem):
 
 def _load_cfg_tree(path):
     try:
-        tree = ET.parse(path)
+        # Keep XML comments from target ctrlr files so merge writes do not
+        # strip user-maintained documentation blocks.
+        parser = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
+        tree = ET.parse(path, parser=parser)
     except ET.ParseError as e:
         raise RuntimeError(f"XML parse error in {path}: {e}") from e
+    except TypeError:
+        # Fallback for environments where insert_comments isn't supported.
+        try:
+            tree = ET.parse(path)
+        except ET.ParseError as e:
+            raise RuntimeError(f"XML parse error in {path}: {e}") from e
     root = tree.getroot()
     if root.tag != "mameconfig":
         raise RuntimeError(f"Invalid root tag in {path}: expected mameconfig")
