@@ -357,7 +357,7 @@ def panel_menu():
             color = SELECT_RECT_COLOR if i == idx else UNSEL_ITEM_RGB
             # menu item: centered at x=240; y starts at 120 with 70px fixed spacing between items
             text = font.render(label, True, color)
-            text_rect = text.get_rect(center=(240, 120 + i*70))
+            text_rect = text.get_rect(midleft=(BORDER_SZ + 14, 120 + i*70))
             base_surface.blit(text, text_rect)
             hit_rect = pygame.Rect(BORDER_SZ, text_rect.top - 3, full_w - 2*BORDER_SZ, text_rect.height + 6)
             item_rects.append(hit_rect)
@@ -440,7 +440,7 @@ def ctrlr_menu():
         for i, label in enumerate(options):
             color = SELECT_RECT_COLOR if i == idx else UNSEL_ITEM_RGB
             text = font.render(label, True, color)
-            text_rect = text.get_rect(center=(240, start_y + i*spacing))
+            text_rect = text.get_rect(midleft=(BORDER_SZ + 14, start_y + i*spacing))
             base_surface.blit(text, text_rect)
             hit_rect = pygame.Rect(BORDER_SZ, text_rect.top - 3, full_w - 2*BORDER_SZ, text_rect.height + 6)
             item_rects.append(hit_rect)
@@ -513,7 +513,7 @@ def select_ctrlr_cfg_menu(title_text, current_cfg):
         for i, label in enumerate(options):
             color = SELECT_RECT_COLOR if i == idx else UNSEL_ITEM_RGB
             text = font.render(label, True, color)
-            text_rect = text.get_rect(center=(240, start_y + i*spacing))
+            text_rect = text.get_rect(midleft=(BORDER_SZ + 14, start_y + i*spacing))
             base_surface.blit(text, text_rect)
             hit_rect = pygame.Rect(BORDER_SZ, text_rect.top - 3, full_w - 2*BORDER_SZ, text_rect.height + 6)
             item_rects.append(hit_rect)
@@ -629,17 +629,105 @@ def advanced_menu():
             print(f"[ERROR] merge_auto_cfg_to_ctrlr: {proc.stderr}", file=sys.stderr)
 
     MENU_ITEMS = [
-        ("Pi5 Dual Display:", lambda: toggle_dual_display()),
-        ("Pi3 Present:", lambda: toggle_pi3_present()),
-        ("Screen Orientation:", lambda: toggle_screen_orientation()),
-        ("Panel Image:", lambda: panel_menu()),
-        ("Select CTRLR Cfg:", lambda: ctrlr_menu()),
-        ("Merge Auto CFG -> CTRLR", _do_merge_auto_cfg_to_ctrlr),
-        ("Auto XinMo Swap:", _do_toggle_xinmo_auto_swap),
-        ("Reset XinMo Stats", _do_reset_xinmo),
-        ("Delete MAME CFG FIles", _do_delete_mame_cfg),
-        ("Return to Main Menu", lambda: None),
+        {
+            "label": "Pi5 Dual Display:",
+            "action": lambda: toggle_dual_display(),
+            "suffix": lambda: "ON" if dual_display else "OFF",
+        },
+        {
+            "label": "Pi3 Present:",
+            "action": lambda: toggle_pi3_present(),
+            "suffix": lambda: "ON" if pi3_present else "OFF",
+        },
+        {
+            "label": "Screen Orientation:",
+            "action": lambda: toggle_screen_orientation(),
+            "suffix": lambda: "Landscape" if screen_horizontal else "Portrait",
+        },
+        {
+            "label": "Panel Image:",
+            "action": lambda: panel_menu(),
+            "suffix": lambda: {
+                "DC": "UltraStick/Spinners",
+                "MC": "Atari/FightStick",
+                "MK": "MarioKart/Wheel",
+                "NA": "None/Blank",
+            }.get(panel, "None/Blank"),
+        },
+        {
+            "label": "CTRLR .cfg FIle:",
+            "action": lambda: ctrlr_menu(),
+            "suffix": lambda: ctrlr_cfg,
+        },
+        {
+            "label": "Update CTRLR from Auto CFG",
+            "action": _do_merge_auto_cfg_to_ctrlr,
+            "suffix": lambda: "",
+        },
+        {
+            "label": "Auto XinMo Swap:",
+            "action": _do_toggle_xinmo_auto_swap,
+            "suffix": lambda: "ON" if xinmo_auto_swap else "OFF",
+        },
+        {
+            "label": "Reset XinMo Stats",
+            "action": _do_reset_xinmo,
+            "suffix": lambda: "",
+        },
+        {
+            "label": "Delete MAME CFG FIles",
+            "action": _do_delete_mame_cfg,
+            "suffix": lambda: f"done ({mame_cfg_reset_count})" if mame_cfg_reset_count > 0 else "",
+        },
+        {
+            "label": "Return to Main Menu",
+            "action": lambda: None,
+            "suffix": lambda: "",
+            "exit": True,
+        },
     ]
+
+    def _menu_index_prefix(index):
+        # 1-9 for first nine entries, then 0 for the tenth.
+        if index == 9:
+            return "[0]"
+        return f"[{index + 1}]"
+
+    def _invoke_menu_item(index):
+        item = MENU_ITEMS[index]
+        if item.get("exit", False):
+            return False
+        item["action"]()
+        return True
+
+    def _hotkey_to_index(key, item_count):
+        # Support both top-row and keypad number keys.
+        key_map = {
+            pygame.K_1: 0,
+            pygame.K_2: 1,
+            pygame.K_3: 2,
+            pygame.K_4: 3,
+            pygame.K_5: 4,
+            pygame.K_6: 5,
+            pygame.K_7: 6,
+            pygame.K_8: 7,
+            pygame.K_9: 8,
+            pygame.K_0: 9,
+            pygame.K_KP1: 0,
+            pygame.K_KP2: 1,
+            pygame.K_KP3: 2,
+            pygame.K_KP4: 3,
+            pygame.K_KP5: 4,
+            pygame.K_KP6: 5,
+            pygame.K_KP7: 6,
+            pygame.K_KP8: 7,
+            pygame.K_KP9: 8,
+            pygame.K_KP0: 9,
+        }
+        idx = key_map.get(key)
+        if idx is None or idx >= item_count:
+            return None
+        return idx
     while running:
         # menu surface: MENU_W x MENU_H black canvas; all elements are drawn here before blitting to the screen
         base_surface = pygame.Surface((MENU_W, MENU_H))
@@ -660,26 +748,14 @@ def advanced_menu():
         # spacing: distributes items evenly from start_y to 40px above the bottom of the menu surface
         spacing = (480 - start_y - 40) // max(item_count, 1)
         item_rects = []
-        for i, (label, _) in enumerate(MENU_ITEMS):
-            suffix = ""
-            if "Dual Display" in label:
-                suffix = "ON" if dual_display else "OFF"
-            elif "Pi3 Present" in label:
-                suffix = "ON" if pi3_present else "OFF"
-            elif "Screen Orientation" in label:
-                suffix = "Landscape" if screen_horizontal else "Portrait"
-            elif "Panel Image" in label:
-                suffix = {"DC":"UltraStick/Spinners", "MC":"Atari/FightStick", "MK":"MarioKart/Wheel", "NA":"None/Blank"}.get(panel, "None/Blank")
-            elif "Select CTRLR Cfg" in label:
-                suffix = ctrlr_cfg
-            elif "XinMo Swap" in label or "Auto-Swap" in label:
-                suffix = "ON" if xinmo_auto_swap else "OFF"
-            elif "Restore MAME" in label or "Reset MAME" in label:
-                suffix = f"done ({mame_cfg_reset_count})" if mame_cfg_reset_count > 0 else ""
+        for i, item in enumerate(MENU_ITEMS):
+            label = item["label"]
+            suffix = item["suffix"]()
             color = SELECT_RECT_COLOR if i == selected else UNSEL_ITEM_RGB
             # menu item: centered at x=240; y = start_y + i * spacing (evenly distributed)
-            text = font.render(f"{label} {suffix}", True, color)
-            text_rect = text.get_rect(center=(240, start_y + i*spacing))
+            numbered_label = f"{_menu_index_prefix(i)} {label}"
+            text = font.render(f"{numbered_label} {suffix}", True, color)
+            text_rect = text.get_rect(midleft=(BORDER_SZ + 14, start_y + i*spacing))
             base_surface.blit(text, text_rect)
             hit_rect = pygame.Rect(BORDER_SZ, text_rect.top - 3, full_w - 2*BORDER_SZ, text_rect.height + 6)
             item_rects.append(hit_rect)
@@ -729,21 +805,24 @@ def advanced_menu():
                 hit = _hit_index(event.pos, item_rects, off_x, off_y, not screen_horizontal)
                 if hit >= 0:
                     selected = hit
-                    if MENU_ITEMS[selected][0] == "Return to Main Menu":
-                        running = False
-                    else:
-                        MENU_ITEMS[selected][1]()
+                    running = _invoke_menu_item(selected)
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
                     selected = (selected - 1) % len(MENU_ITEMS)
                 elif event.key == pygame.K_DOWN:
                     selected = (selected + 1) % len(MENU_ITEMS)
                 elif event.key in (pygame.K_RETURN, pygame.K_SPACE):
-                    if MENU_ITEMS[selected][0] == "Return to Main Menu":
-                        running = False
+                    running = _invoke_menu_item(selected)
+                    if not running:
                         break
-                    MENU_ITEMS[selected][1]()
-                elif event.key == pygame.K_ESCAPE:
+                else:
+                    hotkey_index = _hotkey_to_index(event.key, len(MENU_ITEMS))
+                    if hotkey_index is not None:
+                        selected = hotkey_index
+                        running = _invoke_menu_item(selected)
+                        if not running:
+                            break
+                if event.key == pygame.K_ESCAPE:
                     running = False
                 elif event.key == pygame.K_F11:
                     toggle_fullscreen()
@@ -856,19 +935,85 @@ def shutdown_system():
     sys.exit(0)
 
 def main_menu():
-    MENU_ITEMS = [
-        ("EmulationStation", lambda: launch_emulationstation()),
-        ("MAME Standalone", lambda: launch_mame()),
-        ("Advanced Config Setup/Options", lambda: advanced_menu()),
-        ("Command Prompt (Exit to Shell)", lambda: _output_choice("C")),
-        ("Exit to X/Wayland Desktop", lambda: _output_choice("X")),
-        ("Shutdown System", lambda: shutdown_system()),
-    ]
     def launch_emulationstation():
         _output_choice("E")
 
     def launch_mame():
         _output_choice("M")
+
+    MENU_ITEMS = [
+        {
+            "label": "EmulationStation",
+            "action": lambda: launch_emulationstation(),
+        },
+        {
+            "label": "MAME Standalone",
+            "action": lambda: launch_mame(),
+        },
+        {
+            "label": "Advanced Config Setup/Options",
+            "action": lambda: advanced_menu(),
+            "def_key": "A",
+        },
+        {
+            "label": "Command Prompt (Exit to Shell)",
+            "action": lambda: _output_choice("C"),
+        },
+        {
+            "label": "Exit to X/Wayland Desktop",
+            "action": lambda: _output_choice("X"),
+        },
+        {
+            "label": "Shutdown System",
+            "action": lambda: shutdown_system(),
+        },
+    ]
+
+    def _menu_index_prefix(index):
+        # 1-9 for first nine entries, then 0 for the tenth.
+        if index == 9:
+            return "[0]"
+        return f"[{index + 1}]"
+
+    def _hotkey_to_index(key, item_count):
+        # Support both top-row and keypad number keys.
+        key_map = {
+            pygame.K_1: 0,
+            pygame.K_2: 1,
+            pygame.K_3: 2,
+            pygame.K_4: 3,
+            pygame.K_5: 4,
+            pygame.K_6: 5,
+            pygame.K_7: 6,
+            pygame.K_8: 7,
+            pygame.K_9: 8,
+            pygame.K_0: 9,
+            pygame.K_KP1: 0,
+            pygame.K_KP2: 1,
+            pygame.K_KP3: 2,
+            pygame.K_KP4: 3,
+            pygame.K_KP5: 4,
+            pygame.K_KP6: 5,
+            pygame.K_KP7: 6,
+            pygame.K_KP8: 7,
+            pygame.K_KP9: 8,
+            pygame.K_KP0: 9,
+        }
+        idx = key_map.get(key)
+        if idx is None or idx >= item_count:
+            return None
+        return idx
+
+    def _invoke_main_menu_item(index):
+        nonlocal countdown, xinmo_label, xinmo_color
+        pygame.time.set_timer(TICK_EVENT, 0)
+        item = MENU_ITEMS[index]
+        if "def_key" in item:
+            save_state(DEF_KEY_FILE, item["def_key"])
+        item["action"]()
+        xinmo_label, xinmo_color = _check_xinmo()
+        countdown = TIMEOUT_SECS
+        pygame.time.set_timer(TICK_EVENT, 1000)
 
     TIMEOUT_SECS = 60
     TICK_EVENT = pygame.USEREVENT + 1
@@ -899,11 +1044,13 @@ def main_menu():
         # spacing: distributes items evenly from start_y to 40px above the bottom of the menu surface
         spacing = (480 - start_y - 40) // max(item_count, 1)
         item_rects = []
-        for i, (label, _) in enumerate(MENU_ITEMS):
+        for i, item in enumerate(MENU_ITEMS):
+            label = item["label"]
             color = SELECT_RECT_COLOR if i == selected else UNSEL_ITEM_RGB
             # menu item: centered at x=240; y = start_y + i * spacing (evenly distributed)
-            text = font.render(label, True, color)
-            text_rect = text.get_rect(center=(240, start_y + i*spacing))
+            numbered_label = f"{_menu_index_prefix(i)} {label}"
+            text = font.render(numbered_label, True, color)
+            text_rect = text.get_rect(midleft=(BORDER_SZ + 14, start_y + i*spacing))
             base_surface.blit(text, text_rect)
             hit_rect = pygame.Rect(BORDER_SZ, text_rect.top - 3, full_w - 2*BORDER_SZ, text_rect.height + 6)
             item_rects.append(hit_rect)
@@ -943,8 +1090,7 @@ def main_menu():
             elif event.type == TICK_EVENT:
                 countdown -= 1
                 if countdown <= 0:
-                    pygame.time.set_timer(TICK_EVENT, 0)
-                    MENU_ITEMS[selected][1]()
+                    _invoke_main_menu_item(selected)
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 countdown = TIMEOUT_SECS
                 off_x = (screen.get_width() - MENU_W) // 2
@@ -952,13 +1098,7 @@ def main_menu():
                 hit = _hit_index(event.pos, item_rects, off_x, off_y, not screen_horizontal)
                 if hit >= 0:
                     selected = hit
-                    pygame.time.set_timer(TICK_EVENT, 0)
-                    if MENU_ITEMS[selected][0] == "Advanced Config Setup/Options":
-                        save_state(DEF_KEY_FILE, "A")
-                    MENU_ITEMS[selected][1]()
-                    xinmo_label, xinmo_color = _check_xinmo()
-                    countdown = TIMEOUT_SECS
-                    pygame.time.set_timer(TICK_EVENT, 1000)
+                    _invoke_main_menu_item(selected)
             elif event.type == pygame.KEYDOWN:
                 # Any keypress cancels the timeout
                 countdown = TIMEOUT_SECS
@@ -967,18 +1107,16 @@ def main_menu():
                 elif event.key == pygame.K_DOWN:
                     selected = (selected + 1) % len(MENU_ITEMS)
                 elif event.key in (pygame.K_RETURN, pygame.K_SPACE):
-                    pygame.time.set_timer(TICK_EVENT, 0)
-                    if MENU_ITEMS[selected][0] == "Advanced Config Setup/Options":
-                        save_state(DEF_KEY_FILE, "A")
-                    MENU_ITEMS[selected][1]()
-                    xinmo_label, xinmo_color = _check_xinmo()
-                    # restart timer after returning from a submenu (e.g. advanced_menu)
-                    countdown = TIMEOUT_SECS
-                    pygame.time.set_timer(TICK_EVENT, 1000)
+                    _invoke_main_menu_item(selected)
                 elif event.key == pygame.K_ESCAPE:
                     sys.exit(0)
                 elif event.key == pygame.K_F11:
                     toggle_fullscreen()
+                else:
+                    hotkey_index = _hotkey_to_index(event.key, len(MENU_ITEMS))
+                    if hotkey_index is not None:
+                        selected = hotkey_index
+                        _invoke_main_menu_item(selected)
 
 def launch_placeholder(name):
     # Placeholder for launching external apps
