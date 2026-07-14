@@ -219,10 +219,13 @@ i. Configure direct wired link static IPs (NetworkManager):
 5/15/26 [X] xinmo swap still NFG - change unswap to force copy from ~/McAtariPi5/...
         [X] pi3 way out of date and NO WIFI! ... WTF!?
 5/27/26 [ ] Attempt new Trixie baseline
-5/28/26 [x] Trixie continued - Pi Connect screen share failed after RetroPie setup
+5/28/26 [X] Trixie continued - Pi Connect screen share failed after RetroPie setup
         root cause: no active Wayland desktop session for user danc
         fix: RetroPie autostart / raspi-config boot to desktop auto-login restored
               lightdm/Wayland; keep IvarArcade autostart.sh launching pic_frontend.py
               and use 'sudo systemctl start lightdm' for Exit to X/Wayland Desktop
-6/19/26 [x] need sudoers for ultrastikcmd (called in runcommand scripts)
+6/19/26 [X] need sudoers for ultrastikcmd (called in runcommand scripts)
             added to /etc/sudoers.d/autostart-nopass (verify path with 'which ultrastikcmd')
+7/13/26 [X] now using ctrlr/*.cfg files rather than mame generated ad-hoc maps in ./cfg/
+        [ ] test PEDAL1 and PEDAL2 in allctrlrs.cfg system default
+        [ ] update ES collections for Atari and DC-Panel
