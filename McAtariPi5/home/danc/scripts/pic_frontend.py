@@ -416,6 +416,20 @@ def _list_ctrlr_cfg_files():
         cfgs.append(DEFAULT_CTRLR_CFG)
     return sorted(cfgs, key=str.lower)
 
+def _sync_panel_from_ctrlr(selected_cfg):
+    """Auto-sync panel image from selected ctrlr profile for known mappings."""
+    global panel
+
+    cfg_name = os.path.splitext(selected_cfg)[0].lower().strip()
+    panel_for_ctrlr = {
+        "atarifs": "MC",   # Atari/FightStick panel image
+        "dcpanel1": "DC",  # UltraStick/Spinners panel image
+    }
+    target_panel = panel_for_ctrlr.get(cfg_name)
+    if target_panel and panel != target_panel:
+        panel = target_panel
+        save_state(PANEL_FILE, panel)
+
 def ctrlr_menu():
     global ctrlr_cfg, screen_horizontal
     options = _list_ctrlr_cfg_files()
@@ -469,6 +483,7 @@ def ctrlr_menu():
                     idx = hit
                     ctrlr_cfg = options[idx]
                     save_state(CTRLR_FILE, ctrlr_cfg)
+                    _sync_panel_from_ctrlr(ctrlr_cfg)
                     running = False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
@@ -478,6 +493,7 @@ def ctrlr_menu():
                 elif event.key in (pygame.K_RETURN, pygame.K_SPACE):
                     ctrlr_cfg = options[idx]
                     save_state(CTRLR_FILE, ctrlr_cfg)
+                    _sync_panel_from_ctrlr(ctrlr_cfg)
                     running = False
                 elif event.key == pygame.K_ESCAPE:
                     running = False
