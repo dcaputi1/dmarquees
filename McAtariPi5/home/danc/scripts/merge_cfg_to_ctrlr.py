@@ -2,10 +2,8 @@
 
 import argparse
 import copy
-import datetime
 import glob
 import os
-import shutil
 import sys
 import xml.etree.ElementTree as ET
 
@@ -172,13 +170,6 @@ def _load_or_create_target_tree(target_path):
     return ET.ElementTree(root)
 
 
-def _backup_target(path):
-    ts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    backup = f"{path}.bak.{ts}"
-    shutil.copy2(path, backup)
-    return backup
-
-
 def merge_cfgs(source_dir, target_path, dry_run=False):
     merged_by_system, parsed_files, source_entries = _build_source_input_map(source_dir)
     target_tree = _load_or_create_target_tree(target_path)
@@ -211,11 +202,8 @@ def merge_cfgs(source_dir, target_path, dry_run=False):
     _reorder_systems(root)
     _indent(root)
 
-    backup_path = None
     if not dry_run:
         os.makedirs(os.path.dirname(target_path), exist_ok=True)
-        if os.path.exists(target_path):
-            backup_path = _backup_target(target_path)
         target_tree.write(target_path, encoding="utf-8", xml_declaration=True)
 
     return {
@@ -226,7 +214,7 @@ def merge_cfgs(source_dir, target_path, dry_run=False):
         "systems_created": systems_created,
         "entries_added": entries_added,
         "entries_replaced": entries_replaced,
-        "backup": backup_path,
+        "backup": None,
         "dry_run": dry_run,
     }
 

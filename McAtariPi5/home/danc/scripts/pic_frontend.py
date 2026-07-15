@@ -784,7 +784,6 @@ def advanced_menu():
         xinmo_rect = xinmo_surf.get_rect(midleft=(BORDER_SZ + 6, 460))
         auto_rect  = auto_surf.get_rect(midright=(full_w - BORDER_SZ - 6, 460))
         base_surface.blit(xinmo_surf, xinmo_rect)
-        base_surface.blit(auto_surf, auto_rect)
         status_top    = min(xinmo_rect.top, auto_rect.top) - 3
         status_bottom = max(xinmo_rect.bottom, auto_rect.bottom) + 3
         timer_rect = pygame.Rect(BORDER_SZ, status_top, full_w - 2*BORDER_SZ, status_bottom - status_top)
@@ -798,7 +797,11 @@ def advanced_menu():
                 merge_color = LT_GRAY_RGB
             merge_surf = font.render(merge_cfg_status, True, merge_color)
             merge_rect = merge_surf.get_rect(bottomright=(full_w - BORDER_SZ - 6, full_h - BORDER_SZ - 6))
+            if auto_rect.colliderect(merge_rect):
+                overlap_rect = auto_rect.clip(merge_rect)
+                pygame.draw.rect(base_surface, MENU_BG_COLOR, overlap_rect)
             base_surface.blit(merge_surf, merge_rect)
+        base_surface.blit(auto_surf, auto_rect)
         # menu border: cyan outline drawn at the inner edge of the menu surface
         # (negative coords are clipped by pygame, so draw at (0,0) not (-3,-3))
         pygame.draw.rect(base_surface, CYAN_RGB, pygame.Rect(0, 0, full_w, full_h), BORDER_PX)

@@ -191,9 +191,8 @@ sync-back:
 	fi
 
 	# --- config knobs you maintain ---
-	# 1) Where NEW files are allowed to be created (relative to $$MAME_DIR)
-	# Include ctrlr so newly created controller profiles can be synced back.
-	NEW_FILE_DIRS=(cfg ctrlr)
+	# 1) Controller profiles in the repo copy that may be updated from the deployment tree.
+	#    Only files already present in the repo copy are considered.
 	# 2) Useful sections for XML .cfg files
 	USEFUL_CFG_SECTIONS=(input video)
 
@@ -201,7 +200,7 @@ sync-back:
 	is_default_only_cfg() {
 		local f="$$1"
 		# Only apply rule to XML-ish cfg files; non-XML cfg files are always allowed.
-		if ! head -n 5 "$$f" 2>/dev/null | grep -qiE '^\s*<\?xml|<mameconfig\b|^\s*<'; then
+		if ! head -n 5 "$${f}" 2>/dev/null | grep -qiE '^\s*<\?xml|<mameconfig\b|^\s*<'; then
 			return 1
 		fi
 		local tag_re=""
@@ -211,40 +210,34 @@ sync-back:
 		done
 		tag_re="$${tag_re%|}"
 		# If we find ANY useful section tag, it is NOT default-only.
-		grep -qiE "$$tag_re" "$$f" && return 1
+		grep -qiE "$${tag_re}" "$${f}" && return 1
 		return 0
 	}
 
 	# --- Phase A: sync only MODIFIED files that ALREADY EXIST in the target tree ---
-	# NOTE: --existing prevents new files from being created in the target tree.
-	rsync -ai --existing --update \
-		--no-perms --no-owner --no-group --omit-dir-times --exclude='__pycache__' \
-		"$$SRC/" "$$DST/"
-
-
-	# --- Phase B: copy NEW files from approved folders (subject to cfg rules) ---
-	for d in "$${NEW_FILE_DIRS[@]}"; do
+	# For ctrlr, scan the repo copy and update any matching file from the deployment tree.
+	for d in cfg ctrlr; do
 		src_dir="$$MAME_DIR/$$d"
 		dst_dir="$$DST/emulators/mame/$$d"
-		[[ -d "$$src_dir" ]] || { echo "ERROR: Missing new-file source folder: $$src_dir"; exit 1; }
-		[[ -d "$$dst_dir" ]] || { echo "ERROR: Missing target folder (must already exist): $$dst_dir"; exit 1; }
+		[[ -d "$${src_dir}" ]] || { echo "ERROR: Missing required folder: $$src_dir"; exit 1; }
+		[[ -d "$${dst_dir}" ]] || { echo "ERROR: Missing target folder (must already exist): $$dst_dir"; exit 1; }
 
-		cd "$$src_dir"
-		find . -type f -print0 \
-		| while IFS= read -r -d '' f; do
-			rel="$${f#./}"
-			# Only include if destination file does NOT exist.
-			if [[ ! -f "$$dst_dir/$$rel" ]]; then
-				# Special rule: skip default-only XML cfg files.
-				if [[ "$$rel" == *.cfg ]] && is_default_only_cfg "$$src_dir/$$rel"; then
-					continue
+		if [[ "$${d}" == "ctrlr" ]]; then
+			find "$${dst_dir}" -maxdepth 1 -type f -print0 \
+			| while IFS= read -r -d '' f; do
+				rel="$${f#$$dst_dir/}"
+				src_file="$$src_dir/$$rel"
+				if [[ -f "$${src_file}" ]]; then
+					rsync -ai --existing --update \
+						--no-perms --no-owner --no-group --omit-dir-times --exclude='__pycache__' \
+						"$$src_file" "$$f"
 				fi
-				printf '%s\0' "$$f"
-			fi
-		done \
-		| rsync -ai --ignore-existing --from0 --files-from=- --no-implied-dirs \
-			--no-perms --no-owner --no-group --omit-dir-times --exclude='__pycache__' \
-			"$$src_dir/" "$$dst_dir/"
+			  done
+		else
+			rsync -ai --existing --update \
+				--no-perms --no-owner --no-group --omit-dir-times --exclude='__pycache__' \
+				"$$src_dir/" "$$dst_dir/"
+		fi
 	done
 
 	@echo "sync-back: $$SRC/ -> $$DST/ ... complete!"
