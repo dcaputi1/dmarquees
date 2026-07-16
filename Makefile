@@ -158,7 +158,7 @@ help:
 
 	@echo "  clean         - Remove all build artifacts"
 	@echo "  uninstall     - Remove installed files (untested)"
-	@echo "  sync-back     - Syncs deployed /opt/retropie MAME cfg/ctrlr updates back to ./McAtariPi5"
+	@echo "  sync-back     - Syncs deployed /opt/retropie MAME ctrlr updates back to ./McAtariPi5"
 	@echo "  help          - Show this help message"
 	@echo ""
 	@echo "Variables:"
@@ -183,7 +183,8 @@ sync-back:
 	[[ -d "$$SRC" ]] || { echo "ERROR: $$SRC not found"; exit 1; }
 	[[ -d "$$DST" ]] || { echo "ERROR: destination tree not found: $$DST"; exit 1; }
 
-	[[ -d "$$MAME_DIR/cfg" ]] || { echo "ERROR: Missing required folder: $$MAME_DIR/cfg"; exit 1; }
+	# The temporary cfg directory is optional and may be absent after merges.
+	# sync-back only needs to pull updated controller profiles from the deployment tree.
 	if [[ -d "$$MAME_DIR/cfg_ra" ]] || [[ -d "$$MAME_DIR/cfg_sa" ]]; then
 		echo "ERROR: Legacy folders detected under $$MAME_DIR (cfg_ra / cfg_sa)."
 		echo "       Remove them from the Pi before running sync-back."
@@ -214,30 +215,22 @@ sync-back:
 		return 0
 	}
 
-	# --- Phase A: sync only MODIFIED files that ALREADY EXIST in the target tree ---
-	# For ctrlr, scan the repo copy and update any matching file from the deployment tree.
-	for d in cfg ctrlr; do
-		src_dir="$$MAME_DIR/$$d"
-		dst_dir="$$DST/emulators/mame/$$d"
-		[[ -d "$${src_dir}" ]] || { echo "ERROR: Missing required folder: $$src_dir"; exit 1; }
-		[[ -d "$${dst_dir}" ]] || { echo "ERROR: Missing target folder (must already exist): $$dst_dir"; exit 1; }
+	# --- Phase A: sync only MODIFIED controller profiles that ALREADY EXIST in the target tree ---
+	d="ctrlr"
+	src_dir="$$MAME_DIR/$$d"
+	dst_dir="$$DST/emulators/mame/$$d"
+	[[ -d "$${src_dir}" ]] || { echo "WARNING: Missing deployment folder: $$src_dir; skipping ctrlr sync."; exit 0; }
+	[[ -d "$${dst_dir}" ]] || { echo "ERROR: Missing target folder (must already exist): $$dst_dir"; exit 1; }
 
-		if [[ "$${d}" == "ctrlr" ]]; then
-			find "$${dst_dir}" -maxdepth 1 -type f -print0 \
-			| while IFS= read -r -d '' f; do
-				rel="$${f#$$dst_dir/}"
-				src_file="$$src_dir/$$rel"
-				if [[ -f "$${src_file}" ]]; then
-					rsync -ai --existing --update \
-						--no-perms --no-owner --no-group --omit-dir-times --exclude='__pycache__' \
-						"$$src_file" "$$f"
-				fi
-			  done
-		else
+	find "$${dst_dir}" -maxdepth 1 -type f -print0 \
+	| while IFS= read -r -d '' f; do
+		rel="$${f#$$dst_dir/}"
+		src_file="$$src_dir/$$rel"
+		if [[ -f "$${src_file}" ]]; then
 			rsync -ai --existing --update \
 				--no-perms --no-owner --no-group --omit-dir-times --exclude='__pycache__' \
-				"$$src_dir/" "$$dst_dir/"
+				"$$src_file" "$${f}"
 		fi
-	done
+	  done
 
 	@echo "sync-back: $$SRC/ -> $$DST/ ... complete!"
