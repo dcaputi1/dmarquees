@@ -91,3 +91,10 @@ How to add a game to the "favorites"
 6. run ~/IvarArcade/analyze_games/analyze_games to create shader file and optional Ultrastik joystick_map ini file
 7. a vector game will need runcommand menu option set to mame (default is lr-mame)
 8. map conroller buttons in ES and MAME GUI
+
+How to use ultrastikcmd
+- to reset the stick (temporarily) to analog:
+~/scripts/set_ultrastik_analog.cmd
+or:
+> ultrastikcmd -v -u /home/danc/IvarArcade/tools/UltraStikMaps/Analog.um
+Note: add -f to flash/save the map (runcommand start/end scripts overwrite the active map). Also note, the current default/flashed map seems to be 8-way digital
