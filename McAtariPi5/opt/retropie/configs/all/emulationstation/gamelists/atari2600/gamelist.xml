@@ -1,0 +1,1970 @@
+<?xml version="1.0"?>
+<gameList>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/3-D Tic-Tac-Toe.bin</path>
+    <name>3-D Tic-Tac-Toe</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/3-D Tic-Tac-Toe.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/3-D Tic-Tac-Toe.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/3-D Tic-Tac-Toe.mp4</video>
+    <rating>0.5</rating>
+    <desc>The game is similar to the traditional game of tic-tac-toe, but is played on four 4x4 grids stacked vertically; it is basically a computerized version of the board game Qubic using traditional tic-tac-toe notation and layout. To win, a player must place four of their symbols on four squares that line up vertically, horizontally, or diagonally, on a single grid, or spaced evenly over all four grids. This creates a total of 76 possible ways to win, in comparison to eight possible ways to win on a standard 3Ã—3 board. The game has nine variations: it can be played by two players against each other, or one player can play against a built-in AI on one of eight different difficulty settings. The game uses the standard joystick controller.</desc>
+    <releasedate>19800101T000000</releasedate>
+    <developer>Sears</developer>
+    <publisher>Atari</publisher>
+    <genre>Simulation</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Adventure.bin</path>
+    <name>Adventure</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Adventure.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Adventure.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Adventure.mp4</video>
+    <rating>0.75</rating>
+    <desc>An evil magician has stolen the Enchanted Chalice and has hidden it somewhere in the Kingdom. The object of the game is to rescue the Enchanted Chalice and place it inside the Golden Castle where it belongs. 
+
+This is no easy task, as the Evil Magician has created three Dragons to hinder you in your quest for the Golden Chalice. There is Yorgie, the Yellow Dragon, who is just plain mean; there is Grundle, the Green Dragon, who is mean and ferocious; and there is Rhindle, the Red Dragon, who is the most ferocious of all. Rhindle is also the fastest Dragon and is the most difficult to outmaneuver.
+
+There are three castles in the Kingdom; the White Castle, the Black Castle, and the Golden Castle. Each castle has a Gate over the entrance. The Gate can be opened with the corresponding colored Key. Inside each Castle are rooms(or dungeons, depending at which Skill Level you are playing).
+
+The Castles are separated by rooms, pathways, and labyrinths. Common to all the Skill Levels is the Blue Labyrinth through which you must find your way to the Black Castle. Skill Levels 2 and 3 have a more complicated Kingdom
+
+Adventure was the first action-adventure game on a video console, the first to contain a widely-known Easter egg, and the first to allow a player to have a stash of items, which required the player to select which one to use at any given moment, usually through keyboard or joystick input. Adventure allowed the player to drop one item and pick up another without having to type in any commands. The graphics, on the other hand, were not that great, and Adventure creator Warren Robinett even described the dragons as looking like ducks.</desc>
+    <releasedate>19800101T000000</releasedate>
+    <developer>Sears</developer>
+    <publisher>Atari</publisher>
+    <genre>Adventure</genre>
+    <players>1</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Air-Sea Battle.bin</path>
+    <name>Air-Sea Battle</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Air-Sea Battle.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Air-Sea Battle.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Air-Sea Battle.mp4</video>
+    <rating>0.5</rating>
+    <desc>Air-Sea Battle is basically a target shooting game.  On most settings, you are positioned at the bottom of the screen and you shoot at targets at the top of the screen.  The various settings provide different targets and weapons with different characteristics.
+
+In games 1-6, you are an anti-aircraft gun and you shoot, unsurprisingly, at aircraft.  You are stationary.   Your control is limited to selecting the time of firing, the angle at which your shot is fired and, on some settings, exertion of minor control over the direction of your missile.  
+
+In games 7-12, you are a submarine and you shoot torpedoes at the ships above.  On these settings you are able to move your submarine back and forth across the bottom of the screen.  Your torpedoes, however, can only be fired directly above.  Some settings allow minor control over the direction of your torpedo once fired.
+ 
+In games 13-15, you are apparently the anti-aircraft gun again.  This time, however, you are shooting at shooting gallery targets (clown faces, ducks, rabbits).  The controls are as in games 1-6.  
+
+In games 16-18, you are a ship and you fire polaris missiles at jets flying above.  Your ship constantly moves on its own, you control only the speed.  When you fire, the angle of the missile and its speed are based on the speed your ship was traveling at the time of firing. Some settings restrict your ability to change speed once a missile is fired, others allow you to exert control over the missile by changing speed once the missile is fired.  
+
+In games 19-21, the situation is reversed, you are the jet dropping bombs at the ships below.  The controls in this setting are the same as in games 16-18.  The difference, of course, is that you are dropping bombs from above at targets below.  
+
+In Games 22-27, one player is the jet and the other is the ship.
+
+Each of the two player games is a matter of who can hit more targets in (oddly enough) 2 minutes and 16 seconds.  (The manual says that the game will also end if one player hits 99 targets.  I have yet to see this happen.)  In each of the single player games, the single player tries to outscore a computer opponent that simply constantly fires.</desc>
+    <releasedate>19770101T000000</releasedate>
+    <developer>Sears</developer>
+    <publisher>Sears</publisher>
+    <genre>Action</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Aquaventure.bin</path>
+    <name>Aquaventure</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Aquaventure.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Aquaventure.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Aquaventure.mp4</video>
+    <rating />
+    <desc>Aquaventure is a bit of a mystery in the prototype world. It was never mentioned in any Atari press releases nor does it show up on any internal part lists.  Aquaventure seems to have popped out of the woodwork one day without any public fanfare nor any history behind its mysterious origins.  In any case, Aquaventure seems to be complete and ready for release, we can only speculate as to why it was shelved.</desc>
+    <releasedate>19830812T000000</releasedate>
+    <developer>Gary Shannon, Tod Frye</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players>1</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Armor Ambush.bin</path>
+    <name>Armor Ambush</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Armor Ambush.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Armor Ambush.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Armor Ambush.mp4</video>
+    <rating />
+    <desc>Armor Ambush is a game that gives players control over tanks that battle one another over terrain that offers varying degrees of texture and traversability. Dueling tanks was a theme familiar to owners of the Atari 2600 since Combat, the game packaged wit</desc>
+    <releasedate>19820101T000000</releasedate>
+    <developer>M Network</developer>
+    <publisher>M Network</publisher>
+    <genre>Shooter</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Asteroids.bin</path>
+    <name>Asteroids</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Asteroids.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Asteroids.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Asteroids.mp4</video>
+    <rating>0.7</rating>
+    <desc>Asteroids is a conversion of the arcade game of the same name.
+
+Play the role of a spaceship pilot trapped in a gigantic asteroid cloud and pulverize incoming asteroids with the ship&apos;s photon cannon.  When all asteroids are destroyed, the play can them move to the next round. In addition to asteroid, the player will also face an Alien Robot Saucer which shoots randomly across the screen.
+
+The player using the controller may rotate the ship (left or right) to any direction or move the ship forward. Shots will be fired according to the ship direction. The player has three reserved ships available to replace a destroyed spaceship. The spaceship is destroyed if an asteroid collides with the spaceship or is shot by an Alien Robot Saucer. Additionally, the player may opt to use the hyperspace warp to avoid collision. The warp however, may also destroy the spaceship in the process.
+
+Asteroids when shot will break-up into smaller pieces or be destroyed.. There are three types of asteroids: large asteroids, medium asteroids, and small asteroids. Large asteroids and medium asteroids when shot, will break-up into two smaller sized asteroids. Small asteroids when shot will be destroyed. 
+
+Alien Robot Saucers come in two sizes: small and large. Both use photon lasers to shoot and will explode when destroyed. Alien Robot Saucers will not appear at the Novice Level.
+
+Game Difficulty and Variations
+There are 4 available difficulty settings: Novice, Intermediate, Advanced, and Expert. 
+
+The game also offers three different game variations:
+
+1. Standard Play - For one or two players, taking turns when a player&apos;s ship is destroyed.
+
+2. Competition Asteroids - Two players appear on the screen at the same time. Friendly fire is in affect, which means shots fired from one player&apos;s spaceship will destroy the other player&apos;s spaceship. Each player has separate ship reserves.
+
+3. Team Asteroids - Two players on the screen at the same time. Friendly fire is disabled, which means shots fired from one player&apos;s spaceship will not destroy the other player&apos;s spaceship and just pass through. Ship reserves for both players are combined.
+
+Scoring
+The score of the Player 1 is viewable on the upper left side of the screen, while Player 2 on the opposite upper right side. A player will be awarded a new reserve ship for every 10,000 points.
+
+1. Small saucer - 1,000 points
+2. Other player&apos;s ship - 500 points
+3. Large saucer - 200 points
+4. Small asteroid - 100 points
+5. Medium asteroid  - 50 poi</desc>
+    <releasedate>19810101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Backgammon.bin</path>
+    <name>Backgammon</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Backgammon.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Backgammon.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Backgammon.mp4</video>
+    <rating>0.35</rating>
+    <desc>This is the game backgammon and its variant, acey deucey. For backgammon, the standard rules are used. As they are long and complex, if you want to see those rules, look in this manual.
+
+Acey Deucey was a variation created by sailors in the U. S. Navy. As such, the rules for acey deucey will vary from ship to ship and person to person. For Atari, this is the variation used here:
+All pieces start out on the central Bar and can be entered at any time with the roll of the dice.
+No piece NEEDS to be moved from the bar first, even if it was hit and sent to the bar.
+A roll of 1-2 (acey deucey) allows a player to choose whichever doublet s/he wants, after making the 1-2 move.
+After moving the doublets, the player is awarded another dice roll.
+If, after moving your doublet, the other dice roll is 1-2, you can move the 1-2 and choose another doublet.
+
+Difficulty switches
+Right:
+A=computer rolls dice for you
+B=you can roll real dice and dial in the numbers
+Left:
+A=computer sets up the board for you
+B=you can set the pieces where you want them.
+
+Game variations
+Games 1, 3, 5, and 7 are one player
+Games 2, 4, 6, and 8 are two player
+
+Games one through four are backgammon
+Games five through eight are acey deucey
+
+Games 1, 2, 5, and 6 have a doubling cube.</desc>
+    <releasedate>19790101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Strategy</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Basketball.bin</path>
+    <name>Basketball</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Basketball.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Basketball.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Basketball.mp4</video>
+    <rating>0.5</rating>
+    <desc>Basketball allows you to play a game of one-on-one against either the computer or another player. The court is viewed from the side with a basket at each end of the screen.  Using the joystick you can move your player around the court, dribble/shoot the ball, and attempt to block your opponent. The game is played in two 4 minute halves, and the player who scores the most points wins. There are two different skill levels available which can be set individually for each player.</desc>
+    <releasedate>19780101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Sports</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Bionic Breakthrough.bin</path>
+    <name>Bionic Breakthrough</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Bionic Breakthrough.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Bionic Breakthrough.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Bionic Breakthrough.mp4</video>
+    <rating />
+    <desc>The Atari Mindlink was an unreleased controller for the Atari 2600. It was intended for release in 1984. The Mindlink was unique in that you had to move the muscles in your head to control the game. These movements would be read by infrared sensors and transferred as movement in the game. Games would be similar to ones that used the paddle controller, but with the Mindlink instead. Testing showed that players frequently got headaches moving their eyebrows around to play the game. Though Atari could have tried to refine the device over time, Atari simply decided to shelve the Mindlink. Two games were in development for the Mindlink by its cancellation, Bionic Breakthrough &amp; Mind Maze.
+
+Bionic Breakthrough was basically Breakout controlled with the Mindlink, while Mind Maze was an attempt to use ESP through the Mindlink to predict what is printed on cards, which admittedly didn&apos;t work. Neither game would see release in a joystick or paddle controlled form in later years, partly due to the failing video game industry, partly due to the games&apos; limited appeal.</desc>
+    <releasedate>19840101T000000</releasedate>
+    <developer />
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players />
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Blackjack.bin</path>
+    <name>Blackjack</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Blackjack.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Blackjack.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Blackjack.mp4</video>
+    <rating>0.35</rating>
+    <desc>Blackjack is based on the casino card game of the same name. You can play alone or with up to 2 other players against the computer that takes the role of the dealer. 
+
+The game follows the same basic rules as its casino counterpart. Each player starts the game with 200 chips and each can bet from 1 to 25 chips to get a hand. A player breaks the bank when he reaches 1000 chips and loses when he has no more chips to bet. In both cases, he is removed from the game. At any time, a player may quit or resume the game by using the game select switch. A player who went broke or who reached 1000 chips may also stay on the game using the same switch. He will then start with 200 chips.</desc>
+    <releasedate>19770101T000000</releasedate>
+    <developer>Sears</developer>
+    <publisher>Sears</publisher>
+    <genre>Sports</genre>
+    <players>3</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Bowling.bin</path>
+    <name>Bowling</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Bowling.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Bowling.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Bowling.mp4</video>
+    <rating>0.5</rating>
+    <desc>Your objective is to roll as high a score as possible, whether you&apos;re playing a one-player or a two-player game.  There are ten &quot;pins&quot; to knock down.  You have two tries (or rolls) to knock down the pins each time you&apos;re up.  Each game consists of ten &quot;frames&quot; (or turns).
+
+If you succeed in knocking down all the pins on your first roll, it&apos;s called a &quot;strike&quot;.  A strike is marked with an &quot;x&quot; on the TV screen.
+
+If you leave pins standing, but &quot;pick them up&quot; on your second try, it&apos;s called a &quot;spare&quot;.  Spares are marked with a &quot;/&quot; on the screen.
+
+An &quot;open frame&quot; occurs when you fail to knock down all then pins in two rolls.  Open frames are indicated with a straight horizontal line (-) on the screen.
+
+The ultimate goal in BOWLING is to roll 12 consecutive strikes for a &quot;perfect&quot; score of 300.</desc>
+    <releasedate>19780101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Sports</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Boxing.bin</path>
+    <name>Boxing</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Boxing.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Boxing.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Boxing.mp4</video>
+    <rating>0.55</rating>
+    <desc>Boxing shows a top-down view of two boxers, one white and one black. When close enough, a boxer can hit his opponent with a punch (executed by pressing the fire button on the Atari joystick). This causes his opponent to reel back slightly. Long punches score one point, while closer punches (power punches, from the manual) score two. There are no knockdowns or rounds. A match is completed either when one player lands 100 punches (a &quot;knockout&quot;) or two minutes have elapsed (a &quot;decision&quot;). In the case of a decision, the player with the most landed punches is the winner. Ties are possible.
+While the gameplay is simple, there are subtleties, such as getting an opponent on the &quot;ropes&quot; and &quot;juggling&quot; him back and forth between alternate punches.</desc>
+    <releasedate>19800101T000000</releasedate>
+    <developer>Activision</developer>
+    <publisher>Activision</publisher>
+    <genre>Sports</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Brain Games.bin</path>
+    <name>Brain Games</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Brain Games.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Brain Games.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Brain Games.mp4</video>
+    <rating>0.3</rating>
+    <desc>In Brain Games one or two players attempt to earn as many points as possible by solving various puzzles presented by the computer. There are six different puzzles included, which are:
+
+Touch Me: The computer will play a sequence of tones. Each button on the controller represents a different tone, and by pressing the correct button you need to recreate the same sequence.
+
+Count Me: The computer will display a sequence of numbers. Using the controller, you need to press the numbered buttons in the same order the computer displayed them.
+
+Picture Me: The computer will display a series of symbols. It will then scramble the order they are displayed in, and you need to reorder the symbols back into their original configuration.
+
+Find Me: The computer will display a series of objects on the screen, and you need to select the object which is dissimilar from the others. Your score is based on how fast you can successfully do this.
+
+Add Me: The computer will display a list of numbers. You need to enter in the sum of the numbers before the timer runs out.
+
+Play Me: This game allows you to play your own songs in free form mode; each button on the controller represents a musical note. Both controllers can be used for a duet, and several example songs are included in the instruction manual.</desc>
+    <releasedate>19780101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Educational</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Breakout.bin</path>
+    <name>Breakout</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Breakout.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Breakout.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Breakout.mp4</video>
+    <rating>0.6</rating>
+    <desc>In Breakout, there is a wall of bricks along the top of the screen and your goal is to destroy the entire wall one brick at a time! To do this, you control a paddle at the bottom of the screen which is used to reflect a bouncing ball into the bricks. When the ball hits a brick, it will destroy it. You start with five balls, and the game ends when all five fall off the bottom of the screen. Also included are several game variations, including breakthru (the ball will go straight through bricks instead of bouncing back), timed breakout (you have a time limit to gain as many points as you can), and invisible breakout (the bricks are only visible for a short while after one of them is hit).  Other variations allow you to catch the ball or control the direction of the ball.</desc>
+    <releasedate>19780101T000000</releasedate>
+    <developer>Sears</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players>4</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Canyon Bomber.bin</path>
+    <name>Canyon Bomber</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Canyon Bomber.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Canyon Bomber.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Canyon Bomber.mp4</video>
+    <rating>0.35</rating>
+    <desc>Two aircraft (yours and your opponent&apos;s) fly over a canyon filled with layers of colorful bricks, a la Breakout. Using the fire button on your paddle controller, you earn points by dropping bombs into the canyon and destroying as many blocks as possible. The player with the highest score at the end of the game wins.
+
+This game is extremely limited in that it is played using only the paddle controller&apos;s fire button. You do not control the movement of the planes and helicopters, but rather you must time your shots to do the most damage.
+
+The cartridge includes a secondary variation titled &quot;Sea Bomber&quot; that is a little more interactive. In this game, you deploy bombs onto seafaring ships, but this time you can use the paddle controller&apos;s knob to determine the depth of the bombs.</desc>
+    <releasedate>19780101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Casino.bin</path>
+    <name>Casino</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Casino.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Casino.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Casino.mp4</video>
+    <rating>0.3</rating>
+    <desc>This is three card games.
+
+Blackjack
+In game one, you play Blackjack with one or two players and allows for splitting. Game two is also Blackjack but is for one to four players and does not allow splitting. The computer is always the dealer. You place bets by rotating the controller then pressing the button.
+
+Difficulty switches
+Left switch:
+If set to A=computer will shuffle after 34 cards are dealt
+If set to B=computer will shuffle after each hand.
+Right switch:
+Set to A=dealer stays on 17 or better
+Set to B=dealer stays on 18 or better and on a hard 17. Player wins if you take the maximum number of hits without busting (Game 1: 3 or 8 hits; Game 2: 3 hits).
+
+Five-card stud poker
+Game three is five-card stud poker for one to four players.  The computer is always the dealer. It will deal you and it a five-card hand. Before the first card is dealt and after the second, third, fourth and fifth cards are dealt, players must place bets or fold. Betting is done the same as in games one and two.
+
+Difficulty switches
+Left switch:
+If set to A=dealer&apos;s first card is dealt face down.
+If set to B=All dealer&apos;s cards are dealt face up
+Right switch:
+If set to A=player&apos;s first card is dealt face down.
+If set to B=All player&apos;s cards are dealt face up
+
+Poker Solitaire
+Game four is a one player game called Poker Solitaire. The object is to place cards on the screen to create the twelve best poker hads in five rows, five columns and two diagonals. You turn the controller to select a spot to place a card and press the button to place it.
+
+Difficulty switches:
+The difficulty switches do not affect Poker Solitaire.
+
+Scoring:
+Royal flush=500 points
+Straight flush=300 points
+Four of a kind=160 points
+Straight=120 points
+Full house=100 points
+Three of a kind=60 points
+Flush=50 points
+Two pair=30 points
+Pair=10 points
+No other combinations will score points.
+
+The highest possible points are 3340.</desc>
+    <releasedate>19780101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Strategy</genre>
+    <players>4</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Centipede.bin</path>
+    <name>Centipede</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Centipede.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Centipede.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Centipede.mp4</video>
+    <rating>0.7</rating>
+    <desc>In Centipede, the player is trapped in the Enchanted Forest. Armed with only a magic wand to ward off the forest&apos;s insect denizens, all of which apparently are attacking in the player in continuous waves. 
+
+The player must use the magic wand to shoot sparks at approaching insects to score points by pressing the controller button. Holding down the controller button will set the wand to rapid fire shots. If the player is bitten by an insect, the player will be temporarily paralyzed and lose one of the three starting magic wands. 
+
+Insect Opponents and Mushrooms
+All enemy insects have a distinctive sound before attacking, which may help the player identify which insect is attacking. Enemies and objects in the game are as the following:
+
+1. The Centipede
+The Centipede will attack in 12 waves. In the first wave, the Centipede will have a head attached to 11 body segments. In the second wave, the Centipede will have a head attached to 10 body segments, in addition to a detached head. The third wave will have the Centipede with an attached head, 9 body segments, plus two detached heads. These body segments will transform into heads and continue to do so until Wave 12. In the last wave, the Centipede will have 12 detached heads, independently attacking the player. Centipede heads are worth more points than body segments.
+
+Attacks from the Centipede will come from the top of the screen, moving downward. If a spark hits any part of the Centipede, that particular body segment will transform into a mushroom, while the body segment behind it will become the new Centipede head. When the Centipede is destroyed, it will briefly disappear and re-appear from the top of the screen again.
+
+The Spider
+The Spider will attempt to distract the player from attacking the Centipede. It will destroy any mushroom it touches. Spiders will score more points if it is hit in closer distances.
+
+The Flea
+The Flea will appear if the player has destroyed most of the existing mushrooms. It will drop down creating a new batch of mushrooms where it falls. The Flea will disappear after two hits. After the first hit, the Flea will drop down much faster.
+
+The Scorpion
+The Scorpion will appear in the third wave. It moves slowly but will pick up speed, moving faster. While doing so, it will poison any mushroom it touches.
+
+Mushrooms
+Mushrooms fill the Enchanted Forest and may act as obstacles or cover for the player, with added effects to enemy insects. It takes for shots to complete destroy a mushro</desc>
+    <releasedate>19820101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players>1</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Championship Soccer.bin</path>
+    <name>Championship Soccer</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Championship Soccer.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Championship Soccer.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Championship Soccer.mp4</video>
+    <rating>0.65</rating>
+    <desc>PelÃ©&apos;s Soccer is an Atari 2600 game based on the famous football (soccer) player PelÃ©, and published in 1981.
+
+It features basic graphics, ball handing and goal keeping techniques using the Atari joystick. Each team has one forward, two defensemen, and a goaltender on the field at all times. The player&apos;s goaltender is always controlled by the computer unless he saves a shot. Each game consists of two halves of various time lengths (depending on the game settings being used). All the forwards and backs run in their proper formation.
+There are 54 different game variations (27 single-player and 27 multiplayer) that allow for different speeds, game lengths, and goal sizes.</desc>
+    <releasedate>19800101T000000</releasedate>
+    <developer>Sears</developer>
+    <publisher>Atari</publisher>
+    <genre>Action, Sports</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Circus Atari.bin</path>
+    <name>Circus Atari</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Circus Atari.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Circus Atari.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Circus Atari.mp4</video>
+    <rating />
+    <desc>Pop the balloons and score points. A wall of red, blue and white balloons will appear at the top of the screen. You must pop balloons by catching a clown on the teeter-totter and bouncing him up to the balloons. Use the controller to move the teeter-totter across the screen to catch the clowns. Each time a clown pops a balloon, the balloon will disappear and you score points. Each player receives five clowns or turns. If you fail to catch a clown on the teeter-totter he will crash and disappear from the playfield. Press the controller button and another clown will bounce off the trampoline from the right or left corner of the playfield. After five clowns have crashed the game is over. The clowns may land on any point on the teeter-totter except where the other clown is sitting, which causes them to crash.</desc>
+    <releasedate>19800101T000000</releasedate>
+    <developer>Exidy,Inc.</developer>
+    <publisher>Atari</publisher>
+    <genre>Adventure</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Codebreaker.bin</path>
+    <name>Codebreaker</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Codebreaker.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Codebreaker.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Codebreaker.mp4</video>
+    <rating>0.4</rating>
+    <desc>In Codebreaker your goal is to guess a 3 or 4 digit secret code which is generated by either the computer or another player. Depending on the difficulty setting, the player has either 8 or 12 guesses to figure out the code by entering in values with the keyboard controller. After each guess, the computer analyzes your input and displays results which indicate if you have a correct digit in the correct position, a correct digit in the wrong position, or no correct digits at all. Points are scored based on how many turns it takes to correctly identify the code. A second game variation called Nim is also included. In this game, two players take turns removing items from a stack. On each turn, a player must take at least one item from a stack, and the player who removes the last item from the screen wins. You can have the computer set up the stacks automatically or set them up manually, and a variation is included where the player who removes the last item from the screen loses rather than wins.
+</desc>
+    <releasedate>19780101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Strategy</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Combat.bin</path>
+    <name>Combat</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Combat.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Combat.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Combat.mp4</video>
+    <rating>0.6</rating>
+    <desc>Combat is an early video game by Atari for the Atari 2600. It was released as one of the nine launch titles for the system in October 1977, and was included in the box with the system from its introduction until 1982. 
+
+Combat boasted having 27 games in one, which were all variations on the tank, biplane, and jet gameplay.</desc>
+    <releasedate>19770101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Combat Two.a26</path>
+    <name>Combat Two</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Combat Two.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Combat Two.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Combat Two.mp4</video>
+    <rating />
+    <desc>The year is 2037. Nations no longer fight monster wars, killing millions. Instead, two combatants enter an arena and fight for their countries honor.
+
+This is a sequel to the 1977 game Combat however, there are no planes, just tanks and missiles. Each player starts in a base in a corner, one in the upper left, the other in the lower right. You must seek out your opponent and shoot them three times to destroy their tank. If they are under trees or, in another game variation, behind walls, you must shoot the trees/walls out of the way first to reach them. Each player has three tanks. The winner is the last one standing.
+
+If you are still in your base, you can press the button to fire a homing missile that will seek out you opponent. When the homing missile hits, it counts as two shots. Missiles must reload between shots and the reloading time is several seconds. If a tank is not hit for several seconds, the &apos;crew&apos; will affect repairs.
+
+There are game variations for trees, which you can drive but not shoot through, walls, which you can neither drive nor shoot through   and versions where you can place the trees/walls where you would like them to be.</desc>
+    <releasedate>19820101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Crystal Castles.bin</path>
+    <name>Crystal Castles</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Crystal Castles.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Crystal Castles.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Crystal Castles.mp4</video>
+    <rating>0.65</rating>
+    <desc>Bentley Bear is trapped in the Crystal Castles! To get out, he will need to collect all of the gems located throughout the castle. The game is played with an isometric view of the multi platformed castle. When Bentley collects all of the gems on the current castle, he will move on to the next, more difficult castle. Wandering throughout the castles are a wide variety of dangerous creatures, which Bentley should avoid. From time to time, a magic hat will appear. If Bentley collects the hat, he will temporarily be invincible to the castles inhabitants.</desc>
+    <releasedate>19840101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players>1</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Dark Chambers.bin</path>
+    <name>Dark Chambers</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Dark Chambers.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Dark Chambers.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Dark Chambers.mp4</video>
+    <rating>0.7</rating>
+    <desc>Dark Chambers is an arcade action game similar to Gauntlet. You are an explorer in an underground maze; your goal is to survive the 26 different levels and collect as many of the hidden treasures as you can. Hidden somewhere in each of the levels is an exit which will take you on to the next level. Trying to stop you from completing your quest are a wide variety of creatures, including zombies, wraiths, skeletons, wizards, and the grim reaper. Each of the creatures in the game has a different strength; when you shoot a creature, it will transform into the next weaker creature. Eventually a creature will become the weakest one (a zombie) at which point it can be destroyed. In addition to the creatures and treasures, other items that can be found in the maze are keys (to open doors), potions (to restore health), poison (drains health), guns (increases your firing rate), traps, shields, and bombs. The game is played from an overhead point of view, and is for one player or two players simultaneously.</desc>
+    <releasedate>19880101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Demons to Diamonds.bin</path>
+    <name>Demons to Diamonds</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Demons to Diamonds.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Demons to Diamonds.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Demons to Diamonds.mp4</video>
+    <rating>0.5</rating>
+    <desc>In Demons to Diamonds, you control a laser zapper which moves horizontally at either the top or the bottom of the screen. Your goal is to earn as many points as possible by shooting objects in the center of the screen. Wandering back and forth in the middle are demons which can be one of two colors. If you shoot a demon that is the same color as your zapper, it will turn into a diamond. Shooting the diamond before it disappears will earn you bonus points. If you shoot a demon of the opposite color, it will instead turn into a skull which will rapidly fire at your zapper. You begin the game with five zappers, and the game ends when all five have been destroyed by skulls. The game can be played by one or two players, and several game variations are included to set the level of difficulty.</desc>
+    <releasedate>19820101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Race, Driving, Action</genre>
+    <players>2</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Desert Falcon.bin</path>
+    <name>Desert Falcon</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Desert Falcon.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Desert Falcon.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Desert Falcon.mp4</video>
+    <rating>0.6</rating>
+    <desc>Desert Falcon is an arcade style shooter. Many of the Pharaoh&apos;s great treasures are lost throughout the desert, and your goal is to steal as many as you can to earn points. The game features a scrolling, isometric point of view as you control your falcon through the various desert landscapes. The treasures you are after are guarded of course. Many desert creatures including vultures, warriors, flying fish, sphinxes and more will all attempt to stop you from succeeding in your task. Also, at the end of each level you will need to face a large, howling sphinx before you can continue on. Your falcon isn&apos;t completely unarmed, and has the ability to fire darts which can be used to destroy the assorted enemies and the sphinx. In the sand, you will occasionally come across some hieroglyphs. Several different superpowers can be gained by landing and hopping over three of these hieroglyphs. Depending on which hieroglyphs are collected, you may become invincible, warp to the end of the level, earn free points, trick enemies into attacking a decoy instead of you, or even get an air bomb which destroys all airborne enemies.</desc>
+    <releasedate>19870101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players>2</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Dodge &apos;Em.bin</path>
+    <name>Dodge &apos;Em</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Dodge &apos;Em.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Dodge &apos;Em.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Dodge &apos;Em.mp4</video>
+    <rating>0.7</rating>
+    <desc>You control a race car on a four lane track, and your goal is to collect all of the dots in order to earn points and advance to the next level! The race track is broken up into four quadrants; your racecar must remain in the lane it is in except where there is a break in the lanes between quadrants. Trying to stop you is a second car which travels in the opposite direction. This car will always be trying to get into the same lane as you, causing a crash, so you need to make sure you switch to any lane it isn&apos;t in! To help out, your racecar has the ability to travel at a fast or slow speed. You begin the game with three racecars, and the game ends when all three cars have crashed. A two player game variation is also available where one player controls a car trying to collect the dots, and the second player controls the crash car trying to stop the first player.</desc>
+    <releasedate>19800101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Race, Driving</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Double Dunk.bin</path>
+    <name>Double Dunk</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Double Dunk.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Double Dunk.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Double Dunk.mp4</video>
+    <rating />
+    <desc>Play a fast paced two-on-two game of half court basket ball. Using only half the court means you need to be more careful not to lose the ball, or to miss easy shots when an opponent is close. With multiple game styles and possible plays each game is something different. 3-point shots and fouls can be toggled on or off. Also, you have the option to change the colors of each team&apos;s uniforms.</desc>
+    <releasedate>19890101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Sports</genre>
+    <players>2</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Fatal Run.bin</path>
+    <name>Fatal Run</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Fatal Run.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Fatal Run.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Fatal Run.mp4</video>
+    <rating>0.45</rating>
+    <desc>In this post-apocalyptic driving/racing game you must travel to various towns delivering medicine, while on your way to a missile base which houses a rocket that can save the world.
+ 
+While driving through the 32 levels, you&apos;ll meet countless enemies who want to stop you from achieving your goal. Your car boasts many weapons to help you out, including dynamite, rockets, oil slicks, smoke screens, and machine guns. You can also upgrade your vehicle within the city shops. Upgrading your gas tank provides better mileage while upgrading your bumper protects you during collisions.
+A password feature let&apos;s you continue where you left off.</desc>
+    <releasedate>19900101T000000</releasedate>
+    <developer>Course</developer>
+    <publisher>Atari</publisher>
+    <genre>Race, Driving</genre>
+    <players>1</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Flag Capture.bin</path>
+    <name>Flag Capture</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Flag Capture.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Flag Capture.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Flag Capture.mp4</video>
+    <rating>0.4</rating>
+    <desc>Flag Capture is an action/strategy game for one or two players. Your goal is to locate a flag hidden somewhere on a 9x7 grid. Using the joystick you can move your explorer around the grid; on any square you can press the button to see if the flag is located in that square, or if not to receive a clue as to the flags location. If the square doesn&apos;t contain the flag, one of several items may appear: an arrow indicating what direction the flag is, a number indicating how many squares away the flag is, or a bomb which will cause you to have to start again. In the one player game your goal is to locate as many flags as possible in the 75 second time limit. There are several varieties of two players games: in free-for-all, both players can move around the grid simultaneously and whomever finds the flag first scores a point. In the other two player games, players take turns moving around the grid. Several skill levels are available which control the players moving speed, allow the flag to be stationary or move, or add an invisible wall around the playfield.</desc>
+    <releasedate>19780101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Strategy</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Football.bin</path>
+    <name>Football</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Football.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Football.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Football.mp4</video>
+    <rating>0.3</rating>
+    <desc>Football is a football game for two players. The game is played from a top down point of view of the field and features two skill levels and three game variations. Using the joystick you can choose from one of five different offensive or defensive plays. In the first game variation, after selecting a play you then control the players on the field. In the second game, you have the option of controller your players after a play is selected or allowing the computer to control the players. The third game has the computer controlling the players at all times and you only need to select the plays you wish it to execute  and indicate when you wish to punt or pass the ball. In all of the game variations the timer begins at 5 minutes, and is active only during plays. Of course, the team with the most points when the timer runs out wins!</desc>
+    <releasedate>19780101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Sports</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Frog Pond.bin</path>
+    <name>Frog Pond</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Frog Pond.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Frog Pond.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Frog Pond.mp4</video>
+    <rating />
+    <desc>The history behind Frog Pond is a little hazy, it&apos;s either a victim of bad timing or of management/programmer dispute.  The premise behind Frog pond is simple, you control a frog who must try and catch various insects with its tongue in a race to see how many points you can score.  The game subject and total lack of difficulty almost guarantee that it was to going to be aimed at small children, much like Nick Tuner&apos;s previous game Demons to Diamonds.  The problem with children&apos;s games is that they&apos;re really not alot of fun for adults to play, and Frog Pond is no exception. 
+
+If Frog Pond looks familiar to you it&apos;s probably because it&apos;s an almost exact copy of Mattel&apos;s Frog Bog, which was released for the 2600 as Frogs and Flies under the M-Network label.  According to Nick Turner, this is a completely coincidence and neither company had any idea what the other had been working on.  According to Nick he wanted to add more options and gameplay to the game, expanding it to 8K.  Atari wasn&apos;t keen on spending the extra money on more memory for a children&apos;s game, and refused to allocate the extra 4K.  Frog Pond was shelved and Nick left Atari shortly afterwards.
+
+As you might expect the gameplay is very simple.  Every time you press the fire button, your frog jumps and shoots out his tongue.  If your tongue hits an insect you score points and your frog gets a pleasant snack.  The are several different insects to catch, which are worth varying amounts of points.
+
+While the larger insects are slightly faster than the smaller ones, they still don&apos;t put up much of fight.  However if you take too long to grab your bug he&apos;ll fly away.  If you miss six insects the sun sets and the games ends. </desc>
+    <releasedate>19820101T000000</releasedate>
+    <developer />
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players />
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Frogs And Flies.bin</path>
+    <name>Frogs And Flies</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Frogs And Flies.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Frogs And Flies.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Frogs And Flies.mp4</video>
+    <rating />
+    <desc>The object of the game is to make frogs catch flies. Points are won by manipulating a frog so that he jumps off a lily pad and scoops up flying insects with a flashing tongue. Jump him too late and you&apos;ll miss. Jump him too far and he&apos;ll land in the pond. you&apos;ll have to wait for him to swim back before trying again. Day &amp; night action. Catch more flies than an opponent. Or beat your own top score!</desc>
+    <releasedate>19820101T000000</releasedate>
+    <developer>Mattel Electronics</developer>
+    <publisher>QuelleSoft</publisher>
+    <genre>Action</genre>
+    <players>2</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Golf.bin</path>
+    <name>Golf</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Golf.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Golf.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Golf.mp4</video>
+    <rating>0.5</rating>
+    <desc>Golf features a nine hole, par 36 course which can be played by one or two players. The game is played from an overhead view of the course, which is complete with sand traps, water hazards, trees, and rough. The player doesn&apos;t have the ability to choose different clubs, so the distance the ball travels is controlled by how big of a backswing is taken. The direction is controlled by the location of the player in relation to the ball. When the player finally reaches the green, the view switches to a closeup of the green for putting. Two different skill levels are available which control the size of the cup and the amount of power lost in the rough or sand.</desc>
+    <releasedate>19800101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Sports</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Gravitar.bin</path>
+    <name>Gravitar</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Gravitar.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Gravitar.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Gravitar.mp4</video>
+    <rating>0.7</rating>
+    <desc>The evil being called Gravitar is out attempting to destroy the universe! With each galaxy he conquers he leaves behind extreme gravitational forces, a powerful, explosive reactor and deadly bunkers. Your job is to stop Gravitar by taking back the twelve solar systems located in four galaxies that are under his control! In each solar system there is a sun, an alien reactor base, and three to four planets. To free the solar system, you have two choices; either visit all of the planets and destroy all enemy bunkers, or activate the reactor at the core of the alien base and escape before it explodes. On each of the planets and the alien base, there will be strong gravitational forces to deal with; make sure you keep your ship in space, since a crash into the ragged landscape will be fatal! After a galaxy has been freed, you then automatically move on to the next galaxy which will be even more difficult to save. The game includes five different skill levels which vary in difficulty by supplying different amounts of ships to begin the game as well as different strengths of gravity.</desc>
+    <releasedate>19820101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players>1</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Hangman.bin</path>
+    <name>Hangman</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Hangman.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Hangman.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Hangman.mp4</video>
+    <rating>0.4</rating>
+    <desc>Hangman is an electronic version of the game hangman! Your goal is to figure out a word that the computer has generated by guessing one letter at a time. Guess a correct letter, and it will appear on the screen in the proper location, but if you guess a letter that isn&apos;t in the word then you are one step closer to being hung. Guess eleven incorrect letters, and the game is over. A point is earned each time a word is completed. Several difficulty settings are included which affect the number of letters in the words. The game can be played by one or two players, and in the two player version the words can optionally be created by one of the players instead of the computer.</desc>
+    <releasedate>19780101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Strategy</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Haunted House.bin</path>
+    <name>Haunted House</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Haunted House.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Haunted House.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Haunted House.mp4</video>
+    <rating>0.7</rating>
+    <desc>Hidden throughout a haunted mansion are three pieces of a magical urn, and your goal is to enter the mansion and retrieve all three before you lose your nine lives! The game is played from an overhead point of view where you see only your eyeballs as you explore the  four floors of the maze-like mansion. To make your mission even more difficult, there are various creatures wandering throughout. Tarantulas, giant vampire bats, and one fast moving ghost will all cause you to lose a life if encountered too closely. As a defense against the creatures, a magical scepter can be found in the mansion which will make you immune to its inhabitants.
+
+The mansion contains many doors, some of which may be locked; to explore all the rooms, you will first need to find the master key which is hidden somewhere. The mansion is very dark, and you will not be able to see any of the objects in it (and in more difficult game variations, you can&apos;t see the walls either). To reveal objects and the mansion walls, you need to light one of your unlimited supply of matches which will light up a small area around you. Don&apos;t be surprised if a swift wind or passing creature blow out your match, though!
+
+You are only allowed to carry one object at a time so you will need to create a strategy for exploring the mansion; to unlock a door or move a piece of the urn, you will need to put down the scepter so be careful! You win the game when all three pieces of the urn are assembled and you make it out of the mansion. The game keeps track of how many matches you have used on your mission, and the fewer matches the better the score!</desc>
+    <releasedate>19810101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Adventure</genre>
+    <players>1</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Holey Moley.bin</path>
+    <name>Holey Moley</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Holey Moley.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Holey Moley.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Holey Moley.mp4</video>
+    <rating />
+    <desc>It&apos;s video Whack-A-Mole!
+
+Each round consists of twenty-five moles. When a mole pops out of his hole, press the corresponding button on the Kid&apos;s Controller to whack it. The faster you hit him, the more points you&apos;ll get. If the King Mole pops up, whack him for even higher points. Beware of the acorn. If it pops up, don&apos;t whack it as it will cost you points. You must score at least three hundred points by the time the mole count reaches zero. If you reach or exceed three hundred points in one round, any points beyond three hundred will be added to your score as a bonus. If you fail to score three hundred points in one round, the game is over.</desc>
+    <releasedate>20020810T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari2600.com</publisher>
+    <genre>Action</genre>
+    <players>1</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Home Run.bin</path>
+    <name>Home Run</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Home Run.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Home Run.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Home Run.mp4</video>
+    <rating>0.3</rating>
+    <desc>The game can be played against the computer or with another player. You have the option to have 1, 2 or 3 players in the field. As a pitcher, you use the joystick to throw the ball and to control its speed and curve. After the ball is hit, your control all your men (they all move together since they follow the orders of a single joystick) in the field to catch the ball. As a batter, you can control the position of the baseball bat with the joystick. If you consider that your runners would make it to the next base, you can press the controller button so they stop at their current base. 
+
+The rest of the rules are basically like real baseball. Each team has nine innings in a game. You are out after three strikes, your get to first base after four balls (balls that do not fly over Home) or if the pitcher hits you with a ball. In the field, you can put out a batter by catching his ball, then another runner by reaching his next base before him or simply by touching him between bases, thus completing a double play. The only way to accomplish a home run is by hitting the ball over second base without having it caught by the field players. You score a point for each runner that reaches Home base after each of the first three.</desc>
+    <releasedate>19780101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Sports</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Human Cannonball.bin</path>
+    <name>Human Cannonball</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Human Cannonball.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Human Cannonball.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Human Cannonball.mp4</video>
+    <rating>0.4</rating>
+    <desc>In Human Cannonball your goal is to fire a man out of a cannon and have him land in a bucket of water. To do this you need to adjust your cannon so the position, angle, and firing speed are just right. You score a point for each successful landing, and the game ends after seven attempts. Several game variations are included which allow you to have the position, angle and speed all set by the player, or have one or more of these in a fixed position, or have one or more of these randomly set by the computer. If you wish to make the game more challenging, you can also set a moving wall in front of the bucket which will make your timing more critical.</desc>
+    <releasedate>19780101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Strategy</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Hunt &amp; Score.bin</path>
+    <name>Hunt &amp; Score</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Hunt &amp; Score.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Hunt &amp; Score.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Hunt &amp; Score.mp4</video>
+    <rating>0.3</rating>
+    <desc>Hunt &amp; Score is similar to the game Memory. The player is presented with a numbered grid; behind each grid section is a picture. On each turn, the player chooses two grid sections in an attempt to find two matching pictures. Points are earned for finding matching pictures, and the player with the most points at the end wins. Several game options include a 16 or 30 square game grid, the ability to handicap one of the players, and the ability to enable or disable wild cards.</desc>
+    <releasedate>19780101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Indy 500.bin</path>
+    <name>Indy 500</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Indy 500.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Indy 500.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Indy 500.mp4</video>
+    <rating>0.5</rating>
+    <desc>Indy 500 is a racing game played from a top down point of view. In the one player game, your goal is to complete as many laps as you can in 60 seconds. In the two player game, the first player to complete 25 laps wins! Included are several different race tracks, two difficulty levels, and additional game variations called ice race, tag, and crash &apos;n score. In ice race, the track is icy causing your car to slide often and making it difficulty to steer.  In tag, one player is &quot;it&quot; and needs to tag the other player. For each second you race without being tagged, a point is earned. Lastly, in crash &apos;n score the goal is to crash into targets which appear on the race track. The first player to crash into the target earns a point, and then a new target will appear elsewhere on the track.</desc>
+    <releasedate>19770101T000000</releasedate>
+    <developer>Sears</developer>
+    <publisher>Atari</publisher>
+    <genre>Race, Driving</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Maze Craze.bin</path>
+    <name>Maze Craze</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Maze Craze.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Maze Craze.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Maze Craze.mp4</video>
+    <rating>0.7</rating>
+    <desc>In Maze Craze, your goal is to be the first of two players to make it out of a maze! Each player controls a cop that starts on the left, and the first player to make it out the exit on the right wins. The game also includes of variety of options. The maze can be completely visible, completely invisible, or have just a few parts invisible. With invisible mazes you can optionally have the computer provide a sneak peak at the complete maze periodically. To make your task more challenging, one to five robbers may also be placed in the maze. If you are caught by one of the robbers, you will momentarily be stunned giving your opponent an advantage. You can also give your cop the ability to set up a blockade to confuse your opponent. This will look like a regular wall, however you can walk straight through it. The games speed can also be adjusted, from calculatingly slow to extremely fast.</desc>
+    <releasedate>19800101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Meltdown.bin</path>
+    <name>Meltdown</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Meltdown.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Meltdown.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Meltdown.mp4</video>
+    <rating />
+    <desc>Not to be confused with the Atari game by the same name (which was released for the 7800), Meltdown was one of the final 20th Century Fox titles to be developed but was never released. Although Meltdown was displayed at the 1983 CES show, it was never seen again after the show closed.
+Meltdown is basically a game of hide and seek that place on a 4x4 grid of atoms.  At the start of each round you will see a rogue quark move about the reactor agitating the atoms.  Each time the quark touches one of atoms it will strip off some of the electrons and atom will shrink.  Once an atom has lost all it&apos;s electrons it will become unstable, if all the atoms destabilize the reactor will blow!
+As the only remaining scientist, it is up to you to destroy the quarks and cool down the reactor.   To accomplish this you will have to make use of the only two tools at your disposal: an atomic stabilizer and Cadmium rods.  When the quark jumps to an atom you must line up the stabilizer (on the X axis), line up the Cadmium tube (on the Y axis), and quickly insert a Cadmium rod by pressing the fire button.  However as soon as you destroy one quark another one appears to take its place, so be vigilant and don&apos;t let your guard down for a moment.
+The core temperature is represented by a bar displayed at the top of the screen.  As the core cools down, the bar will grow longer, once the bar reaches the center of the screen the reactor will come back under control and the reactor will be saved. Each time you successfully save the reactor the action will get more intense; the number of quarks will multiply, they will begin to move faster, and the electrons will strip off more easily.
+Meltdown is an simple, yet amazingly addictive game.  It&apos;s interesting graphical style and progressive difficulty ramping makes Meltdown a game that&apos;s hard to put down.</desc>
+    <releasedate>19830101T000000</releasedate>
+    <developer>Videa</developer>
+    <publisher>20th Century Fox</publisher>
+    <genre>Puzzle-Game</genre>
+    <players />
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Millipede.bin</path>
+    <name>Millipede</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Millipede.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Millipede.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Millipede.mp4</video>
+    <rating>0.8</rating>
+    <desc>Millipedes, cousins of the Centipede, are all over the garden. This will ruin anything trying to grow there unless they are stopped. But there are other insects as well; spiders, bees, dragonflies and earwigs. Nature is dangerous. Luckily, there&apos;s a bug zapper that can shoot arrows at these insects and destroy them.
+
+Millipede is the sequel to Centipede, and features similar gameplay, but with a new swarm of insects! The goal is to destroy the multi-segmented millipede as it traverses its way through the mushroom forest towards the bottom of the screen. When all millipede segments have been destroyed, the player will progress to the next, more difficult level. Millipedes and other creatures are all worth a different amount of points. Occasionally dynamite will appear on the screen, which will explode if shot by the bug zapper. With a well timed shot, numerous millipede segments (and other insects as well) can be taken out as they pass by.</desc>
+    <releasedate>19840101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players>1</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Mind Maze.bin</path>
+    <name>Mind Maze</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Mind Maze.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Mind Maze.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Mind Maze.mp4</video>
+    <rating />
+    <desc>Mind Maze is played somewhat like those old mind reading experiments where a scientist would hold up a card and ask a person to tell him what was on the other side. Depending on the game selected, two to four cards appear on the screen each round. The player then must try and guess the &quot;correct&quot; card by highlighting it (using the joystick) and pressing the fire button.</desc>
+    <releasedate>19840101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Educational</genre>
+    <players />
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Miniature Golf.bin</path>
+    <name>Miniature Golf</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Miniature Golf.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Miniature Golf.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Miniature Golf.mp4</video>
+    <rating>0.4</rating>
+    <desc>This is a computer game simulation of a Miniature Golf course. It attempts to refine your sense of timing and your perceptiveness in judging distance.  As in a traditional miniature golf course, a variety of obstacles are placed in your path to the &quot;cup.&quot;  Depending on the game that is selected, the course can be played solo, or a two player competition can be initiated.
+
+Rather than a full 18 holes, this Miniature Golf variation has a nine-hole half-course.  Your goal is clear: taking the various obstacles into account, hit the ball through the course and complete each hole by knocking the ball into the cup.  The number of attempts you make for a single hole is tallied as strokes.  While total strokes are unlimited, each hole still has a specific par assigned to it.  So ideally, you should make it your goal to not exceed the par assigned to each hole.
+
+Using the standard joystick controller, you can position the club to adjust the strength and angle of how the ball is hit. Remember that no matter how many strokes have accrued, it is necessary to get the ball in the cup before the game continues on to the next hole.</desc>
+    <releasedate>19790101T000000</releasedate>
+    <developer>Sears</developer>
+    <publisher>Atari</publisher>
+    <genre>Sports</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Missile Command.bin</path>
+    <name>Missile Command</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Missile Command.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Missile Command.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Missile Command.mp4</video>
+    <rating>0.75</rating>
+    <desc>Aliens from the planet of Krytol are attacking your cities!! As the commander of a missile base, it is your responsibility to defend them. A variety of enemy weapons and planes will be incoming trying to destroy the six cities at the bottom of the screen. You need to fire missiles to destroy the incoming weapons. If anything gets through, one of your cities could be destroyed. When all of the cities are gone, the game is over. On each level you have a limited amount of ammo, so make sure most (if not all) of your shots are accurate or you could run out of ammo and leave your cities at risk! As the levels progress, there are more and more enemy weapons to destroy which come in at an increasingly faster rate.</desc>
+    <releasedate>19810101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/MotoRodeo.bin</path>
+    <name>MotoRodeo</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/MotoRodeo.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/MotoRodeo.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/MotoRodeo.mp4</video>
+    <rating />
+    <desc>This is a monster truck race that features true split screen action on an Atari 2600.
+
+First, you move the joystick(s) up or down to select if this opponent will be a human player or computer, a blazer or a truck and whether it will have tires or trax. Tires allow you to go over obstacles easier, trax make you bounce higher. Then on the next screen, you select weather you are going to do a competition at hard, medium or easy or whether you are going to practice one of the obstacles in the game.
+
+Press the joystick button to accelerate. Move the joystick down to do a wheelie when on the ground. Move the joystick left and right when in the air to control your spin. Move the joystick left and right quickly to escape mud bogs. Press the joystick button and push forward to use a nitro burst if you collected them.
+
+Difficulty switches
+Only the left switch is used.
+ Set it to A for a scoring game in which the player with the most points at the end of the race wins.
+Set it to B for a timing race in which the first player across the finish line wins.
+
+Scoring
+If the difficulty switch is set to A, the scoring is as follows:
+Landing upright and flat from a jump=5 points
+Hit a wall=10 points
+Crush a car=20 points
+Bounce on truck tires on the platform=25 points
+Jump to a collapsed ramp=25 points
+Touching 50 on the screen=50 points
+Finish the race first=100 points</desc>
+    <releasedate>19900101T000000</releasedate>
+    <developer>Course</developer>
+    <publisher>Course</publisher>
+    <genre>Sports, Race, Driving</genre>
+    <players>2</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Night Driver.bin</path>
+    <name>Night Driver</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Night Driver.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Night Driver.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Night Driver.mp4</video>
+    <rating>0.6</rating>
+    <desc>Night Driver is an action racing game which takes place at night! Your goal is to score as many points as possible by racing through one of four different tracks. Points are scored by passing checkpoints located throughout the track. If your car crashes into the side of the road, oncoming cars, or any other obstacles, you will lose all of your speed and a lot of time! The game ends when the 90 second time limit is up. The four tracks you can choose from are beginner, pro, expert, and random (this track is different every time and can not be memorized like the other three). Several game options are included which allows you to select whether or not other cars will honk before entering the screen, and choose between a 90 second or infinite amount of time for a game.</desc>
+    <releasedate>19800101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action, Race, Driving</genre>
+    <players>1</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Off the Wall.bin</path>
+    <name>Off the Wall</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Off the Wall.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Off the Wall.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Off the Wall.mp4</video>
+    <rating />
+    <desc>Off The Wall is an arcade action game with Breakout style gameplay. You control Kung Fu Lu, whose mission is to destroy a mysterious, evil wall by reflecting a bouncing ball into the bricks that make up the wall. When the bricks are hit by the ball, they are destroyed. On the top of the screen is a mystical dragon which guards the wall. Each level can be completed by either destroying all of the bricks in the wall, or hitting the dragon six times with the ball. Once the first level is completed, a blackbird will also appear on screen just below the wall. The blackbird will deflect the ball, and tries to get in the way to make your mission more difficult. From time to time, a magic token will fall downward which gives you special powers if caught. These can make the ball magnetic and follow your player, give you a larger paddle, or make the ball explosive and take out larger chunks of bricks. You start the game at a skill level of Peasant, and advance in rank every time four waves of bricks are cleared. You lose a life every time the ball falls off the bottoms of the screen, and the game ends when you lose all five of your lives.</desc>
+    <releasedate>19890101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players>2</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Peek-A-Boo.bin</path>
+    <name>Peek-A-Boo</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Peek-A-Boo.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Peek-A-Boo.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Peek-A-Boo.mp4</video>
+    <rating />
+    <desc>According to Atari, Peek-A-Boo was to be a revolutionary new video activity based on the familiar concepts of Peek-a-Boo and Hide &apos;n&apos; Seek.  It was supposed to teach important concepts such as spatial orientation, direction, and memory that build a child&apos;s self-esteem and teach them to have fun on the 2600.nnSince Peek-A-Boo was intended for very young children the gameplay is very simple.  The main character of this game (a cat named Smart Seymour) moves in and out from behind a square.  Depending on the game selected the various elements of the game change slightly.  The square may be a single block, a rectangle, or four colored squares.  The cat may move far away from the square, or he may barely move half his body out.  The cat may move rapidly in and out from behind the square, or he may stay behind the square.  There are eight different types of games, each with a slightly different objective.nnBefore starting the game, the first thing you must do is turn the kids controller sideways to the left (so the top row read 3 6 9 #, middle row reads 2 5 8 0, and bottom row reads 1 4 7 *).nn-Game 1: Single BlocknnThis is the easiest of all the games.  All of the buttons work to move Seymour behind the block or out from behind it in various directions.nn-Game 2: Horizontal BarnnIn this game the top row of buttons (3 6 9 #) moves Seymour up, the bottom row (1 4 7 *) moves Seymour down, and the middle row (2 5 8 0) gives you an error sound.  As with all the other game variations, all of the buttons work to move Seymour behind the line.nn-Game 3: Vertical BarnnIn this game buttons 1 2 3 4 5 6 move Seymour to the left while buttons 7 8 9 * 0 # move him to the right.nn-Game 4: Single BlocknnIn this game buttons 6 and 9 move Seymour up, 4 and 7 move him down, 1 2 3 moves him left, and * 0 # moves him right.  Buttons 5 and 8 give the error sound.nn-Game 5: Four BlocksnnIn this game you have to press the right buttons depending on which block Seymour is behind.  Buttons 3 and 6 move him from behind the top left block, 9 and # move him from behind the top right block, 1 and 4 move him from behind the bottom left block, and 7 and * move him from behind bottom right block.  All of the middle buttons 2580 give the error sound.nn-Game 6: Four Colored BlocksnnIn this game the buttons are assigned different colors that correspond to the colored blocks.  Buttons 1 2 3 moves Seymour from behind the green block, 456 for the red block, 7 8 9 for the tan block, and 0 * # moves Se</desc>
+    <releasedate>19840101T000000</releasedate>
+    <developer />
+    <publisher>Atari</publisher>
+    <genre>Educational</genre>
+    <players />
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Quadrun.bin</path>
+    <name>Quadrun</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Quadrun.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Quadrun.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Quadrun.mp4</video>
+    <rating>0.8</rating>
+    <desc>Quadrun is an arcade style action game for one player. The planet of Quad has been invaded, and all of the &quot;Runts&quot; are imprisoned; your goal is to rescue them! The screen is broken up into four sectors (one on each edge of the screen), with the prison in the center. Your character is equipped with three phaser balls; on the screen you will see the captors running up and down vertically, and you need to hit them with a phaser ball. When hit, the captor will be destroyed and one of the Runts will be able to escape. The Runts will run back and forth horizontally, and you need to catch them before they run into the deadly wall at the edge of the screen. To make the game more challenging, you are only equipped with three phaser balls! This means after firing a phaser ball, you will need to quickly run around to the other side of the screen and catch it before it disappears. You will also lose a phaser ball if one of the captors collides with your character. Lose all three phaser balls, and the game is over. Also, there is a critter counter at the top of the screen; if you fail to destroy one of the captors or if one of the escaped Runts runs into a wall, the critter counter will decrease. If the critter counter runs out, the game ends.</desc>
+    <releasedate>19830101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players>1</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Radar Lock.bin</path>
+    <name>Radar Lock</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Radar Lock.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Radar Lock.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Radar Lock.mp4</video>
+    <rating>0.4</rating>
+    <desc>The safety of a nearby aircraft carrier is in your hands. You are the ace of a supersonic F-22, the latest, most powerful airborne weapon ever created. Below is the carrier. Above is the enemy. Your buddies are nowhere in sight and it is up to you to clear the skies of devilish interceptors, stealth fighters, and bombers. Your ship is equipped with guided missiles, machine guns, proximity missiles, and the latest ultra secret RADAR LOCK tracking system. Remember, that carrier crew is counting on you. Good luck, Ace!</desc>
+    <releasedate>19890101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players>1</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/RealSports Baseball.bin</path>
+    <name>RealSports Baseball</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/RealSports Baseball.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/RealSports Baseball.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/RealSports Baseball.mp4</video>
+    <rating>0.4</rating>
+    <desc>Baseball is an action game which can be played by two players or one player against the computer. The game allows you to bunt the ball or try for a homerun, steal bases, and throw several types of pitches from a fast ball to a curve ball. Several game variations are included which allow you to select whether the home or visiting team is at bat first, and whether or not a player can swing only at pitches that are a strike, or they can swing at any pitch.</desc>
+    <releasedate>19820101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Sports</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/RealSports Boxing.bin</path>
+    <name>RealSports Boxing</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/RealSports Boxing.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/RealSports Boxing.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/RealSports Boxing.mp4</video>
+    <rating>0.7</rating>
+    <desc>Released later in the life of Atari&apos;s industry-shaping 2600 console, RealSports Boxing puts the player in the role of an up-and-coming boxer. Enter the squared circle to face off against a friend or a computer-controlled opponent. Throw quick jabs and hard body blows until there&apos;s only one man left standing.
+
+Watch out for Lefty O&apos;Leary&apos;s brutal technique. Beware Jabbin&apos; Jack&apos;s lightning quickness. Players pummel their way up the ladder, each victory leading to a more challenging adversary, until their boxer makes it to the top. Proven pugilists can then defend the coveted championship against a slew of fierce contenders.</desc>
+    <releasedate>19870101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Sports</genre>
+    <players>2</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/RealSports Football.bin</path>
+    <name>RealSports Football</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/RealSports Football.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/RealSports Football.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/RealSports Football.mp4</video>
+    <rating>0.4</rating>
+    <desc>RealSports Football is a one or two-player football simulation played on a horizontal scrolling field, with five players on each team. As in real football, the goal is to march down a 100-yard field using a combination of passing and running plays. There are three ways to score: crossing the defensive team&apos;s goal line is a touchdown worth seven points, kicking the ball through the defense&apos;s goal post is a field goal worth three points, and tackling the ball carrier inside the end zone is a safety worth two points.</desc>
+    <releasedate>19820101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Sports</genre>
+    <players>2</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/RealSports Soccer.bin</path>
+    <name>RealSports Soccer</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/RealSports Soccer.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/RealSports Soccer.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/RealSports Soccer.mp4</video>
+    <rating>0.3</rating>
+    <desc>The game is played from an angled overhead point of view of the field which scrolls to follow the action. If your team has the ball, you control whichever player is currently dribbling the ball, otherwise you can control any one player at a time while the computer controls the rest of your team. Various time lengths can be selected for each game, you can kick the ball low, medium or high, and there are throw-ins, corner kicks, goal kicks. When playing against the computer several different skill levels are available.</desc>
+    <releasedate>19830101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Sports</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/RealSports Tennis.bin</path>
+    <name>RealSports Tennis</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/RealSports Tennis.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/RealSports Tennis.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/RealSports Tennis.mp4</video>
+    <rating>0.55</rating>
+    <desc>Realsports Tennis is a tennis game for two players or one player against the computer. The game follows standard tennis rules, and allows you to hit forehand or backhand shots to all areas of the court as well as serves and lobs. You can play a game of singles or doubles, and multiple skill levels are included.</desc>
+    <releasedate>19830101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Sports</genre>
+    <players>2</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/RealSports Volleyball.bin</path>
+    <name>RealSports Volleyball</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/RealSports Volleyball.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/RealSports Volleyball.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/RealSports Volleyball.mp4</video>
+    <rating />
+    <desc>Volleyball is an action game which can be played by one or two players. The game follows traditional volleyball rules; the first team to score 15 points wins! You control both players on the team, which have the ability to serve, set, spike, and block. There are several game variations included; two game difficulties and two player speeds.  In the easier version of the game, the ball will automatically be sent back over the net when hit. In the advanced version, the game also allows you to set the ball between teammates. In either version of the game with either one or two players, the speed at which the players run can be set to either fast or slow for an extra challenge or to handicap one team.</desc>
+    <releasedate>19820101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Sports</genre>
+    <players>2</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Saboteur.bin</path>
+    <name>Saboteur</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Saboteur.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Saboteur.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Saboteur.mp4</video>
+    <rating />
+    <desc>You are Hotot, a cybernetic life form from a serene planet in a distant galaxy. Unfortunately, even in a galaxy far far away not everything is as peaceful as it first seems, for Hotot has discovered an alien missile base hidden on his planet. Manned by strange blue aliens, these evil intruders are using your planet as a launching site for their deadly warhead which is posed to destroy the galaxy&apos;s power source. With the help of the birdlike Gorfons, you must destroy the warhead, and prevent the destruction of the galaxy! Good luck Hotot. You are the Saboteur.
+
+On the first screen, you are trying to prevent the Qotile construction robots and Yar slaves from completing a missile. You will be helped by the Gorfrons. While the Qotile construction robots and Yar slaves will build up the missile, the Gorfrons will steal pieces to lower it. Beware of the Master robot on the top catwalk as it will try to shoot you and the Gorfrons to prevent your interference. After you finish the Rocket Construction Site, it is off to Warhead Assembly.
+
+In Warhead Assembly, you must destroy the warhead parts on the conveyor belt. There is just one little problem; the conveyor belt is protected by a field. The good news is that the Master robot&apos;s energy is on the same frequency so what you do is shoot the Master robot and the shot will then head for the conveyor belt. Of course, the Master robot isn&apos;t just standing there, letting you bounce shots off him. He has released a security drone that bounces around the screen trying to hit you.Also, the Master robot will hurt you if you touch him. If you destroy the parts before time runs out, you will advance to a harder round. If not, you must destroy the warhead one-on-one.
+
+In the Warhead Showdown, you must destroy the warhead with a shot. Of course, the warhead isn&apos;t gonna stand for that as it has an impressive defense matrix that will try to hold you off. If you take to log to destroy the warhead, it will escape into space. Whether you destroy it or not, you will then return to the Rocket Construction Site at a harder level.</desc>
+    <releasedate>19830101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>AtariAge</publisher>
+    <genre>Action</genre>
+    <players>1</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Save Mary!.bin</path>
+    <name>Save Mary!</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Save Mary!.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Save Mary!.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Save Mary!.mp4</video>
+    <rating />
+    <desc>Save Mary! was one of those 2600 revival titles that should have been released but was ultimately lost when Atari closed its Atari 2600 operations in 1990.  Save Mary! may have been in development longer than any other Atari 2600 game (over two years according to some sources).  One reason for this was Atari management constantly making changes to an already complex game, but another reason for the long development cycle was that programmer Tod Frye (of Pac-Man fame) may only have been working part time for Atari at the time and was also working on another unreleased 2600 game Shooting Arcade.  No matter what the reasons were it&apos;s a shame Save Mary! never got released, as it&apos;s a fun and highly original game.
+The game title says it all, the goal of the game is to &quot;Save Mary!&quot;.  Apparently Mary is a rather stupid girl who has somehow got herself stuck in a canyon that&apos;s rapidly filling with water (don&apos;t you hate it when that happens?)  Using only a crane and several odd shaped blocks you must build a platform for Mary to climb onto and make it high enough so you can hoist her out with the crane.  However your task is made more difficult due to the shape of the blocks (otherwise it wouldn&apos;t be much of a game would it?).  Not all the blocks come in nice little squares, each level has its own unique set of blocks which require clever planning to successfully link them together into a platform for Mary.
+Further complicating things is that Mary appears to have started panicking and will run back and forth around the platform.  Remember that Mary is human (despite the gaping hole in her head!), and like most humans she doesn&apos;t take kindly to being squished with blocks (or having them swung into her).  Take special care when dropping blocks not to hit Mary or it&apos;s game over.  Also be sure to watch out for the low flying airplane that appears on the higher levels (yes I said Airplane).  If the plane hits your crane you will automatically drop the block you&apos;re carrying (possibly squishing Mary).
+Thankfully there are several power-ups to help you accomplish your task.  Power-ups appear on the cliff sides and require that you pick them up and drop them off at the top of the canyon to activate them.  These power-ups do a wide variety of things:
+
+The Plug - Stops the water from rising for a few seconds
+Stop Sign - Makes Mary stop hopping around like an idiot (very handy)
+Oil Can - Makes your crane move faster
+Gold Block - Makes Mary invincible to being squished by fallin</desc>
+    <releasedate>19890101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players>1</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Sea Battle.bin</path>
+    <name>Sea Battle</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Sea Battle.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Sea Battle.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Sea Battle.mp4</video>
+    <rating />
+    <desc>Sea Battle is a strategic game for two players only. Each player controls a fleet of ships including Submarines, Destroyers, and Battleships. The goal is to engage and sink enemy ships. The winner is the player who commands the troop transport ship into the opponent&apos;s harbor. There are two phases in Sea Battle; the strategy phase, and the combat phase. The strategy phase includes maneuvering your fleet into different strategic positions on the map, laying mines, and repair fleets. Opponents engage in ship-to-ship warfare in the combat phase, triggered by the ENGAGE button. Each of the different types of ships has there own strengths and weaknesses, such as weapon range and maneuverability.</desc>
+    <releasedate>19830101T000000</releasedate>
+    <developer>APh Technological Consulting</developer>
+    <publisher>M Network</publisher>
+    <genre>Strategy</genre>
+    <players>2</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Secret Quest.bin</path>
+    <name>Secret Quest</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Secret Quest.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Secret Quest.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Secret Quest.mp4</video>
+    <rating>0.8</rating>
+    <desc>It started with one station, then three, then eight. If something isn&apos;t done, the aliens will overrun Earth. It is up to you to destroy the stations by setting their self destructs.
+
+You move from room to room, fighting any enemies you encounter. When you beat an enemy, you get an energy pod or oxygen bottle. Fighting aliens depletes you energy and/or oxygen so kill quickly. You also use oxygen at the rate of one bottle per minute while exploring.
+
+Along the way, you will sometimes find sonic keys, and energy sword, sonic blaster or particle beam. Sonic keys are needed for certain doors you encounter in later stations.
+
+Once you set the self destruct code, a clock starts and you must make it to the teleporter before the time runs out. The game ends when you destroy all eight stations, run out of oxygen or do not get off a station before it self destructs. If you run out of energy, the game does not end but you will not be able to use any weapon so you can&apos;t kill monsters so you can&apos;t replenish oxygen. Hence, the game won&apos;t go long if you run out of energy.
+
+Weapon energy use and damage
+Energy sword=1 energy and 2 strength
+Sonic blaster=2 energy and 4 strength
+Particle beam=4 energy and 8 strength.
+
+Scoring
+Bear trap=50 points
+Potato Man=100 points
+Chopper=150 points
+Machine=200 points
+Floater=250 points
+Spinner=350 points
+Medusa=400 points
+Squid=500 points
+Stomper=550 points
+Ghost=600 points
+Firecracker=650 points
+Snake=700 points
+Dragon=750 points</desc>
+    <releasedate>19890101T000000</releasedate>
+    <developer>Axlon</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players>1</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Sentinel.bin</path>
+    <name>Sentinel</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Sentinel.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Sentinel.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Sentinel.mp4</video>
+    <rating />
+    <desc>Sentinel is a side scrolling action game. Several worlds have fallen victim of an alien attack, and you need to free them. To do this, a glowing orb called the Sentinel has been sent which can absorb the alien energy. As the Sentinel floats above the various, scrolling landscapes, you need to protect it from attacks by using the light gun to destroy enemies and enemy fire. If you don&apos;t destroy an enemy, it will deplete the Sentinels energy supply which will eventually destroy it. There are four levels of increasing difficulty, each with a large boss at the end. To help out on your mission, several bonuses may be encountered from time to time; increased firepower and energy can be acquired when you shoot the bonus capsules that appear. Three levels of difficulty are available.</desc>
+    <releasedate>19900101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players>1</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Shooting Arcade.bin</path>
+    <name>Shooting Arcade</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Shooting Arcade.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Shooting Arcade.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Shooting Arcade.mp4</video>
+    <rating />
+    <desc>Shooting Arcade is one of only two 2600 games to use the light gun (Sentinel was the other), but was never released.  This is a shame because Shooting Arcade is a creative light gun target game similar to the Point Blank series, and would have been unique among 2600 games.  Interestingly it appears that Shooting Arcade was not developed in the US, but rather in Mexico by a company called Heuristica.  How Axlon was invovled is unknown, but they may have simply sub-contracted the game out to Heuristica instead of doing it themselves.
+Shooting Arcade is really made up of six different scenes that are put together in different orders depending on the level you&apos;ve selected.  Each scene has its own unique theme, rules, and objective, making Shooting Arcade essentially six games in one.  Depending on which skill level you choose, the scene&apos;s attributes change to make it more or less difficult and the timer at the bottom of the screen counts down more or less quickly.  The status bar at the top of the screen shows the number of shots you have left, your current difficulty level, and the number of targets left.  You start each level out with a limited amount of ammunition depending on the difficulty level (40, 10, 5, 2, or 1).  You can continue from the last screen you completed an infinite amount of times by simply pressing the reset button.  This is a handy feature as the game get very hard at the later levels...
+The six scenes are:
+Colored Squares - Here you must shoot out all the colored squares before the timer runs out.  Starting on level 1 if you shoot and empty area where a square would be, a new square appear and you&apos;ll have to shoot it again!  On level 4 the squares will all disappear after you take your first shot, and you must memorize where all the squares were before you start.  The squares can briefly be seen when you take a shot which helps a bit, but they will reappear if you shoot the same area twice (as in level 1).  Every square you successfully hit will give you two extra shots.
+Shooting Gallery - This scene is reminiscent of Imagic&apos;s Shooting Gallery cartridge.  Here you must shoot various carnival targets such as glass pipes, ducks, milk jugs, colored squares, and dinosaurs?  The targets in the center area move at a fair clip (depending on the difficulty level) and the pipes at the top can be very difficult to hit making this scene one of the toughest in the game.  Speaking of squares, you can shoot the colored squares at the bottom of the sc</desc>
+    <releasedate>19840101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Lightgun Shooter</genre>
+    <players />
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Sky Diver.bin</path>
+    <name>Sky Diver</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Sky Diver.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Sky Diver.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Sky Diver.mp4</video>
+    <rating>0.6</rating>
+    <desc>Sky Diver is an action game for two players. The goal is to score the most points by jumping from a plane, opening your parachute,  and guiding your sky diver safely to a landing pad. The longer you wait to open your parachute, the more points you earn for a successful landing, but don&apos;t wait too long or your chute won&apos;t open at all! For each jump, there will be varying wind conditions which blow your sky diver off course. A wind sock at the bottom of the screen will help you determine the wind speed and direction so you can compensate. There are nine jumps total, and the player with the most points at the end wins.</desc>
+    <releasedate>19780101T000000</releasedate>
+    <developer>Sears</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Slot Machine.bin</path>
+    <name>Slot Machine</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Slot Machine.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Slot Machine.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Slot Machine.mp4</video>
+    <rating>0.3</rating>
+    <desc>Slot Machine is an electronic slot machine simulation for one or two players. Players start with twenty five coins, and can bet up to five coins on each turn. The game ends when one of the players goes broke. There are two different slot machines, and several game variations are available which affect the level of difficulty.</desc>
+    <releasedate>19790101T000000</releasedate>
+    <developer>Sears</developer>
+    <publisher>Atari</publisher>
+    <genre>Simulation</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Slot Racers.bin</path>
+    <name>Slot Racers</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Slot Racers.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Slot Racers.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Slot Racers.mp4</video>
+    <rating>0.5</rating>
+    <desc>The goal of this two-players console game is to move your vehicle in a maze so you can shoot missiles at your opponent without getting shot at. 
+
+The games features four different mazes to choose from, each faster than the last. Another feature lets you decide to make the missiles faster or slower than the car. The difficulty switch determines whether you can shoot a missile while one of your own is still on the screen. Otherwise, your missile has to hit the enemy or be retrieved by your vehicle before you can launch another one.
+
+You steer your car with a joystick. Each time you hit your enemy with a missile, you get a point. The fist player to get 25 points is the winner.</desc>
+    <releasedate>19780101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Solaris.bin</path>
+    <name>Solaris</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Solaris.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Solaris.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Solaris.mp4</video>
+    <rating>0.8</rating>
+    <desc>The Zylons are back, and are attempting another takeover of the galaxy! Your goal is to destroy all of the Zylon fighters you encounter, rescue cadets that are trapped on Zylon planets, and to find the planet Solaris to protect it from the Zylons. Your spaceship is equipped with a galactic map which can be used to warp to different sectors of the galaxy. The map shows the location of Zylon squadrons, Zylon planets, federation starbases, wormholes, clusters of stars, and Solaris when you find it. By warping to the correct sector, you can battle the numerous types of Zylon fighters to keep them from attacking federation bases and planets. Your spaceship has a limited amount of fuel; when you see the fuel gage get too low, you will need to warp to a federation starbase to refuel (make sure you leave enough fuel to warp). When flying over a Zylon controlled planet, you will see your cadets on the surface. If you rescue all of the cadets as you fly past, you will receive bonus points and an extra spaceship. The Zylon&apos;s have many different types of fighters which you will encounter, as well as some narrow corridors with blockades which you will need to clear in order to reach new locations in the galaxy.</desc>
+    <releasedate>19861201T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players>1</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Space Attack.bin</path>
+    <name>Space Attack</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Space Attack.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Space Attack.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Space Attack.mp4</video>
+    <rating />
+    <desc>The object of the game is to defend your Mother Ship from attacking aliens. You have 3 squadrons, with 3 ships in each squadron. Aliens have 6 fleets of varying sizes. (Only 3 fleets appear at a time on the Radar Screen.) Destroy all alien fleets and you win! If your squadrons are destroyed first, the aliens move in and annihilate the hidden Mother Ship.</desc>
+    <releasedate>19820101T000000</releasedate>
+    <developer />
+    <publisher>M Network</publisher>
+    <genre>Simulation</genre>
+    <players />
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Space War.bin</path>
+    <name>Space War</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Space War.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Space War.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Space War.mp4</video>
+    <rating>0.3</rating>
+    <desc>In this classic vector game, two ships are controlled by two players, flying around a sun, fighting gravity and trying to blow each other to bits.  Options include variable gravity, a black hole, an extra orbiting moon, toroidal space, and playing across a modem connection.</desc>
+    <releasedate>19780101T000000</releasedate>
+    <developer>Sears</developer>
+    <publisher>Atari</publisher>
+    <genre>Action, Simulation</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Spitfire Attack.bin</path>
+    <name>Spitfire Attack</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Spitfire Attack.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Spitfire Attack.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Spitfire Attack.mp4</video>
+    <rating />
+    <desc>In this game, you are an American fighter pilot. Your mission is to shoot down enemy planes, shoot enemy ammo dumps (they look like little black houses) and enemy anti-aircraft guns (they kinda look like sundials). If you fly down too long, you will get a low altitude warning. If you don&apos;t correct, you will crash. You can also be shot down by anti-aircraft guns and enemy planes. Push left and right to go those directions but push up to go down and down to go up. Push the fire button to fire machine guns.</desc>
+    <releasedate>19830101T000000</releasedate>
+    <developer>Milton Bradley Co.</developer>
+    <publisher>Milton Bradley Co.</publisher>
+    <genre>Action</genre>
+    <players>1</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Sprint Master.bin</path>
+    <name>Sprint Master</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Sprint Master.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Sprint Master.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Sprint Master.mp4</video>
+    <rating />
+    <desc>Sprintmaster is an action racing game similar to Super Sprint. The game is played with an overhead view of the racetrack, and the first of two players to race around the track for the required number of laps wins! Occasionally a bonus will appear in the roadway; collect these to increase the traction capabilities of your car or gain a temporary speed boost. Other obstacles, such as oil slicks, may also appear in the roadway which will cause you to lose control and speed. There is a total of nine different tracks with varying levels of difficulty to race on, and you can choose either blacktop, dirt, or ice for terrain.</desc>
+    <releasedate>19880101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Race, Driving</genre>
+    <players>2</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Star Raiders.bin</path>
+    <name>Star Raiders</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Star Raiders.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Star Raiders.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Star Raiders.mp4</video>
+    <rating>0.7</rating>
+    <desc>As the pilot of an interstellar starship, your mission is to destroy all of the Krylon fighters which are closing in on your starbases! There are three different types of fighters roaming throughout the galaxy; cruisers, fighters, and basestars. With the help of your galactic map, you can find the sectors of the galaxy where these fighters are located and then warp there to destroy them. When all of the fighters in a sector are destroyed, you can warp to a new location for the next battle. Be sure to keep an eye on your starships energy; warping to new locations, being hit by enemy fire, or colliding with an asteroid will drain your energy. If you completely run out of energy, your starship will be destroyed, however you can warp back to a starbase to refuel at any time. Returning to a starbase will also repair other types of damage your starship can receive, such as faulty engines, loss of your shield, and faulty photon torpedoes. When all of the Krylon that are visible on your galactic map have been destroyed, you win this round and can advance in rank (or even be demoted if you performed poorly on a mission).  The games difficulty will gradually increase as you rise in rank from ships cook up to captain.</desc>
+    <releasedate>19820101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Shooter, Strategy</genre>
+    <players>1</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Star Ship.bin</path>
+    <name>Star Ship</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Star Ship.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Star Ship.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Star Ship.mp4</video>
+    <rating>0.45</rating>
+    <desc>Star Ship contains three different arcade action games which can be played by one or two players.
+
+Star Ship
+These game variations are played from a first person point of view in your star ship. Your goal is to earn as many points as possible by shooting the various enemies and space debris. You have a time limit of 2 minutes 16 seconds in the one player versions. In the two player version the time limit is 4 minutes 32 seconds; for half of this time one player will be the star ship commander, and the other will control a space module and needs to dodge the star ships fire. The roles will be reversed for the second half of the time limit.
+
+Warp Drive
+These game variations are also played from a first person point of view. Your goal here is to travel as much distance as possible while avoiding the oncoming asteroids.
+
+Lunar Lander
+These game variations are played from a third person point of view. You need to pilot your star ship and successfully land on the constantly moving moon. One point is earned for each successful landing, and asteroids and other debris may get in your way and will deduct points if you crash. In the two player versions, one player controls the star ship and the other player controls the moon.
+
+Each of these games feature several variations which control the game speed and level of difficulty.</desc>
+    <releasedate>19770101T000000</releasedate>
+    <developer>Sears</developer>
+    <publisher>Sears</publisher>
+    <genre>Action</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Star Strike.bin</path>
+    <name>Star Strike</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Star Strike.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Star Strike.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Star Strike.mp4</video>
+    <rating />
+    <desc>Star Strike was clearly inspired by the Death Star battle sequence in the movie Star Wars. You fly a space craft into the enemy launch trench. Your mission: to destroy the alien station before Earth passes directly over the launch trench. You must evade the alien ships that are defending the launch trench while being sure to bomb the red &quot;Hot Targets&quot;. The very first red target that is missed when the Earth is directly in the middle of the launch trench becomes a missile. The missile is launched and destroys Earth.</desc>
+    <releasedate>19820101T000000</releasedate>
+    <developer>Mattel Electronics</developer>
+    <publisher>Mattel Electronics</publisher>
+    <genre>Action</genre>
+    <players>1</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Steeplechase.bin</path>
+    <name>Steeplechase (sears)</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Steeplechase.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Steeplechase.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Steeplechase.mp4</video>
+    <rating />
+    <desc>This is a hurdles horse race.
+
+The horse&apos;s names, from bottom to top, are: Lucky Devil, Absent Mind, Just Missed and Little Dictator. You play as one of the jockeys and must reach the right side of the screen first. The horse runs and hurdles come at you from the right. To jump these hurdles, you turn the paddle to set the height of the jump, as indicated by the marker on the right. You press the button to jump. The better you jump, the faster your horse goes. After 3 minutes, if no one has gotten all the way to the right, the race ends and whoever was in the lead wins.
+
+There are 6 game variations. In games 1, 2 and 3, the distance between the hurdles is uniform with the computer-controlled horse&apos;s racing ability being poor, good and excellent, respectively.
+In games 4, 5 and 6, the the distance between the hurdles is random with the computer-controlled horse&apos;s racing ability being poor, good and excellent, respectively.
+The difficulty switches are not used.</desc>
+    <releasedate>19800101T000000</releasedate>
+    <developer>Sears</developer>
+    <publisher>Atari</publisher>
+    <genre>Strategy, Sports</genre>
+    <players>4</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Stellar Track.bin</path>
+    <name>Stellar Track</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Stellar Track.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Stellar Track.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Stellar Track.mp4</video>
+    <rating />
+    <desc>This is an Atari 2600 version of a Star Trek game found on many college mainframes.
+
+Like those mainframe programs, it has no graphics, only text. You use the joystick, moving left or right, to select the command you want then press the red button. You then move the joystick left or right to select set the parameters of that command, if there are any. You start by pressing Reset or Select to choose how many enemies you must kill in how many stardates. 
+
+The commands and any settings are as follows:
+
+Galaxy Map=a 6x6 grid that starts out empty until you do a long range scan. Afterwards, the quadrants will show a 2 digit number. The left digit is the number of aliens in the area. The right digit will either be a 1 or a zero, depending on whether there is or is not a starbase in that area. Galaxy map costs you no energy or stardates.
+
+LR Scan=Long range scan. This will tell you what is in your quadrant and all the quadrants next to yours. If there are any enemies in your quadrant when you do an LR scan, they will attack you. LR scan does not cost energy or stardates but it does take a turn.
+
+SR Scan=Short range scan. This shows you the stars, aliens and starbases in your quadrant. You need to do this to destroy aliens and dock with starbases. Like LR Scan, if there are aliens in your quadrant, they will attack after you use SR Scan. Also, like LR Scan, SR Scan does not cost energy or stardates but it does take a turn.
+
+Warp=Warp is how you move, either from quadrant to quadrant or from sector to sector within a quadrant. You move by setting 2 settings. The first is your direction. You select a direction based on the numbers below:
+8  1  2
+  | /
+7--*--3
+ / | 
+6  5  4
+Next, you select how many quadrants and sectors to move. If you want to move within a quadrant, set the left number to zero so you don&apos;t warp out of that quadrant. Warp uses stardates, energy and a turn. If you warp into a quadrant that has only you and stars, the screen will be green. If you warp into a quadrant with aliens or aliens and a starbase, the screen will be red. If you warp into a quadrant with just the starbase, the screen will be gray. You cannot warp through stars. If you try, you lose the stardate and energy but don&apos;t go anywhere.
+
+Photon Torpedo=If you hit an enemy with one of these, just one shot kills them. You select the direction with the same numbers as warp. there must be a clear line of sight between you and the enemy; no stars. You carry up to 9 torpedoes and they can be r</desc>
+    <releasedate>19810101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Sears</publisher>
+    <genre>Strategy</genre>
+    <players>1</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Street Racer.bin</path>
+    <name>Street Racer</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Street Racer.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Street Racer.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Street Racer.mp4</video>
+    <rating />
+    <desc>A rebranded version of Street Racer, published and sold under the Tele-Games name by Sears.</desc>
+    <releasedate />
+    <developer />
+    <publisher />
+    <genre>Race, Driving</genre>
+    <players />
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Stunt Cycle.bin</path>
+    <name>Stunt Cycle</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Stunt Cycle.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Stunt Cycle.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Stunt Cycle.mp4</video>
+    <rating />
+    <desc>Stunt Cycle was one of Atari&apos;s first &quot;Non-Pong&quot; standalone consoles, and was based off the Atari coin-op of the same name.  The console consisted of a set of handlebar grips, which you could use to make your cycle move faster or slower and a fire button used to make you jump.  The gameplay revolves around making your &quot;Stunt Cycle&quot; jump over cars (ala Evil Knievel) and land safely on the other side without flying off the end of the screen.  Your cycle starts at the top of the screen, where you are given two &quot;rows&quot; of screen space to build up speed before hitting the ramp at the bottom.  The &quot;trick&quot; to the game is to build up enough speed to jump over the cars, but not too much that you go crashing off the edge of the screen.  If you successfully make the jump the row of cars gets wider and you have to go back and jump it again.
+It is interesting to note that the arcade version has your cycle move through &apos;tubes&apos; on the sides of the screen between rows whereas the home console version does not.  This means that in the arcade your cycle moves left to right across the first row, then RIGHT to LEFT across the second row before moving left to right again on the bottom.  This is a bit more realistic (well as realistic as motorcycle blasting through invisible tubes on the sides of the screen can be anyway) but can mess with your head if you&apos;re not expecting it.  The home console and 2600 port simply has the player &apos;warp&apos; back to the left side of the screen when he reaches the end, meaning you always travel left to right on each row.
+Sometime in 1980 Atari decided that Stunt Cycle would make a great 2600 game, so Bob Polaro was tapped to do the conversion.  Using the paddle controllers to simulate the original consoles bike grips, Bob made a near perfect port of the standalone console.  One change that was made to the game was the addition of color.  Since the original coin-op and home console were from 1976, the graphics were in Black and White which was standard at the time.  However Atari 2600 games had to have the option of color or B&amp;W, some color was added to the game (although not much) to spruce it up.  After a few months of programming, Stunt Cycle was finished and ready to go.
+It was around this time that marketing had &quot;brilliant&quot; idea; why not make Stunt Cycle into a Dukes of Hazzard game?  So Bob went back to work retooling the graphics to fit the new Dukes of Hazzard theme.  The cycle was changed into the General Lee, while the row of cars was changed </desc>
+    <releasedate>19800101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Race, Driving</genre>
+    <players />
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Submarine Commander.bin</path>
+    <name>Submarine Commander</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Submarine Commander.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Submarine Commander.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Submarine Commander.mp4</video>
+    <rating />
+    <desc>You&apos;re the commander of a submarine in enemy waters.  Use your skills, radar, and luck to take down the enemy ships.  With 8 difficulty settings there is a lot of the game to master as you must start to keep an eye on your fuel, torpedoes, radar, and enemy while avoiding depth charges as the difficulty rises.  You can fire up to two torpedoes at a time. While enemy shows go by your periscope sink as many as you can.  The periscope can turn 360 degrees and look off into the horizon or close to your sub.  Some ships move slower than others, and one of the ships moves so fast that the only way to hit it is by tracking it by radar instead of visually.</desc>
+    <releasedate>19820101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Sears</publisher>
+    <genre>Simulation</genre>
+    <players>2</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Super Baseball.bin</path>
+    <name>Super Baseball</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Super Baseball.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Super Baseball.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Super Baseball.mp4</video>
+    <rating />
+    <desc>This game is an altered version of the Atari 2600 version of RealSports Baseball. The game controls are identical. The alterations are that the graphics and colors were changed. Also, the options were reduced to one or two player and whether, in one player, the human player is up first at bat or not.
+
+Otherwise, everything else is the same. You still can throw fastballs, curve balls, sinkers, etc. and you can still bunt, hit fly balls, etc. Scoring remains the same with a tie after nine innings going into extra innings. The difficulty switches do not have any use.</desc>
+    <releasedate>19880101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Sports, Sports / Baseball</genre>
+    <players>2</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Super Breakout.bin</path>
+    <name>Super Breakout</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Super Breakout.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Super Breakout.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Super Breakout.mp4</video>
+    <rating>0.65</rating>
+    <desc>Super Breakout features similar gameplay to the original, but with several new game variations. Your goal is to earn as many points as possible by destroying the bricks at the top of the playfield. To do this, you need to use the paddle at the bottom of the screen to keep a bouncing ball within the playfield. There are four different game variations included. The first is &apos;Breakout&apos;, and plays the same as the original game. 
+
+This leaves three new gameplay concepts. In &apos;Progressive&apos; the brick walls will slowly drop towards the bottom of the screen and the ball moves progressively faster and faster. When there&apos;s room, a new layer of bricks will appear at the top. 
+
+The other two games add a second paddle. In &apos;Double Breakout&apos; you have two balls to keep in play and score with. In &apos;Cavity&apos; there is a single ball in play when you start, but two additional balls trapped within the bricks. These are freed when their surrounding bricks are destroyed.</desc>
+    <releasedate>19780101T000000</releasedate>
+    <developer>Turner, Nick / Shaw, Carol</developer>
+    <publisher>Atari</publisher>
+    <genre>Sports, Action</genre>
+    <players>2</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Super Challenge Baseball.bin</path>
+    <name>Super Challenge Baseball</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Super Challenge Baseball.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Super Challenge Baseball.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Super Challenge Baseball.mp4</video>
+    <rating />
+    <desc>The object of the game is to score the most runs in 9 innings or extra innings to a decision. Most professional baseball rules apply - 3 strikes for an out, 4 balls for a walk, first 2 fouled balls count as strikes. Each player controls an 8-man team. One team fields while the other team is up to bat. Home runs, force-outs, double and triple plays can all be made. Batter up!</desc>
+    <releasedate>19820101T000000</releasedate>
+    <developer>Mattel Electronics</developer>
+    <publisher>Mattel Electronics</publisher>
+    <genre>Sports</genre>
+    <players />
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Super Challenge Football.bin</path>
+    <name>Super Challenge Football</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Super Challenge Football.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Super Challenge Football.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Super Challenge Football.mp4</video>
+    <rating />
+    <desc>The object of the game is to out-score your opponent.  There&apos;s passing, rushing, blocking, and touchdowns!  Simulated 15 minute quarters.  You set both offense and defense.  Individual control of both the quarterback and linebacker.</desc>
+    <releasedate>19820101T000000</releasedate>
+    <developer>Mattel Electronics</developer>
+    <publisher>Mattel Electronics</publisher>
+    <genre>Sports</genre>
+    <players />
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Super Football.bin</path>
+    <name>Super Football</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Super Football.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Super Football.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Super Football.mp4</video>
+    <rating>0.75</rating>
+    <desc>The is an American football game with an isometric view. Player one always starts as offense and are in the red jerseys. The computer (or player two) starts as defense and are in blue jerseys.You have the choice to pass or run. On the offense, you control the quarterback until he passes the ball. You then control the receiver. The quarterback cannot pass after he crosses the line of scrimmage. On defense, you control the corner.
+
+Game variations
+Game 1 (Novice)=3 minutes per quarter
+Game 2 (Standard)=7 minutes per quarter
+Game 3 (Advanced)=10 minutes per quarter
+Game 4 (Expert)=15 minutes per quarter
+
+Play selection
+Offense selects both the formation and pattern that the receiver will run*. The formation is the number on the left, from 1 to 9. The pattern is the number on the right, from 1 to 4.
+
+Defense only selects formations, from 1 to 9*. If the offense selects to punt or a field goal, the defense play is automatically selected to counter that.
+
+To see the formations and patterns, you must refer to the game manual, as they are not named or graphically displayed on screen.
+
+*=In game 1 (Novice), you do not manually select plays, they are selected automatically.
+
+Scoring
+Field goals=3 points
+Touchdowns=6 points
+Extra point=1 point
+
+Inaccuracies
+There are only 5 players per side.
+You cannot tackle anyone within the five-yard line and the goal, therefore...
+There are no 2-point safeties or 2-point conversions
+There are no penalties</desc>
+    <releasedate>19880101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Sports</genre>
+    <players>2</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Surround.bin</path>
+    <name>Surround</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Surround.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Surround.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Surround.mp4</video>
+    <rating>0.4</rating>
+    <desc>Welcome to the exciting and competitive world of SURROUND. Your basic objective is to surround your opponent, causing him to run out of space in which to move, and at the same time not running into anything yourself. You can set up a blockade, force him into a corner or wander off by yourself and hope that he runs into something on his own.
+
+Along with the basic SURROUND game, we&apos;ve added four game features to make things more interesting. Be sure to read Section 4 to learn more about these features.
+
+Then there&apos;s VIDEO GRAFFITI. It&apos;s just for fun without the competitive edge thrown in. VIDEO GRAFFITI actually allows you to draw on the screen.
+
+Surround was one of the nine Atari 2600 launch titles released in September 1977.</desc>
+    <releasedate>19770101T000000</releasedate>
+    <developer>Sears</developer>
+    <publisher>Sears</publisher>
+    <genre>Action</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Swordfight.bin</path>
+    <name>Swordfight</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Swordfight.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Swordfight.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Swordfight.mp4</video>
+    <rating />
+    <desc>En garde! Attack, feint, block, strike!
+
+This is a one-on-one sword fight for two players only. Press the button to skip in and out and move the joystick to swing the sword and block. Your sword is obviously based on a lightsaber from the way the blade extends and the sound effects.</desc>
+    <releasedate>19830101T000000</releasedate>
+    <developer>Mattel Electronics</developer>
+    <publisher>M Network</publisher>
+    <genre>Action</genre>
+    <players>2</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/SwordQuest - EarthWorld.bin</path>
+    <name>SwordQuest - EarthWorld</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/SwordQuest - EarthWorld.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/SwordQuest - EarthWorld.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/SwordQuest - EarthWorld.mp4</video>
+    <rating />
+    <desc>SwordQuest: EarthWorld was an adventure game produced for the Atari 2600. The game play boils down to walking from room to room, finding and dropping items, beating the action stages in order to find more items, and seeing the odd set of numbers flash at you if you get the right combination of items in the right rooms. 
+
+The sets of numbers, for instance 16-4, were actually a combination of a page number and a panel number in the comic book that came with the game. On the page indicated by the game, you would find a word hidden somewhere in the numbered panel. When all the correct words were found, you could send them to Atari in hopes of winning the SwordQuest contest that this game was designed for.</desc>
+    <releasedate>19870101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action, Adventure</genre>
+    <players>1</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/SwordQuest - FireWorld.bin</path>
+    <name>SwordQuest - FireWorld</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/SwordQuest - FireWorld.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/SwordQuest - FireWorld.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/SwordQuest - FireWorld.mp4</video>
+    <rating />
+    <desc>SwordQuest: FireWorld, the second game in the SwordQuest series, was insanely identical to the first game, EarthWorld. In this installment you will find yourself walking from room to room, finding and dropping items, beating the action stages in order to find more items, seeing the odd set of numbers flash at you if you get the right combination of items in the right rooms. 
+
+The sets of numbers, for instance 16-4, were actually a combination of a page number and a panel number in the comic book that came with the game. On the page indicated by the game, you would find a word hidden somewhere in the numbered panel. When all the correct words were found, you could send them to Atari in hopes of winning the SwordQuest contest that this game was designed for.</desc>
+    <releasedate>19820101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action, Adventure</genre>
+    <players>1</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/SwordQuest - WaterWorld.bin</path>
+    <name>SwordQuest - WaterWorld</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/SwordQuest - WaterWorld.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/SwordQuest - WaterWorld.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/SwordQuest - WaterWorld.mp4</video>
+    <rating />
+    <desc>Much like the games SwordQuest: EarthWorld
+and SwordQuest: FireWorld before it, SwordQuest: WaterWorld involves walking through rooms, picking up items, beating action stages to reveal more items, and seeing the odd set of numbers flash at you when you have the right items in the right rooms. 
+
+The sets of numbers, for instance 8-4, were actually a combination of a page number and a panel number in the comic book that came with the game. On the page indicated by the game, you would find a word hidden somewhere in the numbered panel. When all the correct words were found, you could send them to Atari in hopes of winning the SwordQuest contest that this game was designed for.</desc>
+    <releasedate>19830101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action, Adventure</genre>
+    <players>1</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Tempest.a26</path>
+    <name>Tempest</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Tempest.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Tempest.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Tempest.mp4</video>
+    <rating />
+    <desc>On the list of games that probably should never have been tried on the 2600, Tempest has to be near the top.  Why Atari decided they could reproduce a 3D vector game on the 2600 is beyond me, but the results weren&apos;t pretty.  Sometimes one has to respect the limitations of the 2600.
+I&apos;ve said it once and I&apos;ll say it again; If there&apos;s one thing the 2600 doesn&apos;t do well it&apos;s diagonals.  Unfortunately Tempest is chockfull of diagonals as the tubes angle out from the center of the screen to form complex geometric patterns.  This leads us to the next problem, if there&apos;s a second thing the 2600 doesn&apos;t do well it&apos;s complex geometric patterns!  The 2600 version gets around this by not having 3D tubes, but rather a flat looking shape (often jokingly compared to a pair of woman&apos;s underware) with the enemies coming from one side and the player moving on the other.  For some reason the board seems to flux and change a bit as things move around the screen, this is probably the result of a programming glitch.  The board  s segmented into what could be called tubes (if you use your imagination), but these &quot;tubes&quot; don&apos;t seem to correspond to where the real tubes (which are invisible) are.
+This brings us to the next problem, if there&apos;s a third thing the 2600 doesn&apos;t do well and it&apos;s 3D perspective.  Atari couldn&apos;t get around this one; the 3D perspective is what makes Tempest &quot;Tempest&quot;.  Atari tried to simulate this by changing the enemy&apos;s size to make it look like it was getting closer.  Unfortunately there aren&apos;t nearly enough frames of animation to do this, so the enemies sort of jump forward in an awkward fashion.  The enemy graphics are very blocky and becomes even more evident as the size is increased when they approach the outer edge of the tube.  This combined with a very blocky looking &quot;shape&quot; for the board makes for one ugly looking game.
+Amazingly, even with the 2600&apos;s limitations, there are four different types of enemies present in this version.
+Flippers -- These are the little bowtie shaped guys who are the main enemy of the game.  They&apos;re not dangerous until they reach the top of the tube and start coming after you.
+Flipper Tankers -- These will break into two Flippers when hit.
+Pulsars -- These guys are dangerous!  They will electrocute the tube they&apos;re in every now and then killing you instantly if you&apos;re on it.  In this version the tube doesn&apos;t light up when electrocuted, but the Pulsar itself will glow a second before, warning you to beware.
+Fuseballs -- </desc>
+    <releasedate>19840101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Shoot&apos;em Up</genre>
+    <players />
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Video Checkers.bin</path>
+    <name>Video Checkers</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Video Checkers.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Video Checkers.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Video Checkers.mp4</video>
+    <rating>0.45</rating>
+    <desc>In this classic game of checkers you can play with your friend or many different levels of computer AI.  Mastering all of them will take skill and strategy, as well as a bit of luck.  Video Checkers follows the standard checkers rules with the following rules: if there is a jump available, you must take it and if you get to king&apos;s row and are promoted, you cannot move again that turn but must wait for your next turn.
+
+Game variations
+Games 1 through 9 are regular checkers, from easiest to hardest in which the object is to capture or block all your opponents pieces.
+ Game 10 is a two player game. 
+Games 11 through 19 are giveaway checkers, from easiest to hardest, in which the object of the game is to lose or be unable to move any of your pieces.
+
+Difficulty switches
+Left switch:
+ Set to A=Set up board as you want.
+Set to B=Will be set up for normal play.
+Right switch
+ Set to A=Right player in a two player game or computer player a one player game is black and starts the game.
+Set to B=Left player in a two player game or human player a one player game is black and starts the game.</desc>
+    <releasedate>19800101T000000</releasedate>
+    <developer>Sears</developer>
+    <publisher>Atari</publisher>
+    <genre>Strategy</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Video Chess.bin</path>
+    <name>Video Chess</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Video Chess.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Video Chess.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Video Chess.mp4</video>
+    <rating>0.7</rating>
+    <desc>This is an early home chess game. The standard U. S. chess rules are used in this game. To move a piece, place the X on the board onto the piece to be moved then press the red button. Next, move the X to where you want the piece to go and press the button again. If the move is illegal, the 2600 will give a warning sound and not make the move.
+
+To castle your king, the king and rook must not have been moved. You move your king two squares in the direction of the rook to castle with. The 2600 will then automatically move your rook around your king, completing the move. You cannot castle out of check and you cannot castle to the king&apos;s side if any squares between the king and rook are threatened.
+
+Another maneuver is called en passant. This move is used to counteract the enemy pawn&apos;s initial double move on a adjacent square.  To carry out the en passant, you must advance your
+pawn to the fifth rank.  Your opponent then has the option of moving
+his or her pawn one square (where it would be under attack) or two
+squares.  If you opponent elects to move two squares, the en passant move allows you to take that pawn by diagonally moving your pawn to the square that was skipped over.
+
+Skill levels
+These determine how long the computer will think on its move. These times are approximate and may vary slightly, depending on what move you did.
+Level 1=15 seconds
+Level 2=30 seconds
+Level 3=45 seconds
+Level 4=2 minutes, 45 seconds
+Level 5=3 minutes, 15 seconds
+Level 6=12 minutes
+Level 7=10 hours
+Level 8=10 seconds
+
+Level 8 is a beginner level.</desc>
+    <releasedate>19790101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action, Strategy</genre>
+    <players>1</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Video Olympics.bin</path>
+    <name>Video Olympics</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Video Olympics.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Video Olympics.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Video Olympics.mp4</video>
+    <rating>0.55</rating>
+    <desc>Video Olympics is an action game containing numerous variations of the game Pong. Two players (or one player against the computer) control paddles on the screen and attempt to prevent a bouncing ball from getting past them. In the most basic game variations, each player has a single paddle and there are no obstacles on the screen. The other game variations add paddles and obstacles, and some are loosely inspired by various sports and change the playfield around, but the goal remains the same: hit the ball past your opponents paddle into the goal to earn points. A few of these variations are:
+
+1. Foozpong: Each player controls multiple paddles which are arranged somewhat like a foozball table.
+
+2. Soccer pong: Each player controls two paddles (representing one goalie and one player) and the goal is much narrower.
+
+3. Hockey pong: The playfield is set up to resemble hockey; the goal isn&apos;t at the very edge of the screen, so the ball may bounce behind and around the goal.
+
+4. Quadrapong: The goals are located along the top, right, bottom, and left sides of the screen. This game is played by four players, two per team with one person defending each of the four goals.
+
+5. Handball pong: There is no goal, and two players take turns hitting the ball against a solid wall to earn points. One point is earned each time your opponent is unable to return the ball.
+
+6. Volleyball pong: The screen is set up like a volleyball court with a &quot;net&quot; in the middle. Both players are along the bottom of the screen and need to bounce the ball past their opponent.
+
+7. Basketball pong: Each player controls a paddle on the bottom of the screen, and attempts to hit the ball into their opponents basket at the top.</desc>
+    <releasedate>19770101T000000</releasedate>
+    <developer>Sears</developer>
+    <publisher>Sears</publisher>
+    <genre>Action</genre>
+    <players>4</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Video Pinball.bin</path>
+    <name>Video Pinball</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Video Pinball.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Video Pinball.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Video Pinball.mp4</video>
+    <rating>0.6</rating>
+    <desc>Video Pinball is a pinball simulation for one or two players. You begin the game with three balls and need to score as many points as possible by hitting the various bumpers, spinners, and rollovers on the pinball table. An extra ball can be earned by hitting the Atari logo rollover four times in a row!  There are two difficulty levels and four game variations included.</desc>
+    <releasedate>19800101T000000</releasedate>
+    <developer>Sears</developer>
+    <publisher>Atari</publisher>
+    <genre>Action, Simulation, Pinball</genre>
+    <players>2</players>
+    <kidgame>true</kidgame>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Warlords.bin</path>
+    <name>Warlords</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Warlords.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Warlords.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Warlords.mp4</video>
+    <rating>0.7</rating>
+    <desc>In Warlords, you need to defend yourself from three human and/or computer players. Each of the four players are in one of the corners of the screen guarded by a castle. You control a small shield which can be moved around the edge of the castle. To survive you need to use the shield to block a ball which bounces around the screen. If the ball hits your castle, it will take out some of the bricks. If a hole forms in the castle wall and the ball makes it though and hits your warlord, then you are out of the game. The last player left alive wins the battle, and the first player to win five battles wins the game! Several game options are included which allow you to either catch or ricochet the ball when the shield touches it, and control the speed of the game.</desc>
+    <releasedate>19810101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Sears</publisher>
+    <genre>Action</genre>
+    <players>4</players>
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Wizard.bin</path>
+    <name>Wizard</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Wizard.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Wizard.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Wizard.mp4</video>
+    <rating />
+    <desc>If there was ever an obscure prototype it&apos;s Wizard.  Wizard was supposedly the last of Atari&apos;s last 2K games, but went unreleased in favor of the new 4K games.  Since Wizard was never advertised in any Atari catalogs and it was never assigned a part number, most people don&apos;t even know of its existence.nnWizard can best be described as a cross between Berzerk and Wizard of Wor.  You control a wizard (at least I think he&apos;s a wizard), who must attempt to destroy the swirling star shaped creature.  The board layout is a giant maze, which makes it hard to run from the creature and to get a clean shot off.  Unfortunately the creature can move through the maze walls, but thankfully it can&apos;t shoot through them.  Once you take a shot you&apos;ll notice that your wizard dims a bit, this means you are recharging, and cannot shoot.  Once your wizard is done recharging he will light back up again, and you can take another shot.  You don&apos;t have to worry about aiming you shots, as you will automatically shoot in the direction of the creature.  This makes it easy to run away but still take shots at the creature.nnYour wizard starts out with zero damage (indicated by the right number), and will die if the damage counter reaches 99.  Each shot you take from the creature causes you two points of damage, touching the creature will also cause you two points of damage.  As you take more and more damage your wizard will weaken until he finally dies.  In your weakened state you will move slower and take longer to recharge.nnThe creatures damage counter is on the left side of the screen.  Each time you shoot the creature it will take two points so damage and be stunned for a few seconds.  This is your chance to get away to a safe distance and hide as you recharge.  The creature is normally invisible unless it&apos;s shooting at you or it has taken a hit.  You can tell where the creature is by listening to the &quot;heartbeat&quot; in the background.  The closer the creature, the louder the sound.nnIf you manage to get the creature&apos;s damage counter up to 99, it will turn black and die.  Your victory is short lived however as a new and more deadly creature will replace the old one.  Each new creature starts with less damage than the previous one, and moves and shoots much faster.  Each time you kill the creature your kill counter (next to the creatures damage counter) will go up by one, and your damage counter will go down significantly.nnWizard has a unique two player feature where one player can cont</desc>
+    <releasedate>19800101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action</genre>
+    <players />
+  </game>
+  <game>
+    <path>/home/pi/RetroPie/roms/atari2600/Yars&apos; Revenge.bin</path>
+    <name>Yars&apos; Revenge</name>
+    <cover />
+    <image>/home/pi/.emulationstation/downloaded_media/atari2600/screenshots/Yars&apos; Revenge.png</image>
+    <marquee>/home/pi/.emulationstation/downloaded_media/atari2600/marquees/Yars&apos; Revenge.png</marquee>
+    <video>/home/pi/.emulationstation/downloaded_media/atari2600/videos/Yars&apos; Revenge.mp4</video>
+    <rating>0.75</rating>
+    <desc>In Yars&apos; Revenge, your goal is to destroy the Qotile laser-base which is located on the right side of the screen behind a shield. You control the fly-like Yar, which can destroy the shield piece by piece by either shooting it or running into it. Once the shield is down, you will need to use the Zorlon cannon to destroy the Qotile. The Zorlon cannon is located on the left side of the screen, and when fired can destroy the Qotile with a direct hit. The Qotile isn&apos;t completely unarmed against your attacks, however. Wandering around the screen is a destroyer missile, which will constantly be homing in on your Yar. This missile can not be destroyed, however you can temporarily hide from it in a shield which runs vertically in the center of the screen. The Yar will be unable to fire when hiding in the shield so you can&apos;t stay there indefinitely! The Qotiles second weapon is a swirl which it will randomly fire at you and should be dodged. When you finally destroy the Qotile you can move on to the next, faster round of gameplay. Several game variations are included which control the difficulty and speed of the game.</desc>
+    <releasedate>19810101T000000</releasedate>
+    <developer>Atari</developer>
+    <publisher>Atari</publisher>
+    <genre>Action, Shoot&apos;em Up</genre>
+    <players>2</players>
+  </game>
+</gameList>

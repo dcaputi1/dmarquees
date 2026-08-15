@@ -41,6 +41,7 @@ h. install experimantal mame package (~2 hours from source)
 i. 5/27/2026: SKIP [install experimental lr-mame]
 j. enable autostart emulationstation
 k. [optional] install Skyscraper
+l. install Atari consoles: lr-atari800, lr-stella2014 and lr-prosystem
 
 steps:
 1. sudo chown -R danc /opt/retropie
@@ -82,8 +83,8 @@ steps:
 
 optional:
 A. sudo apt install meld
-C. sudo apt install jstest-gtk
-D. sudo apt install code
+B. sudo apt install jstest-gtk
+C. sudo apt install code
 
 ===========================================
   Pi3 baseline setup

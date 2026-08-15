@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<gameList>
+	<game>
+		<path>./12 Mousketak.ATR</path>
+		<name>12 Mousketak</name>
+		<playcount>1</playcount>
+		<lastplayed>20260809T164730</lastplayed>
+	</game>
+	<game>
+		<path>./25 AstroChase.ATR</path>
+		<name>25 AstroChase</name>
+		<playcount>1</playcount>
+		<lastplayed>20260809T164922</lastplayed>
+	</game>
+	<game>
+		<path>./25b Bandits.ATR</path>
+		<name>25b Bandits</name>
+		<playcount>1</playcount>
+		<lastplayed>20260809T164836</lastplayed>
+	</game>
+	<game>
+		<path>./06 (Basic) Invaders, Pacman, Canyon, AstroWarriors, DogDaze, Froggie.ATR</path>
+		<name>06 (Basic) Invaders, Pacman, Canyon, AstroWarriors, DogDaze, Froggie</name>
+		<playcount>1</playcount>
+		<lastplayed>20260809T231313</lastplayed>
+	</game>
+	<game>
+		<path>./15b Threshold.ATR</path>
+		<name>15b Threshold</name>
+		<playcount>1</playcount>
+		<lastplayed>20260809T231537</lastplayed>
+	</game>
+	<game>
+		<path>./01 Dan's Programs (Sky Diver, Swarm, Worms, Junk).ATR</path>
+		<name>01 Dan's Programs (Sky Diver, Swarm, Worms, Junk)</name>
+		<playcount>1</playcount>
+		<lastplayed>20260811T223115</lastplayed>
+	</game>
+	<game>
+		<path>./02 Defender, Breakaway, Donkey, Canyon.ATR</path>
+		<name>02 Defender, Breakaway, Donkey, Canyon</name>
+		<playcount>4</playcount>
+		<lastplayed>20260811T223541</lastplayed>
+	</game>
+	<game>
+		<path>./08 (Basic) Asteroids, SpaceInvaders, MissileCmd, StarRaider, Outlaw, BoardGames.ATR</path>
+		<name>08 (Basic) Asteroids, SpaceInvaders, MissileCmd, StarRaider, Outlaw, BoardGames</name>
+		<playcount>7</playcount>
+		<lastplayed>20260811T225548</lastplayed>
+	</game>
+</gameList>

@@ -7,3 +7,6 @@ cp -vf /media/danc/ExtremeSSD/Mame/mame-merged/BIOS/roms/*.zip /home/danc/RetroP
 
 # OMG! why is this not in the internet archive 0.256 rom set?
 cp -vf /media/danc/ExtremeSSD/Mame/roms_fav/pacman.zip /home/danc/RetroPie/roms/arcade/
+
+# Copy Atari console binaries from MC Atari FightStick RetroPie console backup
+cp -vrf /media/danc/ExtremeSSD/Atari/MicroCenter/RetroPie/* /home/danc/RetroPie/

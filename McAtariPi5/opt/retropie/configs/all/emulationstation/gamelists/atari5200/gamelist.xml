@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<gameList>
+	<game>
+		<path>./Asteroids.zip</path>
+		<name>Asteroids</name>
+		<playcount>7</playcount>
+		<lastplayed>20200522T033923</lastplayed>
+	</game>
+	<game>
+		<path>./Caverns-of-Mars_Atari-8-bit_EN.zip</path>
+		<name>Caverns-of-Mars_Atari-8-bit_EN</name>
+		<playcount>1</playcount>
+		<lastplayed>20200522T041328</lastplayed>
+	</game>
+	<game>
+		<path>./Centipede (USA).zip</path>
+		<name>Centipede (USA)</name>
+		<playcount>1</playcount>
+		<lastplayed>20200522T041412</lastplayed>
+	</game>
+	<game>
+		<path>./Countermeasure (USA).zip</path>
+		<name>Countermeasure (USA)</name>
+		<playcount>1</playcount>
+		<lastplayed>20200522T041437</lastplayed>
+	</game>
+	<game>
+		<path>./Microgammon SB (USA) (Proto).zip</path>
+		<name>Microgammon SB (USA) (Proto)</name>
+		<playcount>1</playcount>
+		<lastplayed>20200522T041851</lastplayed>
+	</game>
+	<game>
+		<path>./Millipede.zip</path>
+		<name>Millipede</name>
+		<playcount>1</playcount>
+		<lastplayed>20200522T041933</lastplayed>
+	</game>
+	<game>
+		<path>./Miniature Golf (USA) (Proto).zip</path>
+		<name>Miniature Golf (USA) (Proto)</name>
+		<playcount>1</playcount>
+		<lastplayed>20200522T042020</lastplayed>
+	</game>
+	<game>
+		<path>./Missile Command (USA).zip</path>
+		<name>Missile Command (USA)</name>
+		<playcount>1</playcount>
+		<lastplayed>20200522T042054</lastplayed>
+	</game>
+	<game>
+		<path>./RealSports Baseball (USA).zip</path>
+		<name>RealSports Baseball (USA)</name>
+		<playcount>1</playcount>
+		<lastplayed>20200522T042134</lastplayed>
+	</game>
+	<game>
+		<path>./RealSports Basketball (USA).zip</path>
+		<name>RealSports Basketball (USA)</name>
+		<playcount>1</playcount>
+		<lastplayed>20200522T042211</lastplayed>
+	</game>
+	<game>
+		<path>./RealSports Football (USA).zip</path>
+		<name>RealSports Football (USA)</name>
+		<playcount>1</playcount>
+		<lastplayed>20200522T042235</lastplayed>
+	</game>
+	<game>
+		<path>./RealSports Soccer (USA).zip</path>
+		<name>RealSports Soccer (USA)</name>
+		<playcount>1</playcount>
+		<lastplayed>20200522T042952</lastplayed>
+	</game>
+	<game>
+		<path>./RealSports Tennis (USA).zip</path>
+		<name>RealSports Tennis (USA)</name>
+		<playcount>1</playcount>
+		<lastplayed>20200522T043055</lastplayed>
+	</game>
+	<game>
+		<path>./Star Raiders (USA).zip</path>
+		<name>Star Raiders (USA)</name>
+		<playcount>1</playcount>
+		<lastplayed>20200522T043144</lastplayed>
+	</game>
+	<game>
+		<path>./Super Breakout (USA).zip</path>
+		<name>Super Breakout (USA)</name>
+		<playcount>1</playcount>
+		<lastplayed>20200522T043211</lastplayed>
+	</game>
+	<game>
+		<path>./Xari Arena (USA) (Proto).zip</path>
+		<name>Xari Arena (USA) (Proto)</name>
+		<playcount>1</playcount>
+		<lastplayed>20200522T043232</lastplayed>
+	</game>
+</gameList>

@@ -19,6 +19,7 @@ fi
 # Copy RetroArch/EmulationStation media assets ExtremeSSD backup
 step "Copying RetroArch/EmulationStation media assets from ExtremeSSD backup"
 run cp -vrf /media/danc/ExtremeSSD/McAtariPi5/home/danc/ /home/
+run cp -vrf /media/danc/ExtremeSSD/McAtariPi5/opt/retropie/ /opt/
 
 # Create MAME home directory symlink
 # note: -sfn replaces RetroArch mame package configs link
