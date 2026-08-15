@@ -233,4 +233,21 @@ sync-back:
 		fi
 	  done
 
+	# --- Phase B: sync recursively all MODIFIED configs files that ALREADY EXIST in the target tree ---
+	src_configs="$$SRC/configs"
+	dst_configs="$$DST/configs"
+	[[ -d "$${src_configs}" ]] || { echo "WARNING: Missing deployment folder: $$src_configs; skipping configs sync."; exit 0; }
+	[[ -d "$${dst_configs}" ]] || { echo "ERROR: Missing target folder (must already exist): $$dst_configs"; exit 1; }
+
+	find "$${dst_configs}" -type f -print0 \
+	| while IFS= read -r -d '' f; do
+		rel="$${f#$$dst_configs/}"
+		src_file="$$src_configs/$$rel"
+		if [[ -f "$${src_file}" ]]; then
+			rsync -ai --existing --update \
+				--no-perms --no-owner --no-group --omit-dir-times --exclude='__pycache__' \
+				"$$src_file" "$${f}"
+		fi
+	  done
+
 	@echo "sync-back: $$SRC/ -> $$DST/ ... complete!"
