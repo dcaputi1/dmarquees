@@ -94,7 +94,7 @@ static time_t _ra_init_hold = 0;
 static uint8_t* image = NULL;
 static char last_image_path[PATH_MAX] = {0};
 
-static const char* _image_dir = HOME_PATH "/mnt/marquees";
+static const char* _image_dir_misc = HOME_PATH "/mnt/marquees";
 static const char* _image_dir_alt = HOME_PATH "/RetroPie/roms/mame/media/marquees";
 static const char* _default_marquee_dir = HOME_PATH "/IvarArcade/images";
 static const char* _dcpanel_template = HOME_PATH "/IvarArcade/images/dcpanel-1-labels.svg";
@@ -183,6 +183,62 @@ static const char *default_marquee_name_for(FrontendMode m)
         case eNA:
         default:  return DEF_MARQUEE_NAME;
     }
+}
+
+static bool is_console_splash_name(const char *name)
+{
+    if (!name)
+        return false;
+
+    static const char *console_names[] = {
+        "atari2600",
+        "atari5200",
+        "atari7800",
+        "atari800"
+    };
+
+    for (size_t i = 0; i < sizeof(console_names) / sizeof(console_names[0]); ++i)
+    {
+        if (strcasecmp(name, console_names[i]) == 0)
+            return true;
+    }
+
+    return false;
+}
+
+static bool show_console_splash(const char *name)
+{
+    if (!name)
+        return false;
+
+    char imgpath[PATH_MAX];
+    if (!build_png_path(imgpath, sizeof(imgpath), _default_marquee_dir, name))
+    {
+        ts_fprintf(stderr, "error: console splash path too long: %s/%s.png\n", _default_marquee_dir, name);
+        return false;
+    }
+
+    int fb_w = chosen_mode.hdisplay;
+    int fb_h = chosen_mode.vdisplay;
+
+    memset(fb_map, 0x00, bo_size);
+
+    int iw = 0, ih = 0;
+    if (image)
+        free(image);
+    image = load_png_rgba(imgpath, &iw, &ih);
+    if (!image)
+    {
+        ts_fprintf(stderr, "warning: console splash load failed: %s\n", imgpath);
+        return false;
+    }
+
+    ts_printf("dmarquees: showing console splash: %s\n", imgpath);
+
+    scale_and_blit_to_xrgb(image, iw, ih, (uint32_t*)fb_map, fb_w, fb_h, stride / 4, 0, _splash_mode);
+    try_reset_crtc();
+    snprintf(last_image_path, sizeof(last_image_path), "%s", imgpath);
+    return true;
 }
 
 static bool read_token_file(const char *path, char* token, size_t len)
@@ -616,9 +672,9 @@ static int initialize(void)
 static bool show_game_marquee(const char* cmd_str)
 {
     char imgpath[PATH_MAX];
-    if (!build_png_path(imgpath, sizeof(imgpath), _image_dir, cmd_str))
+    if (!build_png_path(imgpath, sizeof(imgpath), _image_dir_misc, cmd_str))
     {
-        ts_fprintf(stderr, "warning: image path too long: %s/%s.png\n", _image_dir, cmd_str);
+        ts_fprintf(stderr, "warning: image path too long: %s/%s.png\n", _image_dir_misc, cmd_str);
         return false;
     }
 
@@ -633,7 +689,7 @@ static bool show_game_marquee(const char* cmd_str)
         }
         if (stat(imgpath, &st) != 0)
         {
-            ts_fprintf(stderr, "warning: image missing in both directories: %s/%s.png\n", _image_dir, cmd_str);
+            ts_fprintf(stderr, "warning: image missing in both directories: %s/%s.png\n", _image_dir_misc, cmd_str);
             return false;
         }
         ts_printf("dmarquees: using alternate image directory: %s\n", imgpath);
@@ -1248,6 +1304,14 @@ static void handle_fifo_command(char *cmd_str)
         // check for a panel cheat sheet (instead of just blank screen)
         if (_splash_mode)
         {
+            if (is_console_splash_name(cmd_str))
+            {
+                ts_printf("dmarquees: splash ROM '%s' is a known console splash\n", cmd_str);
+                if (!show_console_splash(cmd_str))
+                    show_default_marquee();
+                break;
+            }
+
             // Read panel setting fresh on every ROM command: avoids stale startup
             // value if user changed it via pic_frontend after the daemon started.
             char panel_code[4] = {0};
