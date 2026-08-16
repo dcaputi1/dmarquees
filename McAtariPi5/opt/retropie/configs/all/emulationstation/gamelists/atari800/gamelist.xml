@@ -19,33 +19,51 @@
 		<lastplayed>20260809T164836</lastplayed>
 	</game>
 	<game>
-		<path>./06 (Basic) Invaders, Pacman, Canyon, AstroWarriors, DogDaze, Froggie.ATR</path>
-		<name>06 (Basic) Invaders, Pacman, Canyon, AstroWarriors, DogDaze, Froggie</name>
-		<playcount>1</playcount>
-		<lastplayed>20260809T231313</lastplayed>
-	</game>
-	<game>
-		<path>./15b Threshold.ATR</path>
-		<name>15b Threshold</name>
-		<playcount>1</playcount>
-		<lastplayed>20260809T231537</lastplayed>
-	</game>
-	<game>
 		<path>./01 Dan's Programs (Sky Diver, Swarm, Worms, Junk).ATR</path>
 		<name>01 Dan's Programs (Sky Diver, Swarm, Worms, Junk)</name>
+		<playcount>5</playcount>
+		<lastplayed>20260815T123833</lastplayed>
+	</game>
+	<game>
+		<path>./01b Pop's Programs Basic.ATR</path>
+		<name>01b Pop's Programs Basic</name>
 		<playcount>1</playcount>
-		<lastplayed>20260811T223115</lastplayed>
+		<lastplayed>20260815T122803</lastplayed>
 	</game>
 	<game>
 		<path>./02 Defender, Breakaway, Donkey, Canyon.ATR</path>
 		<name>02 Defender, Breakaway, Donkey, Canyon</name>
+		<playcount>7</playcount>
+		<lastplayed>20260815T124148</lastplayed>
+	</game>
+	<game>
+		<path>./05 (Basic) ActionQuest, AlienSwarm, PacificCoastHwy, BugAttack, Megalegs.ATR</path>
+		<name>05 (Basic) ActionQuest, AlienSwarm, PacificCoastHwy, BugAttack, Megalegs</name>
+		<playcount>3</playcount>
+		<lastplayed>20260815T123019</lastplayed>
+	</game>
+	<game>
+		<path>./06 (Basic) Invaders, Pacman, Canyon, AstroWarriors, DogDaze, Froggie.ATR</path>
+		<name>06 (Basic) Invaders, Pacman, Canyon, AstroWarriors, DogDaze, Froggie</name>
+		<playcount>2</playcount>
+		<lastplayed>20260815T123043</lastplayed>
+	</game>
+	<game>
+		<path>./07b Caver0nsOfMars, Centepede, Adventure, VideoEasel.ATR</path>
+		<name>07b Caver0nsOfMars, Centepede, Adventure, VideoEasel</name>
 		<playcount>4</playcount>
-		<lastplayed>20260811T223541</lastplayed>
+		<lastplayed>20260815T123650</lastplayed>
 	</game>
 	<game>
 		<path>./08 (Basic) Asteroids, SpaceInvaders, MissileCmd, StarRaider, Outlaw, BoardGames.ATR</path>
 		<name>08 (Basic) Asteroids, SpaceInvaders, MissileCmd, StarRaider, Outlaw, BoardGames</name>
-		<playcount>7</playcount>
-		<lastplayed>20260811T225548</lastplayed>
+		<playcount>9</playcount>
+		<lastplayed>20260815T122845</lastplayed>
+	</game>
+	<game>
+		<path>./15b Threshold.ATR</path>
+		<name>15b Threshold</name>
+		<playcount>2</playcount>
+		<lastplayed>20260815T122657</lastplayed>
 	</game>
 </gameList>
