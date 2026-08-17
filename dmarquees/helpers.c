@@ -158,9 +158,26 @@ void scale_and_blit_to_xrgb(const uint8_t *src_rgba, int src_w, int src_h, uint3
         {
             int src_x = (x * src_w) / scaled_w;
             const uint8_t *p = src_row + src_x * 4;
+            uint8_t a = p[3];
+            if (a == 0)
+            {
+                dst_row[x] = 0;
+                continue;
+            }
+
             uint8_t r = p[0];
             uint8_t g = p[1];
             uint8_t b = p[2];
+
+            // Transparent pixels are already black on the framebuffer; when source alpha
+            // is partial, blend against black instead of copying the RGB edge color.
+            if (a < 255)
+            {
+                r = (uint8_t)((r * a) / 255U);
+                g = (uint8_t)((g * a) / 255U);
+                b = (uint8_t)((b * a) / 255U);
+            }
+
             uint32_t pixel = ((uint32_t)r << 16) | ((uint32_t)g << 8) | (uint32_t)b;
             dst_row[x] = pixel;
         }
